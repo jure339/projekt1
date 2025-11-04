@@ -1,0 +1,33 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Player {
+  id        Int      @id @default(autoincrement())
+  name      String
+  position  String
+  age       Int
+  createdAt DateTime @default(now())
+}
+
+model Match {
+  id         Int      @id @default(autoincrement())
+  date       DateTime
+  opponent   String
+  teamScore  Int
+  oppScore   Int
+  createdAt  DateTime @default(now())
+}
+
+model Training {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  focus     String
+  duration  Int      // minute
+  createdAt DateTime @default(now())
+}
