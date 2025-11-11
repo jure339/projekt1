@@ -1,13 +1,7 @@
-import { PaymentsOverview } from "@/components/Charts/payments-overview";
 import { UsedDevices } from "@/components/Charts/used-devices";
-import { WeeksProfit } from "@/components/Charts/weeks-profit";
 import { TopChannels } from "@/components/Tables/top-channels";
-import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
 import { createTimeFrameExtractor } from "@/utils/timeframe-extractor";
-import { Suspense } from "react";
-import { OverviewCardsGroup } from "./_components/overview-cards";
-import { OverviewCardsSkeleton } from "./_components/overview-cards/skeleton";
-import { RegionLabels } from "./_components/region-labels";
+import { CampaignVisitors } from "@/components/Charts/campaign-visitors";
 
 
 
@@ -35,8 +29,12 @@ export default async function Home({ searchParams }: PropsType) {
 
           
           <TopChannels 
-          className="col-span-12 xl:col-span-5"/>
-          
+          className="col-span-12 xl:col-span-5"
+          />
+
+          <CampaignVisitors
+            className="col-span-12 xl:col-span-5"
+          />
 
       </div>
     </>
