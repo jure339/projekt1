@@ -9,7 +9,7 @@ export const NAV_DATA = [
         icon: Icons.HomeIcon,
         items: [
           {
-            title: "eCommerce",
+            title: "Home",
             url: "/",
           },
         ],
