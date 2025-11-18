@@ -1,7 +1,7 @@
 import { PaymentsOverview } from "@/components/Charts/payments-overview";
 import { AttendanceDonut } from "@/components/Charts/used-devices"; 
 import { WeeksProfit } from "@/components/Charts/weeks-profit";
-import { TopChannels } from "@/components/Tables/top-channels";
+import { PlayersList } from "@/components/Tables/top-channels";
 import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
 import { createTimeFrameExtractor } from "@/utils/timeframe-extractor";
 import { Suspense } from "react";
@@ -28,7 +28,7 @@ export default async function Home({ searchParams }: PropsType) {
           timeFrame={extractTimeFrame("attendance_overview")?.split(":")[1]}
         />
 
-        <TopChannels 
+        <PlayersList 
           className="col-span-12 xl:col-span-5"
         />
 
