@@ -35,7 +35,7 @@ export default async function Home({ searchParams }: PropsType) {
 
           
           <TopChannels 
-          className="col-span-12 xl:col-span-5"/>
+          className="col-span-12 xl:col-span-5" />
           
 
       </div>
