@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import postgres from 'postgres';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   pozicije,
@@ -180,8 +181,8 @@ async function seedIgralecTrening() {
   return Promise.all(
     igralecTrening.map((row) =>
       sql`
-        INSERT INTO igralec_trening (igralec_id, trening_id, prisoten)
-        VALUES (${row.igralec_id}, ${row.trening_id}, ${row.prisoten})
+        INSERT INTO igralec_trening (id, igralec_id, trening_id, prisoten)
+        VALUES (${uuidv4()}, ${row.igralec_id}, ${row.trening_id}, ${row.prisoten})
         ON CONFLICT (id) DO NOTHING;
       `
     )
@@ -205,8 +206,8 @@ async function seedIgralecTekma() {
   return Promise.all(
     igralecTekma.map((row) =>
       sql`
-        INSERT INTO igralec_tekma (igralec_id, tekma_id, minute, pozicija_id)
-        VALUES (${row.igralec_id}, ${row.tekma_id}, ${row.minute}, ${row.pozicija_id})
+        INSERT INTO igralec_tekma (id, igralec_id, tekma_id, minute, pozicija_id)
+        VALUES (${uuidv4()}, ${row.igralec_id}, ${row.tekma_id}, ${row.minute}, ${row.pozicija_id})
         ON CONFLICT (id) DO NOTHING;
       `
     )
@@ -230,8 +231,8 @@ export async function GET() {
     });
 
     return Response.json({ message: 'Football database seeded successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Seeding Error:', error);
-    return Response.json({ error: 'Seeding failed' }, { status: 500 });
+    return Response.json({ error: error.message, stack: error.stack }, { status: 500 });
   }
 }
