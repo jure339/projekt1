@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import postgres from 'postgres';
 
 import {
@@ -10,7 +10,7 @@ import {
   tekme,
   igralecTrening,
   igralecTekma,
-} from '../lib/placeholder-data';
+} from '../../lib/placeholder-data';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
