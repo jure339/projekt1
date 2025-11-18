@@ -1,144 +1,158 @@
-// Placeholder data for seeding the football management database.
+// ------------------------------------------
+// POZICIJE (nova tabela)
+// ------------------------------------------
+const pozicije = [
+  {
+    id: '99999999-1111-2222-3333-000000000001',
+    naziv: 'Centralni vezist',
+    kratica: 'CM',
+  },
+  {
+    id: '99999999-1111-2222-3333-000000000002',
+    naziv: 'Napadalec',
+    kratica: 'ST',
+  },
+  {
+    id: '99999999-1111-2222-3333-000000000003',
+    naziv: 'Vezist',
+    kratica: 'MID',
+  }
+];
 
-// =========================
+// ------------------------------------------
 // IGRALCI
-// =========================
+// ------------------------------------------
 const igralci = [
   {
-    id: 'p1',
-    ime: 'Marko',
-    priimek: 'Novak',
-    starost: 18,
-    visina: 178,
-    pozicija: 'vezist',
-    stevilka_dresa: 8,
-    email: 'marko.novak@example.com',
-    geslo: 'marko123', // hashaj v produkciji
-  },
-  {
-    id: 'p2',
+    id: '11111111-aaaa-bbbb-cccc-000000000001',
     ime: 'Luka',
-    priimek: 'Kranjc',
+    priimek: 'Kovač',
     starost: 17,
-    visina: 182,
-    pozicija: 'branilec',
-    stevilka_dresa: 4,
-    email: 'luka.kranjc@example.com',
-    geslo: 'luka123',
+    visina: 180,
+    pozicija_id: pozicije[0].id,      // CM
+    stevilka_dresa: 8,
+    email: 'luka@klub.com',
+    geslo: '123456',
   },
   {
-    id: 'p3',
-    ime: 'Tian',
-    priimek: 'Mlakar',
+    id: '11111111-aaaa-bbbb-cccc-000000000002',
+    ime: 'Žan',
+    priimek: 'Horvat',
     starost: 18,
-    visina: 175,
-    pozicija: 'napadalec',
+    visina: 176,
+    pozicija_id: pozicije[1].id,      // ST
     stevilka_dresa: 9,
-    email: 'tian.mlakar@example.com',
-    geslo: 'tian123',
+    email: 'zan@klub.com',
+    geslo: '123456',
   },
 ];
 
-// =========================
+// ------------------------------------------
 // TRENERJI
-// =========================
+// ------------------------------------------
 const trenerji = [
   {
-    id: 'tr1',
-    ime: 'Andrej',
-    priimek: 'Kovač',
-    starost: 42,
-    email: 'andrej.kovac@example.com',
-    geslo: 'trener123',
-  },
-  {
-    id: 'tr2',
-    ime: 'Milan',
-    priimek: 'Horvat',
-    starost: 47,
-    email: 'milan.horvat@example.com',
-    geslo: 'milan123',
+    id: '22222222-bbbb-cccc-dddd-000000000001',
+    ime: 'Marko',
+    priimek: 'Novak',
+    starost: 38,
+    email: 'trener@klub.com',
+    geslo: '123456',
   },
 ];
 
-// =========================
+// ------------------------------------------
 // NASPROTNE EKIPE
-// =========================
+// ------------------------------------------
 const nasprotneEkipe = [
-  { id: 'op1', ime_ekipe: 'NK Celje' },
-  { id: 'op2', ime_ekipe: 'NK Maribor' },
-  { id: 'op3', ime_ekipe: 'NK Olimpija' },
-];
-
-// =========================
-// TRENINGI
-// =========================
-const treningi = [
   {
-    id: 't1',
-    cas_treninga: '2024-10-01 17:00',
-    povrsina: 'umetna',
-    opis: 'Taktična vaja + zaključki na gol.',
+    id: '33333333-cccc-dddd-eeee-000000000001',
+    ime_ekipe: 'NK Maribor',
   },
   {
-    id: 't2',
-    cas_treninga: '2024-10-03 17:00',
-    povrsina: 'naravna',
-    opis: 'Krožni trening moči in eksplozivnosti.',
+    id: '33333333-cccc-dddd-eeee-000000000002',
+    ime_ekipe: 'NK Celje',
   },
 ];
 
-// =========================
+// ------------------------------------------
 // TEKME
-// =========================
+// ------------------------------------------
 const tekme = [
   {
-    id: 'm1',
-    cas_tekme: '2024-10-10 16:00',
+    id: '44444444-dddd-eeee-ffff-000000000001',
+    cas_tekme: '2025-03-20 17:00',
     kraj_tekme: 'Velenje',
     nasprotna_ekipa_id: nasprotneEkipe[0].id,
   },
   {
-    id: 'm2',
-    cas_tekme: '2024-10-20 15:30',
-    kraj_tekme: 'Maribor',
+    id: '44444444-dddd-eeee-ffff-000000000002',
+    cas_tekme: '2025-03-28 18:00',
+    kraj_tekme: 'Celje',
     nasprotna_ekipa_id: nasprotneEkipe[1].id,
   },
 ];
 
-// =========================
-// IGRALCI ↔ TRENINGI
-// =========================
-const igralecTrening = [
-  { igralec_id: igralci[0].id, trening_id: treningi[0].id, prisoten: true },
-  { igralec_id: igralci[1].id, trening_id: treningi[0].id, prisoten: false },
-  { igralec_id: igralci[2].id, trening_id: treningi[1].id, prisoten: true },
+// ------------------------------------------
+// TRENINGI
+// ------------------------------------------
+const treningi = [
+  {
+    id: '55555555-eeee-ffff-1111-000000000001',
+    cas_treninga: '2025-03-15 17:30',
+    povrsina: 'naravna',
+    opis: 'Taktični trening + kroženje žoge',
+  },
+  {
+    id: '55555555-eeee-ffff-1111-000000000002',
+    cas_treninga: '2025-03-17 18:00',
+    povrsina: 'umetna',
+    opis: 'Kondicija + intenzivni sprinti',
+  },
 ];
 
-// =========================
-// IGRALCI ↔ TEKME
-// =========================
+// ------------------------------------------
+// MANY-TO-MANY: IGRALEC – TRENING
+// ------------------------------------------
+const igralecTrening = [
+  {
+    igralec_id: igralci[0].id,
+    trening_id: treningi[0].id,
+    prisoten: true,
+  },
+  {
+    igralec_id: igralci[1].id,
+    trening_id: treningi[1].id,
+    prisoten: false,
+  },
+];
+
+// ------------------------------------------
+// MANY-TO-MANY: IGRALEC – TEKMA
+// ------------------------------------------
 const igralecTekma = [
   {
     igralec_id: igralci[0].id,
     tekma_id: tekme[0].id,
     minute: 90,
-    pozicija_na_tekmi: 'vezist',
+    pozicija_id: pozicije[2].id,  // vezist
   },
   {
-    igralec_id: igralci[2].id,
+    igralec_id: igralci[1].id,
     tekma_id: tekme[1].id,
     minute: 70,
-    pozicija_na_tekmi: 'napadalec',
+    pozicija_id: pozicije[1].id,  // ST
   },
 ];
 
+// EXPORT -----------------------------------------------------
 export {
+  pozicije,
   igralci,
   trenerji,
+  tekme,
   nasprotneEkipe,
   treningi,
-  tekme,
   igralecTrening,
   igralecTekma,
 };
