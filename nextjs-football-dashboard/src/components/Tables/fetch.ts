@@ -115,7 +115,7 @@ export async function getTopChannels() {
       revenues: 4220,
       sales: 3456,
       conversion: 2.59,
-      logo: logos.facebook,
+      logo: logos.facebook,x  
     },
   ];
 }

@@ -1,7 +1,19 @@
-export { default as dark } from './dark.svg'; 
-export { default as facebook } from './facebook.svg'; 
-export { default as github } from './github.svg'; 
-export { default as google } from './google.svg'; 
-export { default as main } from './main.svg'; 
-export { default as vimeo } from './vimeo.svg'; 
-export { default as x } from './x.svg'; 
+import { sql } from "@/lib/db"; // tvoja povezava na PostgreSQL
+
+export async function GET() {
+  try {
+    const igralci = await sql`
+      SELECT 
+        id,
+        ime,
+        priimek,
+        pozicija_id AS pozicija,
+        null AS slika
+      FROM igralci;
+    `;
+    return new Response(JSON.stringify(igralci), { status: 200 });
+  } catch (err) {
+    console.error(err);
+    return new Response(JSON.stringify({ error: "Database error" }), { status: 500 });
+  }
+}

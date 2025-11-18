@@ -1,5 +1,5 @@
 import { PaymentsOverview } from "@/components/Charts/payments-overview";
-import { UsedDevices } from "@/components/Charts/used-devices";
+import { AttendanceDonut } from "@/components/Charts/used-devices"; 
 import { WeeksProfit } from "@/components/Charts/weeks-profit";
 import { TopChannels } from "@/components/Tables/top-channels";
 import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
@@ -8,8 +8,6 @@ import { Suspense } from "react";
 import { OverviewCardsGroup } from "./_components/overview-cards";
 import { OverviewCardsSkeleton } from "./_components/overview-cards/skeleton";
 import { RegionLabels } from "./_components/region-labels";
-
-
 
 type PropsType = {
   searchParams: Promise<{
@@ -23,20 +21,16 @@ export default async function Home({ searchParams }: PropsType) {
 
   return (
     <>
-
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-9 2xl:gap-7.5">
-
-
-        <UsedDevices
+        <AttendanceDonut
           className="col-span-12 xl:col-span-5"
-          key={extractTimeFrame("used_devices")}
-          timeFrame={extractTimeFrame("used_devices")?.split(":")[1]}
+          key={extractTimeFrame("attendance_overview")}
+          timeFrame={extractTimeFrame("attendance_overview")?.split(":")[1]}
         />
 
-          
-          <TopChannels 
-          className="col-span-12 xl:col-span-5" />
-          
+        <TopChannels 
+          className="col-span-12 xl:col-span-5"
+        />
 
       </div>
     </>
