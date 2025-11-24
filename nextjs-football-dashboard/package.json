@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fullcalendar/daygrid": "^6.1.19",
+    "@fullcalendar/interaction": "^6.1.19",
+    "@fullcalendar/react": "^6.1.19",
+    "@fullcalendar/timegrid": "^6.1.19",
     "@prisma/extension-accelerate": "^2.0.2",
     "apexcharts": "^4.5.0",
     "bcryptjs": "^3.0.3",
@@ -23,6 +27,7 @@
     "postgres": "^3.4.7",
     "react": "19.0.0",
     "react-apexcharts": "^1.7.0",
+    "react-datepicker": "^8.9.0",
     "react-dom": "19.0.0",
     "tailwind-merge": "^2.6.0",
     "uuid": "^13.0.0"
@@ -31,6 +36,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^22",
     "@types/react": "19.0.8",
+    "@types/react-datepicker": "^7.0.0",
     "@types/react-dom": "19.0.3",
     "@types/uuid": "^11.0.0",
     "autoprefixer": "^10.4.20",
