@@ -1,14 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import CalendarBox from "@/components/CalenderBox";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import DatePickerOne from "@/components/FormElements/DatePicker/DatePickerOne";
 import InputGroup from "@/components/FormElements/InputGroup";
-import { TextAreaGroup } from "@/components/FormElements/InputGroup/text-area";
 import { Select } from "@/components/FormElements/select";
 
-// POPRAVEK: dodaj name v tip PropsType komponente Select
-// v Select.tsx:
+// Pomembno: v Select.tsx dodaj prop `name` v tip PropsType:
 // type PropsType = {
 //   label: string;
 //   items: { label: string; value: string }[];
@@ -18,6 +17,8 @@ import { Select } from "@/components/FormElements/select";
 // };
 
 export default function CalendarPage() {
+  const [refreshKey, setRefreshKey] = useState(0); // za osvežitev CalendarBox po dodajanju
+
   // Client-side funkcija za dodajanje dogodka
   async function addEvent(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,14 +29,17 @@ export default function CalendarPage() {
     const description = formData.get("description") as string;
     const nasprotnik_id = formData.get("nasprotnik_id") as string | null;
 
-    await fetch("/api/calendar", {
+    const res = await fetch("/api/calendar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type, date, description, nasprotnik_id }),
     });
 
-    // Po potrebi osveži koledar ali prikaži sporočilo
+    if (!res.ok) return alert("Napaka pri dodajanju dogodka");
+
     alert("Dogodek dodan!");
+    setRefreshKey((prev) => prev + 1); // osveži CalendarBox
+    e.currentTarget.reset(); // počisti formo
   }
 
   return (
@@ -56,7 +60,7 @@ export default function CalendarPage() {
               { label: "Trening", value: "trening" },
               { label: "Tekma", value: "tekma" },
             ]}
-            name="type" // sedaj deluje, ker je dodan v tip PropsType
+            name="type"
           />
 
           <DatePickerOne name="date" label="Datum & ura" />
@@ -83,7 +87,7 @@ export default function CalendarPage() {
 
         {/* ====== RIGHT: KOLEDAR ====== */}
         <div className="md:col-span-2 bg-white dark:bg-gray-dark p-4 rounded-lg shadow">
-          <CalendarBox />
+          <CalendarBox key={refreshKey} /> {/* osvežitev koledarja ob dodajanju */}
         </div>
       </div>
     </>
