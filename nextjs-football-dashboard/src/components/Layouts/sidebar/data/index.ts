@@ -41,17 +41,6 @@ export const NAV_DATA = [
         ],
       },
       {
-        title: "Tables",
-        url: "/tables",
-        icon: Icons.Table,
-        items: [
-          {
-            title: "Tables",
-            url: "/tables",
-          },
-        ],
-      },
-      {
         title: "Pages",
         icon: Icons.Alphabet,
         items: [
@@ -66,16 +55,6 @@ export const NAV_DATA = [
   {
     label: "OTHERS",
     items: [
-      {
-        title: "Charts",
-        icon: Icons.PieChart,
-        items: [
-          {
-            title: "Basic Chart",
-            url: "/charts/basic-chart",
-          },
-        ],
-      },
       {
         title: "UI Elements",
         icon: Icons.FourCircle,
