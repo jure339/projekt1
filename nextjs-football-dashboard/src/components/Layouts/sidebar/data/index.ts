@@ -1,6 +1,26 @@
 import * as Icons from "../icons";
+import { ReactElement } from "react";
 
-export const NAV_DATA = [
+// Tipi
+export type NavSubItem = {
+  title: string;
+  url: string;
+};
+
+export type NavItem = {
+  title: string;
+  url?: string;
+  icon: React.ElementType;
+  items: NavSubItem[];
+};
+
+export type NavSection = {
+  label: string;
+  items: NavItem[];
+};
+
+// Podatki
+export const NAV_DATA: NavSection[] = [
   {
     label: "MAIN MENU",
     items: [
@@ -16,7 +36,6 @@ export const NAV_DATA = [
         icon: Icons.Calendar,
         items: [],
       },
-      
     ],
   },
 ];
