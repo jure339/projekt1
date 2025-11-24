@@ -12,7 +12,7 @@ export async function AttendanceDonut({
   timeFrame = "monthly",
   className,
 }: PropsType) {
-  const data = await getAttendanceData(timeFrame);
+  const data = await getAttendanceData();
 
   return (
     <div
