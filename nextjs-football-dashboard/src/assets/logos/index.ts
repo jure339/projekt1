@@ -1,4 +1,4 @@
-import { sql } from "@/lib/db"; // tvoja povezava na PostgreSQL
+import  sql  from "@/lib/db"; // tvoja povezava na PostgreSQL
 
 export async function GET() {
   try {
