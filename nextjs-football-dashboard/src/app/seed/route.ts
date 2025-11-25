@@ -1,23 +1,61 @@
-import bcrypt from 'bcryptjs';
-import postgres from 'postgres';
-import { v4 as uuidv4 } from 'uuid';
+import bcrypt from "bcryptjs";
+import postgres from "postgres";
+import { v4 as uuidv4 } from "uuid";
 
 import {
   pozicije,
   igralci,
   trenerji,
+  ekipe,
   nasprotneEkipe,
   treningi,
   tekme,
   igralecTrening,
   igralecTekma,
-} from '../../lib/placeholder-data';
+} from "@/lib/placeholder-data";
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-// ============================
-// POZICIJE
-// ============================
+/* ============================================================
+   0) RESET – da popravi stara shema brez ekipa_id
+   ============================================================ */
+async function resetTables() {
+  await sql`DROP TABLE IF EXISTS igralec_tekma`;
+  await sql`DROP TABLE IF EXISTS igralec_trening`;
+  await sql`DROP TABLE IF EXISTS tekme`;
+  await sql`DROP TABLE IF EXISTS treningi`;
+  await sql`DROP TABLE IF EXISTS nasprotne_ekipe`;
+  await sql`DROP TABLE IF EXISTS igralci`;
+  await sql`DROP TABLE IF EXISTS trenerji`;
+  await sql`DROP TABLE IF EXISTS pozicije`;
+  await sql`DROP TABLE IF EXISTS ekipe`;
+}
+
+/* ============================================================
+   1) EKIPE
+   ============================================================ */
+async function seedEkipe() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS ekipe (
+      id UUID PRIMARY KEY,
+      ime VARCHAR(255) NOT NULL
+    );
+  `;
+
+  return Promise.all(
+    ekipe.map((e) =>
+      sql`
+        INSERT INTO ekipe (id, ime)
+        VALUES (${e.id}, ${e.ime})
+        ON CONFLICT (id) DO NOTHING;
+      `
+    )
+  );
+}
+
+/* ============================================================
+   2) POZICIJE
+   ============================================================ */
 async function seedPozicije() {
   await sql`
     CREATE TABLE IF NOT EXISTS pozicije (
@@ -38,9 +76,38 @@ async function seedPozicije() {
   );
 }
 
-// ============================
-// IGRALCI
-// ============================
+/* ============================================================
+   3) TRENERJI
+   ============================================================ */
+async function seedTrenerji() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS trenerji (
+      id UUID PRIMARY KEY,
+      ime VARCHAR(255) NOT NULL,
+      priimek VARCHAR(255) NOT NULL,
+      starost INT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      ekipa_id UUID REFERENCES ekipe(id)
+    );
+  `;
+
+  return Promise.all(
+    trenerji.map(async (t) => {
+      const hashed = await bcrypt.hash(t.geslo, 10);
+
+      return sql`
+        INSERT INTO trenerji (id, ime, priimek, starost, email, password, ekipa_id)
+        VALUES (${t.id}, ${t.ime}, ${t.priimek}, ${t.starost}, ${t.email}, ${hashed}, ${t.ekipa_id})
+        ON CONFLICT (id) DO NOTHING;
+      `;
+    })
+  );
+}
+
+/* ============================================================
+   4) IGRALCI
+   ============================================================ */
 async function seedIgralci() {
   await sql`
     CREATE TABLE IF NOT EXISTS igralci (
@@ -52,52 +119,32 @@ async function seedIgralci() {
       pozicija_id UUID REFERENCES pozicije(id),
       stevilka_dresa INT,
       email TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL
+      password TEXT NOT NULL,
+      ekipa_id UUID REFERENCES ekipe(id)
     );
   `;
 
   return Promise.all(
-    igralci.map(async (igralec) => {
-      const hashedPassword = await bcrypt.hash(igralec.geslo, 10);
+    igralci.map(async (i) => {
+      const hashed = await bcrypt.hash(i.geslo, 10);
+
       return sql`
-        INSERT INTO igralci (id, ime, priimek, starost, visina, pozicija_id, stevilka_dresa, email, password)
-        VALUES (${igralec.id}, ${igralec.ime}, ${igralec.priimek}, ${igralec.starost}, ${igralec.visina}, ${igralec.pozicija_id}, ${igralec.stevilka_dresa}, ${igralec.email}, ${hashedPassword})
+        INSERT INTO igralci
+        (id, ime, priimek, starost, visina, pozicija_id, stevilka_dresa, email, password, ekipa_id)
+        VALUES (
+          ${i.id}, ${i.ime}, ${i.priimek}, ${i.starost}, ${i.visina},
+          ${i.pozicija_id}, ${i.stevilka_dresa},
+          ${i.email}, ${hashed}, ${i.ekipa_id}
+        )
         ON CONFLICT (id) DO NOTHING;
       `;
     })
   );
 }
 
-// ============================
-// TRENERJI
-// ============================
-async function seedTrenerji() {
-  await sql`
-    CREATE TABLE IF NOT EXISTS trenerji (
-      id UUID PRIMARY KEY,
-      ime VARCHAR(255) NOT NULL,
-      priimek VARCHAR(255) NOT NULL,
-      starost INT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL
-    );
-  `;
-
-  return Promise.all(
-    trenerji.map(async (trener) => {
-      const hashedPassword = await bcrypt.hash(trener.geslo, 10);
-      return sql`
-        INSERT INTO trenerji (id, ime, priimek, starost, email, password)
-        VALUES (${trener.id}, ${trener.ime}, ${trener.priimek}, ${trener.starost}, ${trener.email}, ${hashedPassword})
-        ON CONFLICT (id) DO NOTHING;
-      `;
-    })
-  );
-}
-
-// ============================
-// NASPROTNE EKIPE
-// ============================
+/* ============================================================
+   5) NASPROTNE EKIPE
+   ============================================================ */
 async function seedNasprotneEkipe() {
   await sql`
     CREATE TABLE IF NOT EXISTS nasprotne_ekipe (
@@ -117,9 +164,9 @@ async function seedNasprotneEkipe() {
   );
 }
 
-// ============================
-// TRENINGI
-// ============================
+/* ============================================================
+   6) TRENINGI
+   ============================================================ */
 async function seedTreningi() {
   await sql`
     CREATE TABLE IF NOT EXISTS treningi (
@@ -141,9 +188,9 @@ async function seedTreningi() {
   );
 }
 
-// ============================
-// TEKME
-// ============================
+/* ============================================================
+   7) TEKME
+   ============================================================ */
 async function seedTekme() {
   await sql`
     CREATE TABLE IF NOT EXISTS tekme (
@@ -165,9 +212,9 @@ async function seedTekme() {
   );
 }
 
-// ============================
-// IGRALCI ↔ TRENINGI
-// ============================
+/* ============================================================
+   8) IGRALCI ↔ TRENINGI
+   ============================================================ */
 async function seedIgralecTrening() {
   await sql`
     CREATE TABLE IF NOT EXISTS igralec_trening (
@@ -189,9 +236,9 @@ async function seedIgralecTrening() {
   );
 }
 
-// ============================
-// IGRALCI ↔ TEKME
-// ============================
+/* ============================================================
+   9) IGRALCI ↔ TEKME
+   ============================================================ */
 async function seedIgralecTekma() {
   await sql`
     CREATE TABLE IF NOT EXISTS igralec_tekma (
@@ -214,15 +261,17 @@ async function seedIgralecTekma() {
   );
 }
 
-// ============================
-// MAIN GET SEED
-// ============================
+/* ============================================================
+   10) MAIN
+   ============================================================ */
 export async function GET() {
   try {
-    await sql.begin(async (sql) => {
+    await sql.begin(async () => {
+      await resetTables();          // ⭐ Zelo pomembno – popravi staro shemo
+      await seedEkipe();
       await seedPozicije();
-      await seedIgralci();
       await seedTrenerji();
+      await seedIgralci();
       await seedNasprotneEkipe();
       await seedTreningi();
       await seedTekme();
@@ -230,9 +279,9 @@ export async function GET() {
       await seedIgralecTekma();
     });
 
-    return Response.json({ message: 'Football database seeded successfully' });
+    return Response.json({ message: "Database seeded successfully" });
   } catch (error: any) {
-    console.error('Seeding Error:', error);
-    return Response.json({ error: error.message, stack: error.stack }, { status: 500 });
+    console.error("SEED ERROR:", error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
