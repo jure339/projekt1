@@ -5,9 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSidebarContext } from "../sidebar/sidebar-context";
 import { MenuIcon } from "./icons";
-import { Notification } from "./notification";
 import { ThemeToggleSwitch } from "./theme-toggle";
-import { UserInfo } from "./user-info";
 
 export function Header() {
   const { toggleSidebar, isMobile } = useSidebarContext();
@@ -36,7 +34,7 @@ export function Header() {
 
       <div className="max-xl:hidden">
         <h1 className="mb-0.5 text-heading-5 font-bold text-dark dark:text-white">
-          Team-Managar
+          Team-Manager
         </h1>
       </div>
 
