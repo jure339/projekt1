@@ -24,6 +24,7 @@
     "jsvectormap": "^1.6.0",
     "jwt": "^0.2.0",
     "next": "15.1.6",
+    "next-auth": "5.0.0-beta.30",
     "next-themes": "^0.4.4",
     "nextjs-toploader": "^3.7.15",
     "postgres": "^3.4.7",
