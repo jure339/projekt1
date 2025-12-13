@@ -36,7 +36,7 @@ export default function LoginPage() {
       }
 
       const next = params.get("next");
-      router.push(next || "/");
+      router.push(next || "/dashboard");
     } catch {
       setMsg("Napaka pri povezavi.");
     } finally {
