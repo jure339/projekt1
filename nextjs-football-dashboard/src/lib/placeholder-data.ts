@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 
-// =====================================
-// POZICIJE
-// =====================================
+/* ============================================================
+   POZICIJE
+   ============================================================ */
 export const pozicije = [
   { id: uuidv4(), naziv: "Vratar", kratica: "GK" },
   { id: uuidv4(), naziv: "Branilec", kratica: "DF" },
@@ -10,18 +10,18 @@ export const pozicije = [
   { id: uuidv4(), naziv: "Napadalec", kratica: "FW" },
 ];
 
-// =====================================
-// EKIPE
-// =====================================
+/* ============================================================
+   EKIPE
+   ============================================================ */
 export const ekipe = [
   { id: uuidv4(), ime: "U15 Rudar" },
   { id: uuidv4(), ime: "U17 Rudar" },
   { id: uuidv4(), ime: "U19 Rudar" },
 ];
 
-// =====================================
-// TRENERJI
-// =====================================
+/* ============================================================
+   TRENERJI
+   ============================================================ */
 export const trenerji = [
   {
     id: uuidv4(),
@@ -79,9 +79,9 @@ export const trenerji = [
   },
 ];
 
-// =====================================
-// IGRALCI (6 na ekipo)
-// =====================================
+/* ============================================================
+   IGRALCI
+   ============================================================ */
 export const igralci = [
   // ---------------- U15 ----------------
   {
@@ -156,186 +156,44 @@ export const igralci = [
     geslo: "player123",
     ekipa_id: ekipe[0].id,
   },
-
-  // ---------------- U17 ----------------
-  {
-    id: uuidv4(),
-    ime: "Žiga",
-    priimek: "Rupnik",
-    starost: 16,
-    visina: 178,
-    pozicija_id: pozicije[3].id,
-    stevilka_dresa: 9,
-    email: "ziga.rupnik@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[1].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Niko",
-    priimek: "Lesjak",
-    starost: 17,
-    visina: 181,
-    pozicija_id: pozicije[2].id,
-    stevilka_dresa: 10,
-    email: "niko.lesjak@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[1].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Kris",
-    priimek: "Tratar",
-    starost: 16,
-    visina: 174,
-    pozicija_id: pozicije[1].id,
-    stevilka_dresa: 3,
-    email: "kris.tratar@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[1].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Tilen",
-    priimek: "Krpič",
-    starost: 16,
-    visina: 176,
-    pozicija_id: pozicije[0].id,
-    stevilka_dresa: 1,
-    email: "tilen.krpic@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[1].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Gaber",
-    priimek: "Zajc",
-    starost: 17,
-    visina: 179,
-    pozicija_id: pozicije[2].id,
-    stevilka_dresa: 14,
-    email: "gaber.zajc@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[1].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Omi",
-    priimek: "Lenarčič",
-    starost: 17,
-    visina: 182,
-    pozicija_id: pozicije[3].id,
-    stevilka_dresa: 7,
-    email: "omi.lenarcic@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[1].id,
-  },
-
-  // ---------------- U19 ----------------
-  {
-    id: uuidv4(),
-    ime: "Tim",
-    priimek: "Kralj",
-    starost: 18,
-    visina: 185,
-    pozicija_id: pozicije[2].id,
-    stevilka_dresa: 8,
-    email: "tim.kralj@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[2].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Denis",
-    priimek: "Štibernik",
-    starost: 19,
-    visina: 188,
-    pozicija_id: pozicije[3].id,
-    stevilka_dresa: 9,
-    email: "denis.stibernik@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[2].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Lian",
-    priimek: "Kapun",
-    starost: 18,
-    visina: 179,
-    pozicija_id: pozicije[1].id,
-    stevilka_dresa: 4,
-    email: "lian.kapun@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[2].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Anže",
-    priimek: "Šubic",
-    starost: 18,
-    visina: 180,
-    pozicija_id: pozicije[0].id,
-    stevilka_dresa: 1,
-    email: "anze.subic@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[2].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Maj",
-    priimek: "Ludvik",
-    starost: 19,
-    visina: 183,
-    pozicija_id: pozicije[2].id,
-    stevilka_dresa: 6,
-    email: "maj.ludvik@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[2].id,
-  },
-  {
-    id: uuidv4(),
-    ime: "Erik",
-    priimek: "Kosec",
-    starost: 19,
-    visina: 187,
-    pozicija_id: pozicije[3].id,
-    stevilka_dresa: 11,
-    email: "erik.kosec@gmail.com",
-    geslo: "player123",
-    ekipa_id: ekipe[2].id,
-  },
 ];
 
-// =====================================
-// NASPROTNE EKIPE
-// =====================================
+/* ============================================================
+   NASPROTNE EKIPE
+   ============================================================ */
 export const nasprotneEkipe = [
   { id: uuidv4(), ime_ekipe: "NK Celje" },
   { id: uuidv4(), ime_ekipe: "NK Maribor" },
   { id: uuidv4(), ime_ekipe: "NK Olimpija" },
 ];
 
-// =====================================
-// TRENINGI
-// =====================================
+/* ============================================================
+   TRENINGI  ✅ POPRAVLJENO
+   ============================================================ */
 export const treningi = [
   {
     id: uuidv4(),
-    cas_treninga: "2025-02-01T17:00:00",
+    ekipa_id: ekipe[0].id,
+    trener_id: trenerji[0].id,
+    zacetek: "2025-02-01T17:00:00",
+    konec: "2025-02-01T18:30:00",
     povrsina: "Trava",
     opis: "Taktični trening",
   },
   {
     id: uuidv4(),
-    cas_treninga: "2025-02-03T18:00:00",
+    ekipa_id: ekipe[0].id,
+    trener_id: trenerji[1].id,
+    zacetek: "2025-02-03T18:00:00",
+    konec: "2025-02-03T19:30:00",
     povrsina: "Dvorana",
     opis: "Kondicijski trening",
   },
 ];
 
-// =====================================
-// TEKME
-// =====================================
+/* ============================================================
+   TEKME
+   ============================================================ */
 export const tekme = [
   {
     id: uuidv4(),
@@ -351,9 +209,9 @@ export const tekme = [
   },
 ];
 
-// =====================================
-// IGRALCI ↔ TRENINGI
-// =====================================
+/* ============================================================
+   IGRALCI ↔ TRENINGI
+   ============================================================ */
 export const igralecTrening = [
   {
     igralec_id: igralci[0].id,
@@ -367,20 +225,14 @@ export const igralecTrening = [
   },
 ];
 
-// =====================================
-// IGRALCI ↔ TEKME
-// =====================================
+/* ============================================================
+   IGRALCI ↔ TEKME
+   ============================================================ */
 export const igralecTekma = [
   {
     igralec_id: igralci[2].id,
     tekma_id: tekme[0].id,
     minute: 70,
     pozicija_id: pozicije[3].id,
-  },
-  {
-    igralec_id: igralci[10].id,
-    tekma_id: tekme[1].id,
-    minute: 90,
-    pozicija_id: pozicije[2].id,
   },
 ];

@@ -17,7 +17,7 @@ import {
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 /* ============================================================
-   0) RESET – da popravi stara shema brez ekipa_id
+   0) RESET – pobriši vse tabele v pravilnem vrstnem redu
    ============================================================ */
 async function resetTables() {
   await sql`DROP TABLE IF EXISTS igralec_tekma`;
@@ -29,6 +29,14 @@ async function resetTables() {
   await sql`DROP TABLE IF EXISTS trenerji`;
   await sql`DROP TABLE IF EXISTS pozicije`;
   await sql`DROP TABLE IF EXISTS ekipe`;
+}
+
+/* ============================================================
+   0.5) EXTENSIONS – priporočeno (UUID helperji)
+   ============================================================ */
+async function ensureExtensions() {
+  // omogoči gen_random_uuid() (če ga boš kdaj uporabljal)
+  await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto;`;
 }
 
 /* ============================================================
@@ -88,7 +96,7 @@ async function seedTrenerji() {
       starost INT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
-      ekipa_id UUID REFERENCES ekipe(id)
+      ekipa_id UUID REFERENCES ekipe(id) ON DELETE SET NULL
     );
   `;
 
@@ -116,11 +124,11 @@ async function seedIgralci() {
       priimek VARCHAR(255) NOT NULL,
       starost INT NOT NULL,
       visina INT,
-      pozicija_id UUID REFERENCES pozicije(id),
+      pozicija_id UUID REFERENCES pozicije(id) ON DELETE SET NULL,
       stevilka_dresa INT,
       email TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
-      ekipa_id UUID REFERENCES ekipe(id)
+      ekipa_id UUID REFERENCES ekipe(id) ON DELETE SET NULL
     );
   `;
 
@@ -165,13 +173,19 @@ async function seedNasprotneEkipe() {
 }
 
 /* ============================================================
-   6) TRENINGI
+   6) TRENINGI  ✅ POPRAVLJENO ZA KOLEDAR
    ============================================================ */
 async function seedTreningi() {
   await sql`
     CREATE TABLE IF NOT EXISTS treningi (
       id UUID PRIMARY KEY,
-      cas_treninga TIMESTAMP NOT NULL,
+
+      ekipa_id UUID NOT NULL REFERENCES ekipe(id) ON DELETE CASCADE,
+      trener_id UUID REFERENCES trenerji(id) ON DELETE SET NULL,
+
+      zacetek TIMESTAMP NOT NULL,
+      konec TIMESTAMP NOT NULL,
+
       povrsina VARCHAR(50) NOT NULL,
       opis TEXT
     );
@@ -180,8 +194,8 @@ async function seedTreningi() {
   return Promise.all(
     treningi.map((t) =>
       sql`
-        INSERT INTO treningi (id, cas_treninga, povrsina, opis)
-        VALUES (${t.id}, ${t.cas_treninga}, ${t.povrsina}, ${t.opis})
+        INSERT INTO treningi (id, ekipa_id, trener_id, zacetek, konec, povrsina, opis)
+        VALUES (${t.id}, ${t.ekipa_id}, ${t.trener_id}, ${t.zacetek}, ${t.konec}, ${t.povrsina}, ${t.opis})
         ON CONFLICT (id) DO NOTHING;
       `
     )
@@ -197,7 +211,7 @@ async function seedTekme() {
       id UUID PRIMARY KEY,
       cas_tekme TIMESTAMP NOT NULL,
       kraj VARCHAR(255),
-      nasprotnik_id UUID REFERENCES nasprotne_ekipe(id)
+      nasprotnik_id UUID REFERENCES nasprotne_ekipe(id) ON DELETE SET NULL
     );
   `;
 
@@ -213,14 +227,14 @@ async function seedTekme() {
 }
 
 /* ============================================================
-   8) IGRALCI ↔ TRENINGI
+   8) IGRALCI ↔ TRENINGI  ✅ FK popravljeno (CASCADE)
    ============================================================ */
 async function seedIgralecTrening() {
   await sql`
     CREATE TABLE IF NOT EXISTS igralec_trening (
       id UUID PRIMARY KEY,
-      igralec_id UUID REFERENCES igralci(id),
-      trening_id UUID REFERENCES treningi(id),
+      igralec_id UUID REFERENCES igralci(id) ON DELETE CASCADE,
+      trening_id UUID REFERENCES treningi(id) ON DELETE CASCADE,
       prisoten BOOLEAN DEFAULT TRUE
     );
   `;
@@ -243,10 +257,10 @@ async function seedIgralecTekma() {
   await sql`
     CREATE TABLE IF NOT EXISTS igralec_tekma (
       id UUID PRIMARY KEY,
-      igralec_id UUID REFERENCES igralci(id),
-      tekma_id UUID REFERENCES tekme(id),
+      igralec_id UUID REFERENCES igralci(id) ON DELETE CASCADE,
+      tekma_id UUID REFERENCES tekme(id) ON DELETE CASCADE,
       minute INT DEFAULT 0,
-      pozicija_id UUID REFERENCES pozicije(id)
+      pozicija_id UUID REFERENCES pozicije(id) ON DELETE SET NULL
     );
   `;
 
@@ -267,14 +281,18 @@ async function seedIgralecTekma() {
 export async function GET() {
   try {
     await sql.begin(async () => {
-      await resetTables();          // ⭐ Zelo pomembno – popravi staro shemo
+      await ensureExtensions();
+      await resetTables();
+
       await seedEkipe();
       await seedPozicije();
       await seedTrenerji();
       await seedIgralci();
       await seedNasprotneEkipe();
+
       await seedTreningi();
       await seedTekme();
+
       await seedIgralecTrening();
       await seedIgralecTekma();
     });
