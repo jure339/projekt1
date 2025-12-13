@@ -26,7 +26,7 @@ export const NAV_DATA: NavSection[] = [
     items: [
       {
         title: "Home",
-        url: "/",
+        url: "/dashboard",
         icon: Icons.HomeIcon,
         items: [],
       },

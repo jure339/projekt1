@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { SearchIcon } from "@/assets/icons";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,8 +8,26 @@ import { useSidebarContext } from "../sidebar/sidebar-context";
 import { MenuIcon } from "./icons";
 import { ThemeToggleSwitch } from "./theme-toggle";
 
+type MeUser = {
+  id: string;
+  ime: string;
+  priimek: string;
+  email: string;
+  ekipa_id: string | null;
+  role: "igralec" | "trener";
+};
+
 export function Header() {
   const { toggleSidebar, isMobile } = useSidebarContext();
+  const [me, setMe] = useState<MeUser | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      const data = await res.json().catch(() => null);
+      setMe(data?.user ?? null);
+    })();
+  }, []);
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-stroke bg-white px-4 py-5 shadow-1 dark:border-stroke-dark dark:bg-gray-dark md:px-5 2xl:px-10">
@@ -45,12 +64,20 @@ export function Header() {
             placeholder="Search"
             className="flex w-full items-center gap-3.5 rounded-full border bg-gray-2 py-3 pl-[53px] pr-5 outline-none transition-colors focus-visible:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-dark-4 dark:hover:bg-dark-3 dark:hover:text-dark-6 dark:focus-visible:border-primary"
           />
-
           <SearchIcon className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 max-[1015px]:size-5" />
         </div>
 
         <ThemeToggleSwitch />
 
+        <div className="ml-2 rounded-lg border px-3 py-2 text-sm dark:border-stroke-dark">
+          {me ? (
+            <span>
+              {me.ime} {me.priimek}
+            </span>
+          ) : (
+            <span>Gost</span>
+          )}
+        </div>
       </div>
     </header>
   );

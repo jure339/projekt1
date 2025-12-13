@@ -1,31 +1,37 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifyAuthToken } from "@/lib/auth";
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get("token")?.value;
   const { pathname } = req.nextUrl;
 
-  // Dovoli auth strani brez prijave
-  const isAuthRoute = pathname.startsWith("/auth");
+  // zaščitimo vse pod /dashboard (in po želji še več)
+  const isProtected =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/trener") ||
+    pathname.startsWith("/igralec");
 
-  if (!token && !isAuthRoute) {
+  if (!isProtected) return NextResponse.next();
+
+  const token = req.cookies.get("auth")?.value;
+  if (!token) {
     const url = req.nextUrl.clone();
     url.pathname = "/auth/login";
-    url.searchParams.set("next", pathname); // da po prijavi vrne nazaj
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  // Če je že prijavljen, naj ne hodi na login/register
-  if (token && isAuthRoute) {
+  try {
+    verifyAuthToken(token);
+    return NextResponse.next();
+  } catch {
     const url = req.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/auth/login";
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
-
-  return NextResponse.next();
 }
 
-// Zelo pomembno: matcher naj pokrije VSE route-e, razen statičnih
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|assets|public).*)"],
+  matcher: ["/dashboard/:path*", "/trener/:path*", "/igralec/:path*"],
 };
