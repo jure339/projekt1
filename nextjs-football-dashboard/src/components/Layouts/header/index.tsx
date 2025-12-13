@@ -8,26 +8,31 @@ import { useSidebarContext } from "../sidebar/sidebar-context";
 import { MenuIcon } from "./icons";
 import { ThemeToggleSwitch } from "./theme-toggle";
 
-type MeUser = {
-  id: string;
-  ime: string;
-  priimek: string;
-  email: string;
-  ekipa_id: string | null;
-  role: "igralec" | "trener";
-};
+import { clearUser, getUser, type StoredUser } from "@/lib/user-store";
 
 export function Header() {
   const { toggleSidebar, isMobile } = useSidebarContext();
-  const [me, setMe] = useState<MeUser | null>(null);
+  const [user, setUser] = useState<StoredUser | null>(null);
 
+  // ✅ preberi userja iz localStorage (takoj ko se header naloži)
   useEffect(() => {
-    (async () => {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
-      const data = await res.json().catch(() => null);
-      setMe(data?.user ?? null);
-    })();
+    setUser(getUser());
+
+    // če userja spremeniš v drugi strani (login/logout), poskusimo osvežit
+    // (deluje, če boš ob loginu/logoutu sprožil "storage" event v istem tabu - spodaj pokažem kako)
+    const onStorage = () => setUser(getUser());
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  function logout() {
+    clearUser();
+
+    // opcijsko: sproži event, da se header posodobi tudi brez refresh-a
+    window.dispatchEvent(new Event("storage"));
+
+    window.location.href = "/auth/login";
+  }
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-stroke bg-white px-4 py-5 shadow-1 dark:border-stroke-dark dark:bg-gray-dark md:px-5 2xl:px-10">
@@ -59,23 +64,37 @@ export function Header() {
 
       <div className="flex flex-1 items-center justify-end gap-2 min-[375px]:gap-4">
         <div className="relative w-full max-w-[300px]">
-          <input
-            type="search"
-            placeholder="Search"
-            className="flex w-full items-center gap-3.5 rounded-full border bg-gray-2 py-3 pl-[53px] pr-5 outline-none transition-colors focus-visible:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-dark-4 dark:hover:bg-dark-3 dark:hover:text-dark-6 dark:focus-visible:border-primary"
-          />
-          <SearchIcon className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 max-[1015px]:size-5" />
+
+          
         </div>
 
         <ThemeToggleSwitch />
 
-        <div className="ml-2 rounded-lg border px-3 py-2 text-sm dark:border-stroke-dark">
-          {me ? (
-            <span>
-              {me.ime} {me.priimek}
-            </span>
+        {/* ✅ DODANO: IZPIS UPORABNIKA (ime+priimek) */}
+        <div className="flex items-center gap-3">
+          <div className="text-right leading-tight">
+            <div className="text-sm font-semibold text-dark dark:text-white">
+              {user ? `${user.ime} ${user.priimek}` : "Gost"}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {user ? user.role : "neprijavljen"}
+            </div>
+          </div>
+
+          {user ? (
+            <button
+              onClick={logout}
+              className="rounded-md border px-3 py-1 text-sm hover:bg-gray-100 dark:border-stroke-dark dark:hover:bg-dark-3"
+            >
+              Odjava
+            </button>
           ) : (
-            <span>Gost</span>
+            <Link
+              href="/auth/login"
+              className="rounded-md border px-3 py-1 text-sm hover:bg-gray-100 dark:border-stroke-dark dark:hover:bg-dark-3"
+            >
+              Prijava
+            </Link>
           )}
         </div>
       </div>

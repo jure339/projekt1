@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { saveUser, type StoredUser } from "@/lib/user-store";
 
 type Role = "igralec" | "trener";
 
@@ -28,15 +29,22 @@ export default function LoginPage() {
         body: JSON.stringify({ role, email, password }),
       });
 
-      const data = await res.json();
+      // ⚠️ prepreči "Unexpected end of JSON input"
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
 
       if (!res.ok) {
         setMsg(data?.error ?? "Napaka pri prijavi.");
         return;
       }
 
+      // ✅ SHRANI UPORABNIKA
+      const user = data.user as StoredUser;
+      saveUser(user);
+
       const next = params.get("next");
       router.push(next || "/dashboard");
+      router.refresh();
     } catch {
       setMsg("Napaka pri povezavi.");
     } finally {
@@ -64,7 +72,6 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             type="email"
             required
-            autoComplete="email"
           />
         </label>
 
@@ -75,7 +82,6 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             type="password"
             required
-            autoComplete="current-password"
           />
         </label>
 
@@ -85,10 +91,6 @@ export default function LoginPage() {
 
         {msg && <p style={{ color: "crimson" }}>{msg}</p>}
       </form>
-
-      <p style={{ marginTop: 12 }}>
-        Nimaš računa? <a href="/auth/register">Registracija</a>
-      </p>
     </div>
   );
 }
