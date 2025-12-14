@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { getUser } from "@/lib/user-store";
 import { cn } from "@/lib/utils";
 
-type RecentTraining = {
+type Training = {
   id: string;
   zacetek: string;
   konec: string;
@@ -13,7 +13,7 @@ type RecentTraining = {
   opis: string | null;
 };
 
-type UpcomingGame = {
+type Game = {
   id: string;
   cas_tekme: string;
   kraj: string | null;
@@ -24,28 +24,24 @@ type DashboardCardsProps = {
   className?: string;
 };
 
-// ✅ varno branje JSON-a
 async function safeReadJson(res: Response) {
   const text = await res.text();
-  if (!text) return { data: null };
-
+  if (!text) return { data: null as any };
   try {
-    return { data: JSON.parse(text) };
+    return { data: JSON.parse(text) as any };
   } catch {
-    return { data: null };
+    return { data: null as any };
   }
 }
 
 export default function DashboardCards({ className }: DashboardCardsProps) {
   const [ekipaId, setEkipaId] = useState<string | null>(null);
-
-  const [recentTraining, setRecentTraining] = useState<RecentTraining | null>(null);
-  const [upcomingGame, setUpcomingGame] = useState<UpcomingGame | null>(null);
+  const [training, setTraining] = useState<Training | null>(null);
+  const [game, setGame] = useState<Game | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // preberi trenerja
   useEffect(() => {
     const u = getUser();
     if (!u || u.role !== "trener" || !u.ekipa_id) {
@@ -55,7 +51,6 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
     setEkipaId(u.ekipa_id);
   }, []);
 
-  // fetch training + game
   useEffect(() => {
     (async () => {
       if (!ekipaId) return;
@@ -75,107 +70,99 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
         const g = await safeReadJson(gRes);
 
         if (!tRes.ok) {
-          setMsg("Napaka pri nalaganju treninga.");
-          setRecentTraining(null);
+          setTraining(null);
+          setMsg(t.data?.error ?? `Napaka pri nalaganju treninga (${tRes.status}).`);
         } else {
-          setRecentTraining(t.data?.training ?? null);
+          setTraining(t.data?.training ?? null);
         }
 
         if (!gRes.ok) {
-          setMsg((prev) => prev ?? "Napaka pri nalaganju tekem.");
-          setUpcomingGame(null);
+          setGame(null);
+          setMsg((prev) => prev ?? (g.data?.error ?? `Napaka pri nalaganju tekme (${gRes.status}).`));
         } else {
-          setUpcomingGame(g.data?.game ?? null);
+          setGame(g.data?.game ?? null);
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
         setMsg("Napaka pri povezavi.");
-        setRecentTraining(null);
-        setUpcomingGame(null);
+        setTraining(null);
+        setGame(null);
       } finally {
         setLoading(false);
       }
     })();
   }, [ekipaId]);
 
+  const cardClass =
+    "rounded-[14px] border border-stroke bg-white p-6 shadow-1 " +
+    "dark:border-primary/30 dark:bg-gray-dark dark:shadow-card";
+
+  const titleClass = "text-xl font-bold text-dark dark:text-white";
+  const mutedClass = "text-dark-6 dark:text-white/70";
+  const bodyClass = "text-dark dark:text-white";
+
+  const actionBtn =
+    "inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90";
+
   return (
     <div className={cn("col-span-12", className)}>
       {msg && <p className="mb-3 text-sm text-red">{msg}</p>}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* ================= NEXT TRAINING ================= */}
-        <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
+        {/* Next Training */}
+        <div className={cardClass}>
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-white">📅</span>
-              <h3 className="text-xl font-bold text-white">Next Training</h3>
+              <span className={mutedClass}>📅</span>
+              <h3 className={titleClass}>Next Training</h3>
             </div>
 
-            <Link
-              href="/addtraning"
-              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-            >
+            <Link href="/addtraning" className={actionBtn}>
               + Add training
             </Link>
           </div>
 
           {loading ? (
-            <p className="text-white/70">Loading...</p>
-          ) : recentTraining ? (
-            <div className="text-white/80">
-              <div className="mb-2 font-medium text-white">
-                {new Date(recentTraining.zacetek).toLocaleString()}
+            <p className={mutedClass}>Loading...</p>
+          ) : training ? (
+            <div className={bodyClass}>
+              <div className="mb-2 font-medium">
+                {new Date(training.zacetek).toLocaleString()}
               </div>
-              <div className="text-white/70">Surface: {recentTraining.povrsina}</div>
-              {recentTraining.opis && (
-                <div className="mt-2 text-white/70">{recentTraining.opis}</div>
-              )}
+              <div className={mutedClass}>Surface: {training.povrsina}</div>
+              {training.opis && <div className={cn("mt-2", mutedClass)}>{training.opis}</div>}
             </div>
           ) : (
-            <p className="mt-10 text-center text-white/70">
-              No trainings scheduled yet
-            </p>
+            <p className={cn("mt-10 text-center", mutedClass)}>No trainings scheduled yet</p>
           )}
         </div>
 
-        {/* ================= NEXT GAME ================= */}
-        <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
+        {/* Next Game */}
+        <div className={cardClass}>
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-white">⚽</span>
-              <h3 className="text-xl font-bold text-white">Next Game</h3>
+              <span className={mutedClass}>⚽</span>
+              <h3 className={titleClass}>Next Game</h3>
             </div>
 
-            <Link
-              href="/addgame"
-              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-            >
+            <Link href="/addgame" className={actionBtn}>
               + Add game
             </Link>
           </div>
 
           {loading ? (
-            <p className="text-white/70">Loading...</p>
-          ) : upcomingGame ? (
-            <div className="text-white/80">
-              <div className="mb-2 font-medium text-white">
-                {new Date(upcomingGame.cas_tekme).toLocaleString()}
+            <p className={mutedClass}>Loading...</p>
+          ) : game ? (
+            <div className={bodyClass}>
+              <div className="mb-2 font-medium">
+                {new Date(game.cas_tekme).toLocaleString()}
               </div>
-              <div className="text-white/70">
-                {upcomingGame.nasprotnik
-                  ? `Opponent: ${upcomingGame.nasprotnik}`
-                  : "Opponent not set"}
+              <div className={mutedClass}>
+                {game.nasprotnik ? `Opponent: ${game.nasprotnik}` : "Opponent not set"}
               </div>
-              {upcomingGame.kraj && (
-                <div className="mt-2 text-white/70">
-                  Location: {upcomingGame.kraj}
-                </div>
-              )}
+              {game.kraj && <div className={cn("mt-2", mutedClass)}>Location: {game.kraj}</div>}
             </div>
           ) : (
-            <p className="mt-10 text-center text-white/70">
-              No games scheduled yet
-            </p>
+            <p className={cn("mt-10 text-center", mutedClass)}>No games scheduled yet</p>
           )}
         </div>
       </div>
