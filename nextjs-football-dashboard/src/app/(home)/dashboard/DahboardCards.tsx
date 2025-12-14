@@ -24,15 +24,15 @@ type DashboardCardsProps = {
   className?: string;
 };
 
-// ✅ varno branje JSON-a iz response (ne vrže napake na prazno/HTML)
+// ✅ varno branje JSON-a
 async function safeReadJson(res: Response) {
   const text = await res.text();
-  if (!text) return { data: null, text: "" };
+  if (!text) return { data: null };
 
   try {
-    return { data: JSON.parse(text), text };
+    return { data: JSON.parse(text) };
   } catch {
-    return { data: null, text }; // npr. HTML ali plain text
+    return { data: null };
   }
 }
 
@@ -45,16 +45,17 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
+  // preberi trenerja
   useEffect(() => {
     const u = getUser();
     if (!u || u.role !== "trener" || !u.ekipa_id) {
-      setEkipaId(null);
       setLoading(false);
       return;
     }
     setEkipaId(u.ekipa_id);
   }, []);
 
+  // fetch training + game
   useEffect(() => {
     (async () => {
       if (!ekipaId) return;
@@ -63,48 +64,32 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
       setMsg(null);
 
       try {
-        const tUrl = `/api/treningi/recent-traning?ekipaId=${encodeURIComponent(ekipaId)}`;
-        const gUrl = `/api/game/upcoming-game`;
-
         const [tRes, gRes] = await Promise.all([
-          fetch(tUrl, { cache: "no-store" }),
-          fetch(gUrl, { cache: "no-store" }),
+          fetch(`/api/treningi/recent-traning?ekipaId=${encodeURIComponent(ekipaId)}`, {
+            cache: "no-store",
+          }),
+          fetch(`/api/game/upcoming-game`, { cache: "no-store" }),
         ]);
 
         const t = await safeReadJson(tRes);
         const g = await safeReadJson(gRes);
 
-        // 🔍 DEBUG (poglej v DevTools Console)
         if (!tRes.ok) {
-          console.error("recent-training failed:", tRes.status, tRes.statusText, t.text?.slice(0, 200));
-        }
-        if (!gRes.ok) {
-          console.error("upcoming-game failed:", gRes.status, gRes.statusText, g.text?.slice(0, 200));
-        }
-
-        // če response ni JSON, bo t.data null → ne crasha
-        const tData: any = t.data;
-        const gData: any = g.data;
-
-        if (!tRes.ok) {
+          setMsg("Napaka pri nalaganju treninga.");
           setRecentTraining(null);
-          setMsg(
-            (tData?.error as string) ??
-              `Napaka pri nalaganju treninga (${tRes.status}).`
-          );
         } else {
-          setRecentTraining((tData?.training as RecentTraining) ?? null);
+          setRecentTraining(t.data?.training ?? null);
         }
 
         if (!gRes.ok) {
+          setMsg((prev) => prev ?? "Napaka pri nalaganju tekem.");
           setUpcomingGame(null);
-          setMsg((prev) => prev ?? (gData?.error as string) ?? `Napaka pri nalaganju tekem (${gRes.status}).`);
         } else {
-          setUpcomingGame((gData?.game as UpcomingGame) ?? null);
+          setUpcomingGame(g.data?.game ?? null);
         }
-      } catch (err) {
-        console.error("DashboardCards fetch error:", err);
-        setMsg("Napaka pri povezavi (poglej Console za podrobnosti).");
+      } catch (e) {
+        console.error(e);
+        setMsg("Napaka pri povezavi.");
         setRecentTraining(null);
         setUpcomingGame(null);
       } finally {
@@ -118,11 +103,20 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
       {msg && <p className="mb-3 text-sm text-red">{msg}</p>}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Most Recent Training */}
+        {/* ================= NEXT TRAINING ================= */}
         <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
-          <div className="mb-6 flex items-center gap-3">
-            <span className="text-white">📅</span>
-            <h3 className="text-xl font-bold text-white">Next Training</h3>
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-white">📅</span>
+              <h3 className="text-xl font-bold text-white">Next Training</h3>
+            </div>
+
+            <Link
+              href="/addtraning"
+              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
+            >
+              + Add training
+            </Link>
           </div>
 
           {loading ? (
@@ -138,70 +132,51 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
               )}
             </div>
           ) : (
-            <p className="mt-10 text-center text-white/70">No trainings scheduled yet</p>
+            <p className="mt-10 text-center text-white/70">
+              No trainings scheduled yet
+            </p>
           )}
         </div>
 
-        {/* Training Sessions */}
+        {/* ================= NEXT GAME ================= */}
         <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
           <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white">Training Sessions</h3>
+            <div className="flex items-center gap-3">
+              <span className="text-white">⚽</span>
+              <h3 className="text-xl font-bold text-white">Next Game</h3>
+            </div>
+
+            <Link
+              href="/addgame"
+              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
+            >
+              + Add game
+            </Link>
           </div>
-
-          <Link
-            href="/addtraning"
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-6 py-3 font-semibold text-black"
-          >
-            📅 Add Training
-          </Link>
-
-          <p className="mt-10 text-center text-white/70">Create and manage your sessions</p>
-        </div>
-
-        {/* Games & Matches */}
-        <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white">Games & Matches</h3>
-          </div>
-
-          <Link
-            href="/dashboard/tekme/dodaj"
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-6 py-3 font-semibold text-black"
-          >
-            ➕ Add Game
-          </Link>
 
           {loading ? (
-            <p className="mt-10 text-center text-white/70">Loading...</p>
+            <p className="text-white/70">Loading...</p>
           ) : upcomingGame ? (
-            <div className="mt-8 text-center text-white/80">
-              <div className="font-semibold text-white">
+            <div className="text-white/80">
+              <div className="mb-2 font-medium text-white">
                 {new Date(upcomingGame.cas_tekme).toLocaleString()}
               </div>
               <div className="text-white/70">
-                {upcomingGame.nasprotnik ? `vs ${upcomingGame.nasprotnik}` : "Opponent not set"}
+                {upcomingGame.nasprotnik
+                  ? `Opponent: ${upcomingGame.nasprotnik}`
+                  : "Opponent not set"}
               </div>
-              {upcomingGame.kraj && <div className="text-white/70">{upcomingGame.kraj}</div>}
+              {upcomingGame.kraj && (
+                <div className="mt-2 text-white/70">
+                  Location: {upcomingGame.kraj}
+                </div>
+              )}
             </div>
           ) : (
-            <p className="mt-10 text-center text-white/70">No games scheduled yet</p>
+            <p className="mt-10 text-center text-white/70">
+              No games scheduled yet
+            </p>
           )}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white">Quick Actions</h3>
-          </div>
-
-          <div className="grid gap-3">
-            <Link
-              href="/addplayer"
-              className="flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-6 py-3 font-semibold text-black"
-            >
-              👤 Add Player
-            </Link>
-          </div>
         </div>
       </div>
     </div>
