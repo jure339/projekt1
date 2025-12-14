@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -19,9 +20,20 @@ export async function PlayersList({ className }: { className?: string }) {
         className,
       )}
     >
-      <h2 className="mb-4 text-body-2xlg font-bold text-dark dark:text-white">
-        Players
-      </h2>
+      {/* Header + gumb */}
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-body-2xlg font-bold text-dark dark:text-white">
+          Players
+        </h2>
+
+        {/* ✅ ADD PLAYER BUTTON */}
+        <Link
+          href="/addplayer"
+          className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
+        >
+          + Add player
+        </Link>
+      </div>
 
       <Table>
         <TableHeader>
