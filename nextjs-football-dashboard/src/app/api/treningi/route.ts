@@ -1,65 +1,49 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { sql } from "@/lib/db";
+import postgres from "postgres";
+import { v4 as uuidv4 } from "uuid";
 
-const CreateTreningSchema = z.object({
-  ekipa_id: z.string().uuid(),
-  trener_id: z.string().uuid().nullable().optional(),
-  zacetek: z.string(), // ISO ali "YYYY-MM-DD HH:mm:ss"
-  konec: z.string(),
-  povrsina: z.string().min(1),
-  opis: z.string().optional().nullable(),
-});
-
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-
-  const ekipa_id = searchParams.get("ekipa_id");
-  const from = searchParams.get("from");
-  const to = searchParams.get("to");
-
-  if (!ekipa_id) {
-    return NextResponse.json({ error: "Missing ekipa_id" }, { status: 400 });
-  }
-
-  // filtriranje po času je optional, ampak zelo uporabno za koledar
-  if (from && to) {
-    const rows = await sql`
-      SELECT id, ekipa_id, trener_id, zacetek, konec, povrsina, opis
-      FROM treningi
-      WHERE ekipa_id = ${ekipa_id}
-        AND zacetek < ${to}
-        AND konec > ${from}
-      ORDER BY zacetek ASC
-    `;
-    return NextResponse.json(rows);
-  }
-
-  const rows = await sql`
-    SELECT id, ekipa_id, trener_id, zacetek, konec, povrsina, opis
-    FROM treningi
-    WHERE ekipa_id = ${ekipa_id}
-    ORDER BY zacetek ASC
-  `;
-
-  return NextResponse.json(rows);
-}
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const parsed = CreateTreningSchema.safeParse(body);
+  try {
+    const body = await req.json();
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    const ekipa_id = String(body.ekipa_id ?? "").trim();
+    const trener_id = String(body.trener_id ?? "").trim();
+    const zacetek = String(body.zacetek ?? "").trim();
+    const konec = String(body.konec ?? "").trim();
+    const povrsina = String(body.povrsina ?? "").trim();
+    const opis = body.opis === null || body.opis === undefined ? null : String(body.opis);
+
+    if (!ekipa_id || !trener_id || !zacetek || !konec || !povrsina) {
+      return Response.json(
+        { error: "Ekipa, trener, začetek, konec in površina so obvezni." },
+        { status: 400 }
+      );
+    }
+
+    const start = new Date(zacetek);
+    const end = new Date(konec);
+
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+      return Response.json({ error: "Neveljaven datum/čas." }, { status: 400 });
+    }
+
+    if (end.getTime() <= start.getTime()) {
+      return Response.json({ error: "Konec mora biti po začetku." }, { status: 400 });
+    }
+
+    const id = uuidv4();
+
+    const inserted = await sql`
+      INSERT INTO treningi
+        (id, ekipa_id, trener_id, zacetek, konec, povrsina, opis)
+      VALUES
+        (${id}, ${ekipa_id}, ${trener_id}, ${start.toISOString()}, ${end.toISOString()}, ${povrsina}, ${opis})
+      RETURNING id, ekipa_id, trener_id, zacetek::text, konec::text, povrsina, opis;
+    `;
+
+    return Response.json({ trening: inserted[0] }, { status: 201 });
+  } catch (error: any) {
+    return Response.json({ error: error.message ?? "Napaka." }, { status: 500 });
   }
-
-  const t = parsed.data;
-
-  const [created] = await sql`
-    INSERT INTO treningi (id, ekipa_id, trener_id, zacetek, konec, povrsina, opis)
-    VALUES (gen_random_uuid(), ${t.ekipa_id}, ${t.trener_id ?? null}, ${t.zacetek}, ${t.konec}, ${t.povrsina}, ${t.opis ?? null})
-    RETURNING id, ekipa_id, trener_id, zacetek, konec, povrsina, opis
-  `;
-
-  return NextResponse.json(created, { status: 201 });
 }

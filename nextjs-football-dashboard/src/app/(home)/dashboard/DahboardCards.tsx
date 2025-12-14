@@ -117,7 +117,7 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
           </div>
 
           <Link
-            href="/dashboard/treningi/dodaj"
+            href="/addtraning"
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-6 py-3 font-semibold text-black"
           >
             📅 Add Training
