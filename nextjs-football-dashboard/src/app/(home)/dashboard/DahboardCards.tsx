@@ -24,6 +24,18 @@ type DashboardCardsProps = {
   className?: string;
 };
 
+// ✅ varno branje JSON-a iz response (ne vrže napake na prazno/HTML)
+async function safeReadJson(res: Response) {
+  const text = await res.text();
+  if (!text) return { data: null, text: "" };
+
+  try {
+    return { data: JSON.parse(text), text };
+  } catch {
+    return { data: null, text }; // npr. HTML ali plain text
+  }
+}
+
 export default function DashboardCards({ className }: DashboardCardsProps) {
   const [ekipaId, setEkipaId] = useState<string | null>(null);
 
@@ -31,6 +43,7 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
   const [upcomingGame, setUpcomingGame] = useState<UpcomingGame | null>(null);
 
   const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const u = getUser();
@@ -45,18 +58,55 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
   useEffect(() => {
     (async () => {
       if (!ekipaId) return;
+
       setLoading(true);
+      setMsg(null);
+
       try {
+        const tUrl = `/api/treningi/recent-traning?ekipaId=${encodeURIComponent(ekipaId)}`;
+        const gUrl = `/api/game/upcoming-game`;
+
         const [tRes, gRes] = await Promise.all([
-          fetch(`/api/dashboard/recent-training?ekipaId=${ekipaId}`),
-          fetch(`/api/dashboard/upcoming-game`),
+          fetch(tUrl, { cache: "no-store" }),
+          fetch(gUrl, { cache: "no-store" }),
         ]);
 
-        const tData = await tRes.json();
-        const gData = await gRes.json();
+        const t = await safeReadJson(tRes);
+        const g = await safeReadJson(gRes);
 
-        setRecentTraining(tRes.ok ? tData.training : null);
-        setUpcomingGame(gRes.ok ? gData.game : null);
+        // 🔍 DEBUG (poglej v DevTools Console)
+        if (!tRes.ok) {
+          console.error("recent-training failed:", tRes.status, tRes.statusText, t.text?.slice(0, 200));
+        }
+        if (!gRes.ok) {
+          console.error("upcoming-game failed:", gRes.status, gRes.statusText, g.text?.slice(0, 200));
+        }
+
+        // če response ni JSON, bo t.data null → ne crasha
+        const tData: any = t.data;
+        const gData: any = g.data;
+
+        if (!tRes.ok) {
+          setRecentTraining(null);
+          setMsg(
+            (tData?.error as string) ??
+              `Napaka pri nalaganju treninga (${tRes.status}).`
+          );
+        } else {
+          setRecentTraining((tData?.training as RecentTraining) ?? null);
+        }
+
+        if (!gRes.ok) {
+          setUpcomingGame(null);
+          setMsg((prev) => prev ?? (gData?.error as string) ?? `Napaka pri nalaganju tekem (${gRes.status}).`);
+        } else {
+          setUpcomingGame((gData?.game as UpcomingGame) ?? null);
+        }
+      } catch (err) {
+        console.error("DashboardCards fetch error:", err);
+        setMsg("Napaka pri povezavi (poglej Console za podrobnosti).");
+        setRecentTraining(null);
+        setUpcomingGame(null);
       } finally {
         setLoading(false);
       }
@@ -64,15 +114,15 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
   }, [ekipaId]);
 
   return (
-    // ✅ ta wrapper omogoči, da se komponenta raztegne čez grid (col-span-12 v Home)
     <div className={cn("col-span-12", className)}>
-      {/* notranji grid 2x2 */}
+      {msg && <p className="mb-3 text-sm text-red">{msg}</p>}
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Most Recent Training */}
         <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
           <div className="mb-6 flex items-center gap-3">
             <span className="text-white">📅</span>
-            <h3 className="text-xl font-bold text-white">Most Recent Training</h3>
+            <h3 className="text-xl font-bold text-white">Next Training</h3>
           </div>
 
           {loading ? (
@@ -92,24 +142,6 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
           )}
         </div>
 
-        {/* Your Players */}
-        <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white">Your Players</h3>
-          </div>
-
-          <Link
-            href="/addplayer"
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-6 py-3 font-semibold text-black"
-          >
-            👤 Add Player
-          </Link>
-
-          <p className="mt-10 text-center text-white/70">
-            Your players are shown in the Players page
-          </p>
-        </div>
-
         {/* Training Sessions */}
         <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
           <div className="mb-6 flex items-center justify-between">
@@ -123,7 +155,7 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
             📅 Add Training
           </Link>
 
-          <p className="mt-10 text-center text-white/70">No training sessions yet</p>
+          <p className="mt-10 text-center text-white/70">Create and manage your sessions</p>
         </div>
 
         {/* Games & Matches */}
@@ -154,6 +186,22 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
           ) : (
             <p className="mt-10 text-center text-white/70">No games scheduled yet</p>
           )}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="rounded-[14px] border border-primary/30 bg-gray-dark p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-xl font-bold text-white">Quick Actions</h3>
+          </div>
+
+          <div className="grid gap-3">
+            <Link
+              href="/addplayer"
+              className="flex w-full items-center justify-center gap-3 rounded-xl bg-primary px-6 py-3 font-semibold text-black"
+            >
+              👤 Add Player
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,8 @@
 import postgres from "postgres";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 export async function GET() {
@@ -15,8 +19,15 @@ export async function GET() {
       LIMIT 1;
     `;
 
-    return Response.json({ game: rows[0] ?? null });
+    return new Response(JSON.stringify({ game: rows[0] ?? null }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    });
   } catch (e: any) {
-    return Response.json({ error: e.message ?? "Napaka" }, { status: 500 });
+    console.error("upcoming-game error:", e);
+    return Response.json({ error: e.message ?? "Napaka", game: null }, { status: 500 });
   }
 }
