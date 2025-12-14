@@ -97,18 +97,6 @@ export default function DashboardCards({ className }: Props) {
 
             <div className="flex gap-2">
               <Link href="/addtraning" className={btn}>+ Add</Link>
-              {training && (
-                <button
-                  onClick={async () => {
-                    if (!confirm("Izbrišem trening?")) return;
-                    await fetch(`/api/treningi/${training.id}`, { method: "DELETE" });
-                    window.location.reload();
-                  }}
-                  className="rounded-lg bg-red px-4 py-2 text-sm font-medium text-white"
-                >
-                  Delete
-                </button>
-              )}
             </div>
           </div>
 
@@ -134,18 +122,6 @@ export default function DashboardCards({ className }: Props) {
 
             <div className="flex gap-2">
               <Link href="/addgame" className={btn}>+ Add</Link>
-              {game && (
-                <button
-                  onClick={async () => {
-                    if (!confirm("Izbrišem tekmo?")) return;
-                    await fetch(`/api/game/${game.id}`, { method: "DELETE" });
-                    window.location.reload();
-                  }}
-                  className="rounded-lg bg-red px-4 py-2 text-sm font-medium text-white"
-                >
-                  Delete
-                </button>
-              )}
             </div>
           </div>
 

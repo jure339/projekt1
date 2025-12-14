@@ -1,5 +1,4 @@
 import * as Icons from "../icons";
-import { ReactElement } from "react";
 
 // Tipi
 export type NavSubItem = {
@@ -21,8 +20,10 @@ export type NavSection = {
 
 // Podatki
 export const NAV_DATA: NavSection[] = [
+
+
   {
-    label: "MAIN MENU",
+    label: "TEAM",
     items: [
       {
         title: "Home",
@@ -31,10 +32,28 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
-        title: "Calendar",
-        url: "/calendar",
-        icon: Icons.Calendar,
-        items: [],
+        title: "Players",
+        icon: Icons.UsersIcon,
+        items: [
+          { title: "All Players", url: "/igralci" },
+          { title: "Add Player", url: "/addplayer" },
+        ],
+      },
+      {
+        title: "Trainings",
+        icon: Icons.ActivityIcon,
+        items: [
+          { title: "All Trainings", url: "/treningi" },
+          { title: "Add Training", url: "/addtraning" },
+        ],
+      },
+      {
+        title: "Games",
+        icon: Icons.FootballIcon,
+        items: [
+          { title: "All Games", url: "/tekme" },
+          { title: "Add Game", url: "/addgame" },
+        ],
       },
     ],
   },
