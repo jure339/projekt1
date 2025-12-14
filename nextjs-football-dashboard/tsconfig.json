@@ -33,7 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-, ".next/types/app/login/page.tsx"  ],
+, ".next/types/app/login/page.tsx", "src/app/api/game/upcoming-game"  ],
   "exclude": [
     "node_modules"
   ]

@@ -59,6 +59,7 @@ export async function PlayersList({
         >
           + Add player
         </Link>
+        
       </div>
 
       <Table>

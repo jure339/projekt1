@@ -1,55 +1,36 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { sql } from "@/lib/db";
+import postgres from "postgres";
 
-const PatchSchema = z.object({
-  zacetek: z.string().optional(),
-  konec: z.string().optional(),
-  povrsina: z.string().min(1).optional(),
-  opis: z.string().nullable().optional(),
-});
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-export async function PATCH(req: Request, ctx: { params: { id: string } }) {
-  const id = ctx.params.id;
-  const body = await req.json();
-  const parsed = PatchSchema.safeParse(body);
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = params.id;
+
+    if (!id) {
+      return Response.json({ error: "Manjka id." }, { status: 400 });
+    }
+
+    // Optional: preveri, ali obstaja
+    const exists = await sql`SELECT id FROM treningi WHERE id = ${id} LIMIT 1;`;
+    if (exists.length === 0) {
+      return Response.json({ error: "Trening ne obstaja (ali je že izbrisan)." }, { status: 404 });
+    }
+
+    // Izbriši
+    await sql`DELETE FROM treningi WHERE id = ${id};`;
+
+    return Response.json({ success: true }, { status: 200 });
+  } catch (e: any) {
+    console.error("DELETE /api/treningi/[id] error:", e);
+    return Response.json(
+      { error: e?.message ?? "Napaka pri brisanju treninga." },
+      { status: 500 }
+    );
   }
-
-  const p = parsed.data;
-
-  const [updated] = await sql`
-    UPDATE treningi
-    SET
-      zacetek = COALESCE(${p.zacetek ?? null}, zacetek),
-      konec = COALESCE(${p.konec ?? null}, konec),
-      povrsina = COALESCE(${p.povrsina ?? null}, povrsina),
-      opis = COALESCE(${p.opis ?? null}, opis)
-    WHERE id = ${id}
-    RETURNING id, ekipa_id, trener_id, zacetek, konec, povrsina, opis
-  `;
-
-  if (!updated) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  return NextResponse.json(updated);
-}
-
-export async function DELETE(_req: Request, ctx: { params: { id: string } }) {
-  const id = ctx.params.id;
-
-  const result = await sql`
-    DELETE FROM treningi
-    WHERE id = ${id}
-    RETURNING id
-  `;
-
-  if (result.length === 0) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  return NextResponse.json({ ok: true });
 }

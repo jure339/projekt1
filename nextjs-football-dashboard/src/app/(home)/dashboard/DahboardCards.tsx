@@ -20,25 +20,24 @@ type Game = {
   nasprotnik: string | null;
 };
 
-type DashboardCardsProps = {
+type Props = {
   className?: string;
 };
 
 async function safeReadJson(res: Response) {
   const text = await res.text();
-  if (!text) return { data: null as any };
+  if (!text) return null;
   try {
-    return { data: JSON.parse(text) as any };
+    return JSON.parse(text);
   } catch {
-    return { data: null as any };
+    return null;
   }
 }
 
-export default function DashboardCards({ className }: DashboardCardsProps) {
+export default function DashboardCards({ className }: Props) {
   const [ekipaId, setEkipaId] = useState<string | null>(null);
   const [training, setTraining] = useState<Training | null>(null);
   const [game, setGame] = useState<Game | null>(null);
-
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -56,113 +55,114 @@ export default function DashboardCards({ className }: DashboardCardsProps) {
       if (!ekipaId) return;
 
       setLoading(true);
-      setMsg(null);
-
       try {
         const [tRes, gRes] = await Promise.all([
-          fetch(`/api/treningi/recent-traning?ekipaId=${encodeURIComponent(ekipaId)}`, {
-            cache: "no-store",
-          }),
+          fetch(`/api/treningi/recent-traning?ekipaId=${ekipaId}`, { cache: "no-store" }),
           fetch(`/api/game/upcoming-game`, { cache: "no-store" }),
         ]);
 
-        const t = await safeReadJson(tRes);
-        const g = await safeReadJson(gRes);
+        const tData = await safeReadJson(tRes);
+        const gData = await safeReadJson(gRes);
 
-        if (!tRes.ok) {
-          setTraining(null);
-          setMsg(t.data?.error ?? `Napaka pri nalaganju treninga (${tRes.status}).`);
-        } else {
-          setTraining(t.data?.training ?? null);
-        }
+        setTraining(tRes.ok ? tData?.training ?? null : null);
+        setGame(gRes.ok ? gData?.game ?? null : null);
 
-        if (!gRes.ok) {
-          setGame(null);
-          setMsg((prev) => prev ?? (g.data?.error ?? `Napaka pri nalaganju tekme (${gRes.status}).`));
-        } else {
-          setGame(g.data?.game ?? null);
+        if (!tRes.ok || !gRes.ok) {
+          setMsg("Napaka pri nalaganju podatkov.");
         }
       } catch {
         setMsg("Napaka pri povezavi.");
-        setTraining(null);
-        setGame(null);
       } finally {
         setLoading(false);
       }
     })();
   }, [ekipaId]);
 
-  const cardClass =
-    "rounded-[14px] border border-stroke bg-white p-6 shadow-1 " +
-    "dark:border-primary/30 dark:bg-gray-dark dark:shadow-card";
-
-  const titleClass = "text-xl font-bold text-dark dark:text-white";
-  const mutedClass = "text-dark-6 dark:text-white/70";
-  const bodyClass = "text-dark dark:text-white";
-
-  const actionBtn =
-    "inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90";
+  const card =
+    "rounded-[14px] border border-stroke bg-white p-6 shadow-1 dark:border-primary/30 dark:bg-gray-dark dark:shadow-card";
+  const title = "text-xl font-bold text-dark dark:text-white";
+  const muted = "text-dark-6 dark:text-white/70";
+  const btn =
+    "inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90";
 
   return (
     <div className={cn("col-span-12", className)}>
       {msg && <p className="mb-3 text-sm text-red">{msg}</p>}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Next Training */}
-        <div className={cardClass}>
+        {/* TRAINING */}
+        <div className={card}>
           <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className={mutedClass}>📅</span>
-              <h3 className={titleClass}>Next Training</h3>
-            </div>
+            <h3 className={title}>📅 Next Training</h3>
 
-            <Link href="/addtraning" className={actionBtn}>
-              + Add training
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/addtraning" className={btn}>+ Add</Link>
+              {training && (
+                <button
+                  onClick={async () => {
+                    if (!confirm("Izbrišem trening?")) return;
+                    await fetch(`/api/treningi/${training.id}`, { method: "DELETE" });
+                    window.location.reload();
+                  }}
+                  className="rounded-lg bg-red px-4 py-2 text-sm font-medium text-white"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
 
           {loading ? (
-            <p className={mutedClass}>Loading...</p>
+            <p className={muted}>Loading...</p>
           ) : training ? (
-            <div className={bodyClass}>
-              <div className="mb-2 font-medium">
+            <>
+              <div className="font-medium text-dark dark:text-white">
                 {new Date(training.zacetek).toLocaleString()}
               </div>
-              <div className={mutedClass}>Surface: {training.povrsina}</div>
-              {training.opis && <div className={cn("mt-2", mutedClass)}>{training.opis}</div>}
-            </div>
+              <div className={muted}>Surface: {training.povrsina}</div>
+              {training.opis && <div className={muted}>{training.opis}</div>}
+            </>
           ) : (
-            <p className={cn("mt-10 text-center", mutedClass)}>No trainings scheduled yet</p>
+            <p className={cn("text-center", muted)}>No trainings</p>
           )}
         </div>
 
-        {/* Next Game */}
-        <div className={cardClass}>
+        {/* GAME */}
+        <div className={card}>
           <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className={mutedClass}>⚽</span>
-              <h3 className={titleClass}>Next Game</h3>
-            </div>
+            <h3 className={title}>⚽ Next Game</h3>
 
-            <Link href="/addgame" className={actionBtn}>
-              + Add game
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/addgame" className={btn}>+ Add</Link>
+              {game && (
+                <button
+                  onClick={async () => {
+                    if (!confirm("Izbrišem tekmo?")) return;
+                    await fetch(`/api/game/${game.id}`, { method: "DELETE" });
+                    window.location.reload();
+                  }}
+                  className="rounded-lg bg-red px-4 py-2 text-sm font-medium text-white"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
 
           {loading ? (
-            <p className={mutedClass}>Loading...</p>
+            <p className={muted}>Loading...</p>
           ) : game ? (
-            <div className={bodyClass}>
-              <div className="mb-2 font-medium">
+            <>
+              <div className="font-medium text-dark dark:text-white">
                 {new Date(game.cas_tekme).toLocaleString()}
               </div>
-              <div className={mutedClass}>
+              <div className={muted}>
                 {game.nasprotnik ? `Opponent: ${game.nasprotnik}` : "Opponent not set"}
               </div>
-              {game.kraj && <div className={cn("mt-2", mutedClass)}>Location: {game.kraj}</div>}
-            </div>
+              {game.kraj && <div className={muted}>Location: {game.kraj}</div>}
+            </>
           ) : (
-            <p className={cn("mt-10 text-center", mutedClass)}>No games scheduled yet</p>
+            <p className={cn("text-center", muted)}>No games</p>
           )}
         </div>
       </div>
