@@ -19,9 +19,6 @@ export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-/* ============================================================
-   0) RESET – pobriši vse tabele v pravilnem vrstnem redu
-   ============================================================ */
 async function resetTables() {
   await sql`DROP TABLE IF EXISTS igralec_tekma`;
   await sql`DROP TABLE IF EXISTS igralec_trening`;
@@ -34,16 +31,10 @@ async function resetTables() {
   await sql`DROP TABLE IF EXISTS ekipe`;
 }
 
-/* ============================================================
-   0.5) EXTENSIONS – priporočeno (UUID helperji)
-   ============================================================ */
 async function ensureExtensions() {
   await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto;`;
 }
 
-/* ============================================================
-   1) EKIPE
-   ============================================================ */
 async function seedEkipe() {
   await sql`
     CREATE TABLE IF NOT EXISTS ekipe (
@@ -53,19 +44,14 @@ async function seedEkipe() {
   `;
 
   return Promise.all(
-    ekipe.map((e) =>
-      sql`
-        INSERT INTO ekipe (id, ime)
-        VALUES (${e.id}, ${e.ime})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
+    ekipe.map((e) => sql`
+      INSERT INTO ekipe (id, ime)
+      VALUES (${e.id}, ${e.ime})
+      ON CONFLICT (id) DO NOTHING;
+    `)
   );
 }
 
-/* ============================================================
-   2) POZICIJE
-   ============================================================ */
 async function seedPozicije() {
   await sql`
     CREATE TABLE IF NOT EXISTS pozicije (
@@ -76,19 +62,14 @@ async function seedPozicije() {
   `;
 
   return Promise.all(
-    pozicije.map((p) =>
-      sql`
-        INSERT INTO pozicije (id, naziv, kratica)
-        VALUES (${p.id}, ${p.naziv}, ${p.kratica})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
+    pozicije.map((p) => sql`
+      INSERT INTO pozicije (id, naziv, kratica)
+      VALUES (${p.id}, ${p.naziv}, ${p.kratica})
+      ON CONFLICT (id) DO NOTHING;
+    `)
   );
 }
 
-/* ============================================================
-   3) TRENERJI
-   ============================================================ */
 async function seedTrenerji() {
   await sql`
     CREATE TABLE IF NOT EXISTS trenerji (
@@ -115,9 +96,6 @@ async function seedTrenerji() {
   );
 }
 
-/* ============================================================
-   4) IGRALCI
-   ============================================================ */
 async function seedIgralci() {
   await sql`
     CREATE TABLE IF NOT EXISTS igralci (
@@ -140,21 +118,17 @@ async function seedIgralci() {
 
       return sql`
         INSERT INTO igralci
-        (id, ime, priimek, starost, visina, pozicija_id, stevilka_dresa, email, password, ekipa_id)
-        VALUES (
-          ${i.id}, ${i.ime}, ${i.priimek}, ${i.starost}, ${i.visina},
-          ${i.pozicija_id}, ${i.stevilka_dresa},
-          ${i.email}, ${hashed}, ${i.ekipa_id}
-        )
+          (id, ime, priimek, starost, visina, pozicija_id, stevilka_dresa, email, password, ekipa_id)
+        VALUES
+          (${i.id}, ${i.ime}, ${i.priimek}, ${i.starost}, ${i.visina},
+           ${i.pozicija_id}, ${i.stevilka_dresa},
+           ${i.email}, ${hashed}, ${i.ekipa_id})
         ON CONFLICT (id) DO NOTHING;
       `;
     })
   );
 }
 
-/* ============================================================
-   5) NASPROTNE EKIPE
-   ============================================================ */
 async function seedNasprotneEkipe() {
   await sql`
     CREATE TABLE IF NOT EXISTS nasprotne_ekipe (
@@ -164,19 +138,14 @@ async function seedNasprotneEkipe() {
   `;
 
   return Promise.all(
-    nasprotneEkipe.map((team) =>
-      sql`
-        INSERT INTO nasprotne_ekipe (id, ime)
-        VALUES (${team.id}, ${team.ime_ekipe})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
+    nasprotneEkipe.map((team) => sql`
+      INSERT INTO nasprotne_ekipe (id, ime)
+      VALUES (${team.id}, ${team.ime_ekipe})
+      ON CONFLICT (id) DO NOTHING;
+    `)
   );
 }
 
-/* ============================================================
-   6) TRENINGI
-   ============================================================ */
 async function seedTreningi() {
   await sql`
     CREATE TABLE IF NOT EXISTS treningi (
@@ -191,19 +160,14 @@ async function seedTreningi() {
   `;
 
   return Promise.all(
-    treningi.map((t) =>
-      sql`
-        INSERT INTO treningi (id, ekipa_id, trener_id, zacetek, konec, povrsina, opis)
-        VALUES (${t.id}, ${t.ekipa_id}, ${t.trener_id}, ${t.zacetek}, ${t.konec}, ${t.povrsina}, ${t.opis})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
+    treningi.map((t) => sql`
+      INSERT INTO treningi (id, ekipa_id, trener_id, zacetek, konec, povrsina, opis)
+      VALUES (${t.id}, ${t.ekipa_id}, ${t.trener_id}, ${t.zacetek}, ${t.konec}, ${t.povrsina}, ${t.opis})
+      ON CONFLICT (id) DO NOTHING;
+    `)
   );
 }
 
-/* ============================================================
-   7) TEKME
-   ============================================================ */
 async function seedTekme() {
   await sql`
     CREATE TABLE IF NOT EXISTS tekme (
@@ -215,19 +179,14 @@ async function seedTekme() {
   `;
 
   return Promise.all(
-    tekme.map((m) =>
-      sql`
-        INSERT INTO tekme (id, cas_tekme, kraj, nasprotnik_id)
-        VALUES (${m.id}, ${m.cas_tekme}, ${m.kraj_tekme}, ${m.nasprotna_ekipa_id})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
+    tekme.map((m) => sql`
+      INSERT INTO tekme (id, cas_tekme, kraj, nasprotnik_id)
+      VALUES (${m.id}, ${m.cas_tekme}, ${m.kraj_tekme}, ${m.nasprotna_ekipa_id})
+      ON CONFLICT (id) DO NOTHING;
+    `)
   );
 }
 
-/* ============================================================
-   8) IGRALCI ↔ TRENINGI
-   ============================================================ */
 async function seedIgralecTrening() {
   await sql`
     CREATE TABLE IF NOT EXISTS igralec_trening (
@@ -239,19 +198,14 @@ async function seedIgralecTrening() {
   `;
 
   return Promise.all(
-    igralecTrening.map((row) =>
-      sql`
-        INSERT INTO igralec_trening (id, igralec_id, trening_id, prisoten)
-        VALUES (${uuidv4()}, ${row.igralec_id}, ${row.trening_id}, ${row.prisoten})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
+    igralecTrening.map((row) => sql`
+      INSERT INTO igralec_trening (id, igralec_id, trening_id, prisoten)
+      VALUES (${uuidv4()}, ${row.igralec_id}, ${row.trening_id}, ${row.prisoten})
+      ON CONFLICT (id) DO NOTHING;
+    `)
   );
 }
 
-/* ============================================================
-   9) IGRALCI ↔ TEKME
-   ============================================================ */
 async function seedIgralecTekma() {
   await sql`
     CREATE TABLE IF NOT EXISTS igralec_tekma (
@@ -264,19 +218,14 @@ async function seedIgralecTekma() {
   `;
 
   return Promise.all(
-    igralecTekma.map((row) =>
-      sql`
-        INSERT INTO igralec_tekma (id, igralec_id, tekma_id, minute, pozicija_id)
-        VALUES (${uuidv4()}, ${row.igralec_id}, ${row.tekma_id}, ${row.minute}, ${row.pozicija_id})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
+    igralecTekma.map((row) => sql`
+      INSERT INTO igralec_tekma (id, igralec_id, tekma_id, minute, pozicija_id)
+      VALUES (${uuidv4()}, ${row.igralec_id}, ${row.tekma_id}, ${row.minute}, ${row.pozicija_id})
+      ON CONFLICT (id) DO NOTHING;
+    `)
   );
 }
 
-/* ============================================================
-   10) MAIN
-   ============================================================ */
 export async function GET() {
   try {
     await sql.begin(async () => {
