@@ -1,5 +1,45 @@
-import { NextResponse } from "next/server";
-// + tvoj db import (postgres/prisma/whatever)
+import postgres from "postgres";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return Response.json({ error: "Manjka ID tekme." }, { status: 400 });
+    }
+
+    const rows = await sql`
+      SELECT *
+      FROM tekme
+      WHERE id = ${id}
+      LIMIT 1;
+    `;
+
+    if (rows.length === 0) {
+      return Response.json(
+        { error: "Tekma ne obstaja." },
+        { status: 404 }
+      );
+    }
+
+    return Response.json({ tekma: rows[0] }, { status: 200 });
+  } catch (error: any) {
+    console.error("GET /api/game/[id] error:", error);
+
+    return Response.json(
+      { error: error?.message ?? "Napaka pri nalaganju tekme." },
+      { status: 500 }
+    );
+  }
+}
 
 export async function DELETE(
   _req: Request,
@@ -9,15 +49,31 @@ export async function DELETE(
     const { id } = await params;
 
     if (!id) {
-      return NextResponse.json({ error: "Manjka ID." }, { status: 400 });
+      return Response.json({ error: "Manjka ID tekme." }, { status: 400 });
     }
 
-    // TODO: tvoj delete iz baze
-    // await sql`DELETE FROM games WHERE id = ${id}`
+    const exists = await sql`
+      SELECT id FROM tekme WHERE id = ${id} LIMIT 1;
+    `;
 
-    return NextResponse.json({ ok: true }, { status: 200 });
-  } catch (e) {
-    console.error("DELETE /api/game/[id] error:", e);
-    return NextResponse.json({ error: "Napaka pri brisanju." }, { status: 500 });
+    if (exists.length === 0) {
+      return Response.json(
+        { error: "Tekma ne obstaja ali je že izbrisana." },
+        { status: 404 }
+      );
+    }
+
+    await sql`
+      DELETE FROM tekme WHERE id = ${id};
+    `;
+
+    return Response.json({ success: true }, { status: 200 });
+  } catch (error: any) {
+    console.error("DELETE /api/game/[id] error:", error);
+
+    return Response.json(
+      { error: error?.message ?? "Napaka pri brisanju tekme." },
+      { status: 500 }
+    );
   }
 }
