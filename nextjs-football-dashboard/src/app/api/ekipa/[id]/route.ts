@@ -7,13 +7,12 @@ export const revalidate = 0;
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 type Ctx = {
-  params: Promise<Record<string, string>>;
+  params: { id: string };
 };
 
 export async function GET(_req: Request, { params }: Ctx) {
   try {
-    const p = await params;
-    const id = p.id;
+    const { id } = params;
 
     if (!id) {
       return NextResponse.json({ error: "Manjka ID ekipe." }, { status: 400 });
