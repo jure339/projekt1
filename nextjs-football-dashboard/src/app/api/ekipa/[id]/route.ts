@@ -1,19 +1,22 @@
 import postgres from "postgres";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type Ctx = {
+  params: Promise<Record<string, string>>;
+};
+
+export async function GET(_req: Request, { params }: Ctx) {
   try {
-    const { id } = await params;
+    const p = await params;
+    const id = p.id;
 
     if (!id) {
-      return Response.json({ error: "Manjka ID ekipe." }, { status: 400 });
+      return NextResponse.json({ error: "Manjka ID ekipe." }, { status: 400 });
     }
 
     const rows = await sql`
@@ -24,12 +27,15 @@ export async function GET(
     `;
 
     if (rows.length === 0) {
-      return Response.json({ error: "Ekipa ne obstaja." }, { status: 404 });
+      return NextResponse.json({ error: "Ekipa ne obstaja." }, { status: 404 });
     }
 
-    return Response.json({ ekipa: rows[0] }, { status: 200 });
-  } catch (error: any) {
+    return NextResponse.json({ ekipa: rows[0] }, { status: 200 });
+  } catch (error) {
     console.error("GET /api/ekipa/[id] error:", error);
-    return Response.json({ error: "Napaka pri nalaganju ekipe." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Napaka pri nalaganju ekipe." },
+      { status: 500 }
+    );
   }
 }
