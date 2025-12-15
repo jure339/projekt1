@@ -1,12 +1,7 @@
-import postgres from "postgres";
 import { NextResponse } from "next/server";
+// + tvoj db import (postgres/prisma/whatever)
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
-
-export async function GET(
+export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -14,26 +9,15 @@ export async function GET(
     const { id } = await params;
 
     if (!id) {
-      return NextResponse.json({ error: "Manjka ID ekipe." }, { status: 400 });
+      return NextResponse.json({ error: "Manjka ID." }, { status: 400 });
     }
 
-    const rows = await sql`
-      SELECT id, ime
-      FROM ekipe
-      WHERE id = ${id}
-      LIMIT 1;
-    `;
+    // TODO: tvoj delete iz baze
+    // await sql`DELETE FROM games WHERE id = ${id}`
 
-    if (rows.length === 0) {
-      return NextResponse.json({ error: "Ekipa ne obstaja." }, { status: 404 });
-    }
-
-    return NextResponse.json({ ekipa: rows[0] }, { status: 200 });
-  } catch (error) {
-    console.error("GET /api/ekipa/[id] error:", error);
-    return NextResponse.json(
-      { error: "Napaka pri nalaganju ekipe." },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (e) {
+    console.error("DELETE /api/game/[id] error:", e);
+    return NextResponse.json({ error: "Napaka pri brisanju." }, { status: 500 });
   }
 }
