@@ -1,17 +1,20 @@
 import postgres from "postgres";
-import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function DELETE(
-  _req: NextRequest,
-  ctx: RouteContext<"/api/game/[id]">
-) {
+function getIdFromRequestUrl(req: Request) {
+  const { pathname } = new URL(req.url);
+  // pričakovano: /api/game/<id>
+  const parts = pathname.split("/").filter(Boolean);
+  return parts.at(-1) ?? "";
+}
+
+export async function DELETE(req: Request) {
   try {
-    const { id } = await ctx.params;
+    const id = getIdFromRequestUrl(req);
 
     if (!id) {
       return Response.json({ error: "Manjka ID tekme." }, { status: 400 });
