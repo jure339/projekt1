@@ -5,9 +5,12 @@ export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function GET(_req: Request, context: any) {
+export async function GET(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const id = context?.params?.id as string | undefined;
+    const id = params.id;
 
     if (!id) {
       return Response.json({ error: "Manjka ID ekipe." }, { status: 400 });
@@ -27,9 +30,6 @@ export async function GET(_req: Request, context: any) {
     return Response.json({ ekipa: rows[0] }, { status: 200 });
   } catch (error: any) {
     console.error("GET /api/ekipa/[id] error:", error);
-    return Response.json(
-      { error: "Napaka pri nalaganju ekipe." },
-      { status: 500 }
-    );
+    return Response.json({ error: "Napaka pri nalaganju ekipe." }, { status: 500 });
   }
 }
