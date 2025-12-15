@@ -5,9 +5,9 @@ export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function GET(_req: Request, context: any) {
+export async function GET(req: Request, context: any) {
   try {
-    const id = context?.params?.id as string | undefined;
+    const id = context?.params?.id;
 
     if (!id) {
       return Response.json({ error: "Manjka ID ekipe." }, { status: 400 });
@@ -24,9 +24,9 @@ export async function GET(_req: Request, context: any) {
       return Response.json({ error: "Ekipa ne obstaja." }, { status: 404 });
     }
 
-    return Response.json({ ekipa: rows[0] }, { status: 200 });
-  } catch (error: any) {
-    console.error("GET /api/ekipe/[id] error:", error);
+    return Response.json({ ekipa: rows[0] });
+  } catch (err) {
+    console.error("GET /api/ekipe/[id]", err);
     return Response.json(
       { error: "Napaka pri nalaganju ekipe." },
       { status: 500 }
