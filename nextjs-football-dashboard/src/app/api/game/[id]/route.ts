@@ -5,48 +5,9 @@ export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: Request, ctx: any) {
   try {
-    const { id } = await params;
-
-    if (!id) {
-      return Response.json({ error: "Manjka ID tekme." }, { status: 400 });
-    }
-
-    const rows = await sql`
-      SELECT *
-      FROM tekme
-      WHERE id = ${id}
-      LIMIT 1;
-    `;
-
-    if (rows.length === 0) {
-      return Response.json(
-        { error: "Tekma ne obstaja." },
-        { status: 404 }
-      );
-    }
-
-    return Response.json({ tekma: rows[0] }, { status: 200 });
-  } catch (error: any) {
-    console.error("GET /api/game/[id] error:", error);
-
-    return Response.json(
-      { error: error?.message ?? "Napaka pri nalaganju tekme." },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
+    const { id } = await ctx.params; // Next 15: params je Promise
 
     if (!id) {
       return Response.json({ error: "Manjka ID tekme." }, { status: 400 });
