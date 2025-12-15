@@ -1,18 +1,23 @@
 import postgres from "postgres";
+import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function DELETE(_req: Request, ctx: any) {
+export async function DELETE(
+  _req: NextRequest,
+  ctx: RouteContext<"/api/game/[id]">
+) {
   try {
-    const { id } = await ctx.params; // Next 15: params je Promise
+    const { id } = await ctx.params;
 
     if (!id) {
       return Response.json({ error: "Manjka ID tekme." }, { status: 400 });
     }
 
+    // 🔍 preveri, ali tekma obstaja
     const exists = await sql`
       SELECT id FROM tekme WHERE id = ${id} LIMIT 1;
     `;
@@ -24,6 +29,7 @@ export async function DELETE(_req: Request, ctx: any) {
       );
     }
 
+    // ❌ izbriši tekmo
     await sql`
       DELETE FROM tekme WHERE id = ${id};
     `;
