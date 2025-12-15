@@ -1,51 +1,23 @@
-import postgres from "postgres";
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+import { NextResponse } from "next/server";
+// + tvoj db import (postgres/prisma/whatever)
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
 
     if (!id) {
-      return Response.json(
-        { error: "Manjka ID tekme." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Manjka ID." }, { status: 400 });
     }
 
-    // 🔍 preveri, ali tekma obstaja
-    const exists = await sql`
-      SELECT id FROM tekme WHERE id = ${id} LIMIT 1;
-    `;
+    // TODO: tvoj delete iz baze
+    // await sql`DELETE FROM games WHERE id = ${id}`
 
-    if (exists.length === 0) {
-      return Response.json(
-        { error: "Tekma ne obstaja ali je že izbrisana." },
-        { status: 404 }
-      );
-    }
-
-    // ❌ izbriši tekmo
-    await sql`
-      DELETE FROM tekme WHERE id = ${id};
-    `;
-
-    return Response.json(
-      { success: true },
-      { status: 200 }
-    );
-  } catch (error: any) {
-    console.error("DELETE /api/game/[id] error:", error);
-
-    return Response.json(
-      { error: error?.message ?? "Napaka pri brisanju tekme." },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (e) {
+    console.error("DELETE /api/game/[id] error:", e);
+    return NextResponse.json({ error: "Napaka pri brisanju." }, { status: 500 });
   }
 }
