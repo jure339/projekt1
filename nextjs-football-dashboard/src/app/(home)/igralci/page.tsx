@@ -20,7 +20,15 @@ export default function DeletePlayersPage() {
   useEffect(() => {
     const u = getUser();
 
-    if (!u || u.role !== "trener" || !u.ekipa_id) {
+    if (!u || u.role !== "trener") {
+      setMsg("Nimaš dostopa.");
+      setLoading(false);
+      return;
+    }
+
+    const ekipaId = u.ekipa_id;
+
+    if (!ekipaId) {
       setMsg("Nimaš dostopa.");
       setLoading(false);
       return;
@@ -29,7 +37,7 @@ export default function DeletePlayersPage() {
     (async () => {
       try {
         const res = await fetch(
-          `/api/igralci?ekipaId=${encodeURIComponent(u.ekipa_id)}`,
+          `/api/igralci?ekipaId=${encodeURIComponent(ekipaId)}`,
           { cache: "no-store" }
         );
 
