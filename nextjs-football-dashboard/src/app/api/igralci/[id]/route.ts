@@ -5,12 +5,9 @@ export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function DELETE(
-  _req: Request,
-  ctx: RouteContext<"/api/igralci/[id]">
-) {
+export async function DELETE(_req: Request, ctx: any) {
   try {
-    const { id } = await ctx.params;
+    const id = String(ctx?.params?.id ?? "");
 
     if (!id) {
       return Response.json({ error: "Manjka ID igralca." }, { status: 400 });
