@@ -7,10 +7,10 @@ const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  ctx: RouteContext<"/api/treningi/[id]">
 ) {
   try {
-    const id = params.id;
+    const { id } = await ctx.params;
 
     if (!id) {
       return Response.json({ error: "Manjka id." }, { status: 400 });
@@ -19,7 +19,10 @@ export async function DELETE(
     // Optional: preveri, ali obstaja
     const exists = await sql`SELECT id FROM treningi WHERE id = ${id} LIMIT 1;`;
     if (exists.length === 0) {
-      return Response.json({ error: "Trening ne obstaja (ali je že izbrisan)." }, { status: 404 });
+      return Response.json(
+        { error: "Trening ne obstaja (ali je že izbrisan)." },
+        { status: 404 }
+      );
     }
 
     // Izbriši
