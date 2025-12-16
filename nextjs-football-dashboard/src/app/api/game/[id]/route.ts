@@ -5,16 +5,19 @@ export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: Request, ctx: RouteContext<"/api/game/[id]">) {
   try {
-    const id = params.id;
+    const { id } = await ctx.params; // ✅ Next.js 15: params je Promise
 
     if (!id) {
       return Response.json({ error: "Manjka ID tekme." }, { status: 400 });
     }
+
+    // Če je id v bazi integer, raje uporabi:
+    // const idNum = Number(id);
+    // if (!Number.isFinite(idNum)) {
+    //   return Response.json({ error: "Neveljaven ID." }, { status: 400 });
+    // }
 
     const exists = await sql`
       SELECT id FROM tekme WHERE id = ${id} LIMIT 1;
