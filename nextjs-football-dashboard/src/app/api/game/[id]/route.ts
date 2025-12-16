@@ -5,22 +5,22 @@ export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-function getIdFromRequestUrl(req: Request) {
-  const { pathname } = new URL(req.url);
-  // pričakovano: /api/game/<id>
-  const parts = pathname.split("/").filter(Boolean);
-  return parts.at(-1) ?? "";
-}
+type Ctx = { params: { id: string } };
 
-export async function DELETE(req: Request) {
+export async function DELETE(_req: Request, { params }: Ctx) {
   try {
-    const id = getIdFromRequestUrl(req);
+    const id = params.id;
 
     if (!id) {
       return Response.json({ error: "Manjka ID tekme." }, { status: 400 });
     }
 
-    // 🔍 preveri, ali tekma obstaja
+    // če je v bazi id številka, je to še bolje:
+    // const idNum = Number(id);
+    // if (!Number.isFinite(idNum)) {
+    //   return Response.json({ error: "Neveljaven ID." }, { status: 400 });
+    // }
+
     const exists = await sql`
       SELECT id FROM tekme WHERE id = ${id} LIMIT 1;
     `;
@@ -32,7 +32,6 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // ❌ izbriši tekmo
     await sql`
       DELETE FROM tekme WHERE id = ${id};
     `;
