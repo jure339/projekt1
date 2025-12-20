@@ -1,11 +1,11 @@
 import type { PropsWithChildren } from "react";
-import { Sidebar } from "@/components/Layouts/sidebar";
 import { Header } from "@/components/Layouts/header";
+import { SidebarPlayer } from "@/components/Layouts/sidebar copy";
 
 export default function HomeLayout({ children }: PropsWithChildren) {
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <SidebarPlayer />
 
       <div className="w-full bg-gray-2 dark:bg-[#020d1a]">
         <Header />
