@@ -4,9 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { saveUser, type StoredUser } from "@/lib/user-store";
 
-// ✅ popravi pot do komponente, kjer jo dejansko imaš
 import InputGroup from "../../../../components/FormElements/InputGroup";
-
 
 type Role = "igralec" | "trener";
 
@@ -45,7 +43,14 @@ export default function LoginPage() {
       saveUser(user);
 
       const next = params.get("next");
-      router.push(next || "/dashboard");
+
+      // ✅ REDIRECT GLEDE NA VLOGO
+      if (user.role === "igralec") {
+        router.push("/playerdashboard");
+      } else {
+        router.push(next || "/dashboard");
+      }
+
       router.refresh();
     } catch {
       setMsg("Napaka pri povezavi.");
@@ -59,7 +64,7 @@ export default function LoginPage() {
       <h1>Prijava</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
-        {/* Vloga (zaenkrat pustiš select) */}
+        {/* Vloga */}
         <label className="text-body-sm font-medium text-dark dark:text-white">
           Vloga
           <select
@@ -73,7 +78,6 @@ export default function LoginPage() {
           </select>
         </label>
 
-        {/* ✅ Email (InputGroup stil) */}
         <InputGroup
           label="Email"
           placeholder="Vpiši email"
@@ -86,7 +90,6 @@ export default function LoginPage() {
           name="email"
         />
 
-        {/* ✅ Geslo (InputGroup stil) */}
         <InputGroup
           label="Geslo"
           placeholder="Vpiši geslo"
@@ -106,6 +109,7 @@ export default function LoginPage() {
         >
           {loading ? "Prijavljam..." : "Prijavi se"}
         </button>
+
         <button
           type="button"
           onClick={() => router.push("/auth/register")}
