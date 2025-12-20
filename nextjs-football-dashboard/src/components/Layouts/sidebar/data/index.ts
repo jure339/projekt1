@@ -33,27 +33,21 @@ export const NAV_DATA: NavSection[] = [
       },
       {
         title: "Players",
+        url: "/igralci",
         icon: Icons.UsersIcon,
-        items: [
-          { title: "All Players", url: "/igralci" },
-          { title: "Add Player", url: "/addplayer" },
-        ],
+        items: [],
       },
       {
         title: "Trainings",
+        url: "/treningi",
         icon: Icons.ActivityIcon,
-        items: [
-          { title: "All Trainings", url: "/treningi" },
-          { title: "Add Training", url: "/addtraning" },
-        ],
+        items: [],
       },
       {
         title: "Games",
+        url: "/tekme",
         icon: Icons.FootballIcon,
-        items: [
-          { title: "All Games", url: "/tekme" },
-          { title: "Add Game", url: "/addgame" },
-        ],
+        items: [],
       },
     ],
   },
