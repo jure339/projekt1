@@ -20,6 +20,8 @@ type Game = {
   nasprotnik: string | null;
 };
 
+type Role = "igralec" | "trener";
+
 type Props = {
   className?: string;
 };
@@ -35,21 +37,33 @@ async function safeReadJson(res: Response) {
 }
 
 export default function DashboardCards({ className }: Props) {
+  const [role, setRole] = useState<Role | null>(null);
   const [ekipaId, setEkipaId] = useState<string | null>(null);
+
   const [training, setTraining] = useState<Training | null>(null);
   const [game, setGame] = useState<Game | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
+  // 🔹 preberi uporabnika
   useEffect(() => {
     const u = getUser();
-    if (!u || u.role !== "trener" || !u.ekipa_id) {
+    if (!u) {
       setLoading(false);
       return;
     }
-    setEkipaId(u.ekipa_id);
+
+    setRole(u.role);
+
+    if (u.role === "trener" && u.ekipa_id) {
+      setEkipaId(u.ekipa_id);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
+  // 🔹 naloži podatke (če je trener)
   useEffect(() => {
     (async () => {
       if (!ekipaId) return;
@@ -57,7 +71,9 @@ export default function DashboardCards({ className }: Props) {
       setLoading(true);
       try {
         const [tRes, gRes] = await Promise.all([
-          fetch(`/api/treningi/recent-traning?ekipaId=${ekipaId}`, { cache: "no-store" }),
+          fetch(`/api/treningi/recent-traning?ekipaId=${ekipaId}`, {
+            cache: "no-store",
+          }),
           fetch(`/api/game/upcoming-game`, { cache: "no-store" }),
         ]);
 
@@ -85,6 +101,8 @@ export default function DashboardCards({ className }: Props) {
   const btn =
     "inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90";
 
+  const isTrainer = role === "trener";
+
   return (
     <div className={cn("col-span-12", className)}>
       {msg && <p className="mb-3 text-sm text-red">{msg}</p>}
@@ -95,9 +113,11 @@ export default function DashboardCards({ className }: Props) {
           <div className="mb-6 flex items-center justify-between">
             <h3 className={title}>📅 Next Training</h3>
 
-            <div className="flex gap-2">
-              <Link href="/addtraning" className={btn}>+ Add</Link>
-            </div>
+            {isTrainer && (
+              <Link href="/addtraning" className={btn}>
+                + Add
+              </Link>
+            )}
           </div>
 
           {loading ? (
@@ -120,9 +140,11 @@ export default function DashboardCards({ className }: Props) {
           <div className="mb-6 flex items-center justify-between">
             <h3 className={title}>⚽ Next Game</h3>
 
-            <div className="flex gap-2">
-              <Link href="/addgame" className={btn}>+ Add</Link>
-            </div>
+            {isTrainer && (
+              <Link href="/addgame" className={btn}>
+                + Add
+              </Link>
+            )}
           </div>
 
           {loading ? (
@@ -133,7 +155,9 @@ export default function DashboardCards({ className }: Props) {
                 {new Date(game.cas_tekme).toLocaleString()}
               </div>
               <div className={muted}>
-                {game.nasprotnik ? `Opponent: ${game.nasprotnik}` : "Opponent not set"}
+                {game.nasprotnik
+                  ? `Opponent: ${game.nasprotnik}`
+                  : "Opponent not set"}
               </div>
               {game.kraj && <div className={muted}>Location: {game.kraj}</div>}
             </>
