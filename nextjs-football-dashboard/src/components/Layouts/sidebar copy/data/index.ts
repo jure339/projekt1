@@ -32,15 +32,9 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
-        title: "Trainings",
-        url: "/playertraning",
-        icon: Icons.ActivityIcon,
-        items: [],
-      },
-      {
-        title: "Games",
-        url: "/playergame",
-        icon: Icons.FootballIcon,
+        title: "Profile",
+        url: "/playerprofile",
+        icon: Icons.User,
         items: [],
       },
     ],
