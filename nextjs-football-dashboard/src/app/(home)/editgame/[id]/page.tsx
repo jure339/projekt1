@@ -54,7 +54,8 @@ export default function EditGamePage() {
       try {
         const [gRes, oRes] = await Promise.all([
           fetch(`/api/game/${id}`, { cache: "no-store" }),
-          fetch(`/api/nasprotne-ekipe`, { cache: "no-store" }),
+          // ✅ tvoj endpoint je v /api/game/nasprotne-ekipe
+          fetch(`/api/game/nasprotne-ekipe`, { cache: "no-store" }),
         ]);
 
         const gData = await safeReadJson(gRes);
@@ -109,10 +110,14 @@ export default function EditGamePage() {
         return;
       }
 
+      // opcijsko: posodobi state, ni pa nujno ker greš nazaj
       const updated = data?.game as Game | undefined;
       if (updated) setGame(updated);
 
       setMsg("Shranjeno ✅");
+
+      // ✅ po shranjevanju nazaj na seznam tekem
+      router.push("/tekme"); // če imaš stran na /tekme, zamenjaj v "/tekme"
       router.refresh();
     } catch {
       setMsg("Napaka pri povezavi.");
@@ -133,7 +138,8 @@ export default function EditGamePage() {
         return;
       }
 
-      router.push("/tekme");
+      // ✅ po brisanju nazaj na seznam tekem
+      router.push("/game"); // če imaš stran na /tekme, zamenjaj v "/tekme"
       router.refresh();
     } catch {
       alert("Napaka pri povezavi.");
@@ -211,9 +217,7 @@ export default function EditGamePage() {
           {saving ? "Shranjujem..." : "Shrani"}
         </button>
 
-        {msg && (
-          <p className="text-sm text-dark-6 dark:text-white/70">{msg}</p>
-        )}
+        {msg && <p className="text-sm text-dark-6 dark:text-white/70">{msg}</p>}
       </form>
     </div>
   );

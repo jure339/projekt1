@@ -61,20 +61,20 @@ export default function LoginPage() {
 
   return (
     <div style={{ maxWidth: 420, margin: "40px auto", padding: 16 }}>
-      <h1>Prijava</h1>
+      <h1>Log In</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
         {/* Vloga */}
         <label className="text-body-sm font-medium text-dark dark:text-white">
-          Vloga
+          
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as Role)}
             className="mt-3 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white"
             disabled={loading}
           >
-            <option value="igralec">Igralec</option>
-            <option value="trener">Trener</option>
+            <option value="igralec">Player</option>
+            <option value="trener">Coach</option>
           </select>
         </label>
 
@@ -91,8 +91,8 @@ export default function LoginPage() {
         />
 
         <InputGroup
-          label="Geslo"
-          placeholder="Vpiši geslo"
+          label="Password"
+          placeholder="Password"
           type="password"
           required
           value={password}
@@ -107,7 +107,7 @@ export default function LoginPage() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Prijavljam..." : "Prijavi se"}
+          {loading ? "Loading..." : "Log In"}
         </button>
 
         <button
@@ -115,7 +115,7 @@ export default function LoginPage() {
           onClick={() => router.push("/auth/register")}
           className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white"
         >
-          Ustvari račun
+          Create account
         </button>
 
         {msg && <p style={{ color: "crimson" }}>{msg}</p>}

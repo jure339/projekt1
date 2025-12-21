@@ -151,9 +151,9 @@ export default function PlayerProfilePage() {
       // ✅ po shranjevanju naj dropdown odraža dejansko stanje iz baze
       setPozicijaValue(updated.pozicija_id ?? "");
 
-      setMsg("Profil shranjen ✅");
+      setMsg("Profile saved ✅");
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg("Error connecting.");
     } finally {
       setSaving(false);
     }
@@ -169,7 +169,7 @@ export default function PlayerProfilePage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-6 text-2xl font-bold text-dark dark:text-white">Moj profil</h1>
+      <h1 className="mb-6 text-2xl font-bold text-dark dark:text-white">My profile</h1>
 
       <div className={card}>
         {loading ? (
@@ -177,18 +177,18 @@ export default function PlayerProfilePage() {
         ) : profile ? (
           <form onSubmit={onSave} className="grid gap-5">
             <div className="text-sm text-dark-6 dark:text-white/70">
-              Ekipa: {profile.ekipa_ime ?? "—"}
+              Team: {profile.ekipa_ime ?? "—"}
               <br />
-              Trenutna pozicija: {currentPosLabel}
+              Current position: {currentPosLabel}
             </div>
 
             <div>
-              <div className={label}>Ime</div>
+              <div className={label}>Name</div>
               <input className={input} value={ime} onChange={(e) => setIme(e.target.value)} required />
             </div>
 
             <div>
-              <div className={label}>Priimek</div>
+              <div className={label}>Last name</div>
               <input className={input} value={priimek} onChange={(e) => setPriimek(e.target.value)} required />
             </div>
 
@@ -198,7 +198,7 @@ export default function PlayerProfilePage() {
             </div>
 
             <div>
-              <div className={label}>Starost (obvezno)</div>
+              <div className={label}>Age (required)</div>
               <input
                 className={input}
                 type="number"
@@ -211,7 +211,7 @@ export default function PlayerProfilePage() {
             </div>
 
             <div>
-              <div className={label}>Višina (cm)</div>
+              <div className={label}>Height (cm)</div>
               <input
                 className={input}
                 type="number"
@@ -224,7 +224,7 @@ export default function PlayerProfilePage() {
             </div>
 
             <div>
-              <div className={label}>Številka dresa</div>
+              <div className={label}>Jersey number</div>
               <input
                 className={input}
                 type="number"
@@ -237,13 +237,13 @@ export default function PlayerProfilePage() {
             </div>
 
             <div>
-              <div className={label}>Pozicija</div>
+              <div className={label}>Position</div>
               <select
                 className={input}
                 value={pozicijaValue}
                 onChange={(e) => setPozicijaValue(e.target.value)}
               >
-                <option value="">Brez pozicije</option>
+                <option value="">No position</option>
                 {positions.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.naziv}
@@ -254,13 +254,13 @@ export default function PlayerProfilePage() {
 
               {positions.length === 0 && (
                 <p className="mt-2 text-xs text-dark-6 dark:text-white/70">
-                  Pozicij ni bilo možno naložiti (endpoint /api/pozicije). Profil vseeno dela.
+                  Positions could not be loaded (endpoint /api/pozicije). Profile still works.
                 </p>
               )}
             </div>
 
             <button className={btn} disabled={saving} type="submit">
-              {saving ? "Shranjujem..." : "Shrani spremembe"}
+              {saving ? "Saving..." : "Save changes"}
             </button>
 
             {msg && (

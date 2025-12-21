@@ -158,16 +158,16 @@ export default function EditTreningPage() {
   return (
     <div className="mx-auto max-w-3xl p-6">
       <h1 className="mb-6 text-2xl font-bold text-dark dark:text-white">
-        Uredi trening
+        Edit traning
       </h1>
 
       <div className={card}>
         {loading ? (
-          <p className="text-dark-6 dark:text-white/70">Nalagam...</p>
+          <p className="text-dark-6 dark:text-white/70">Loading...</p>
         ) : training ? (
           <form onSubmit={onSave} className="grid gap-5">
             <div>
-              <div className={label}>Začetek</div>
+              <div className={label}>Start</div>
               <input
                 className={input}
                 type="datetime-local"
@@ -178,7 +178,7 @@ export default function EditTreningPage() {
             </div>
 
             <div>
-              <div className={label}>Konec</div>
+              <div className={label}>End</div>
               <input
                 className={input}
                 type="datetime-local"
@@ -189,28 +189,28 @@ export default function EditTreningPage() {
             </div>
 
             <div>
-              <div className={label}>Površina</div>
+              <div className={label}>Surfece</div>
               <input
                 className={input}
                 value={povrsina}
                 onChange={(e) => setPovrsina(e.target.value)}
-                placeholder="npr. trava / umetna / dvorana"
+                placeholder="e.g. grass / artificial / indoor"
                 required
               />
             </div>
 
             <div>
-              <div className={label}>Opis</div>
+              <div className={label}>Description</div>
               <textarea
                 className={cn(input, "min-h-[120px]")}
                 value={opis}
                 onChange={(e) => setOpis(e.target.value)}
-                placeholder="Opcijsko..."
+                placeholder="Optional..."
               />
             </div>
 
             <button className={btn} disabled={saving} type="submit">
-              {saving ? "Shranjujem..." : "Shrani"}
+              {saving ? "Saving..." : "Save"}
             </button>
 
             {msg && (
