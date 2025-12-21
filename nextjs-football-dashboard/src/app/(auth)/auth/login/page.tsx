@@ -35,7 +35,7 @@ export default function LoginPage() {
       const data = text ? JSON.parse(text) : null;
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri prijavi.");
+        setMsg(data?.error ?? "Login failed.");
         return;
       }
 
@@ -44,16 +44,21 @@ export default function LoginPage() {
 
       const next = params.get("next");
 
-      // ✅ REDIRECT GLEDE NA VLOGO
+      // ✅ ROLE-BASED REDIRECTS
       if (user.role === "igralec") {
         router.push("/playerdashboard");
       } else {
-        router.push(next || "/dashboard");
+        // coach
+        if (!user.ekipa_id) {
+          router.push("/createteam");
+        } else {
+          router.push(next || "/dashboard");
+        }
       }
 
       router.refresh();
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg("Connection error.");
     } finally {
       setLoading(false);
     }
@@ -64,9 +69,9 @@ export default function LoginPage() {
       <h1>Log In</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
-        {/* Vloga */}
+        {/* Role */}
         <label className="text-body-sm font-medium text-dark dark:text-white">
-          
+          Role
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as Role)}
@@ -80,7 +85,7 @@ export default function LoginPage() {
 
         <InputGroup
           label="Email"
-          placeholder="Vpiši email"
+          placeholder="Enter your email"
           type="email"
           required
           value={email}
@@ -92,7 +97,7 @@ export default function LoginPage() {
 
         <InputGroup
           label="Password"
-          placeholder="Password"
+          placeholder="Enter your password"
           type="password"
           required
           value={password}

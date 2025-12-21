@@ -74,10 +74,10 @@ export function Header() {
         <div className="flex items-center gap-3">
           <div className="text-right leading-tight">
             <div className="text-sm font-semibold text-dark dark:text-white">
-              {user ? `${user.ime} ${user.priimek}` : "Gost"}
+              {user ? `${user.ime} ${user.priimek}` : "Guest"}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {user ? user.role : "neprijavljen"}
+              {user ? user.role : "not logged in"}
             </div>
           </div>
 
@@ -86,14 +86,14 @@ export function Header() {
               onClick={logout}
               className="rounded-md border px-3 py-1 text-sm hover:bg-gray-100 dark:border-stroke-dark dark:hover:bg-dark-3"
             >
-              Odjava
+              Logout
             </button>
           ) : (
             <Link
               href="/auth/login"
               className="rounded-md border px-3 py-1 text-sm hover:bg-gray-100 dark:border-stroke-dark dark:hover:bg-dark-3"
             >
-              Prijava
+              Login
             </Link>
           )}
         </div>
