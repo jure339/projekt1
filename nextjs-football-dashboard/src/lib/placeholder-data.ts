@@ -124,6 +124,7 @@ export const tekme = [
     cas_tekme: "2025-03-12T15:00:00",
     kraj_tekme: "Velenje",
     nasprotna_ekipa_id: nasprotneEkipe[0].id,
+    ekipa_id: ekipe[0].id,
   },
 ];
 

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 type Game = {
   id: string;
@@ -24,19 +23,20 @@ export default function GamePage() {
   async function load() {
     setLoading(true);
     setMsg(null);
+
     try {
       const res = await fetch("/api/game", { cache: "no-store" });
       const data = await safeJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri nalaganju tekem.");
+        setMsg(data?.error ?? "Failed to load games.");
         setGames([]);
         return;
       }
 
       setGames(data?.games ?? []);
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg("Connection error.");
     } finally {
       setLoading(false);
     }
@@ -47,12 +47,12 @@ export default function GamePage() {
   }, []);
 
   async function onDelete(id: string) {
-    if (!confirm("Ali res želiš izbrisati to tekmo?")) return;
+    if (!confirm("Are you sure you want to delete this game?")) return;
 
     const res = await fetch(`/api/game/${id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await safeJson(res);
-      alert(data?.error ?? "Napaka pri brisanju.");
+      alert(data?.error ?? "Delete failed.");
       return;
     }
 
@@ -61,9 +61,7 @@ export default function GamePage() {
 
   return (
     <div className="mx-auto mt-10 max-w-6xl px-4">
-      {/* CARD */}
       <div className="rounded-[14px] bg-white p-6 shadow-1 dark:bg-gray-dark dark:shadow-card">
-        {/* HEADER */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-dark dark:text-white">
             Games
@@ -88,7 +86,6 @@ export default function GamePage() {
 
         {msg && <p className="mb-4 text-sm text-red">{msg}</p>}
 
-        {/* TABLE HEADER */}
         <div className="grid grid-cols-12 border-b border-stroke pb-3 text-sm font-semibold uppercase text-dark-6 dark:border-dark-3 dark:text-white/70">
           <div className="col-span-4">Date & time</div>
           <div className="col-span-4">Opponent</div>
@@ -96,11 +93,10 @@ export default function GamePage() {
           <div className="col-span-2 text-right">Actions</div>
         </div>
 
-        {/* ROWS */}
         {loading ? (
           <p className="mt-4 text-dark-6 dark:text-white/70">Loading...</p>
         ) : games.length === 0 ? (
-          <p className="mt-4 text-dark-6 dark:text-white/70">Ni tekem.</p>
+          <p className="mt-4 text-dark-6 dark:text-white/70">No games found.</p>
         ) : (
           <div className="divide-y divide-stroke dark:divide-dark-3">
             {games.map((g) => (
@@ -112,13 +108,9 @@ export default function GamePage() {
                   {new Date(g.cas_tekme).toLocaleString()}
                 </div>
 
-                <div className="col-span-4">
-                  {g.nasprotnik ?? "—"}
-                </div>
+                <div className="col-span-4">{g.nasprotnik ?? "—"}</div>
 
-                <div className="col-span-2">
-                  {g.kraj ?? "—"}
-                </div>
+                <div className="col-span-2">{g.kraj ?? "—"}</div>
 
                 <div className="col-span-2 flex justify-end gap-2">
                   <Link

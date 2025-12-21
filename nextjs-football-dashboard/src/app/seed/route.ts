@@ -95,9 +95,11 @@ export async function GET() {
         );
       `;
 
+      // ✅ KLJUČNO: dodan ekipa_id v tekme
       await tx`
         CREATE TABLE tekme (
           id UUID PRIMARY KEY,
+          ekipa_id UUID REFERENCES ekipe(id) ON DELETE CASCADE,
           cas_tekme TIMESTAMP NOT NULL,
           kraj TEXT,
           nasprotnik_id UUID REFERENCES nasprotne_ekipe(id)
@@ -122,6 +124,8 @@ export async function GET() {
           pozicija_id UUID REFERENCES pozicije(id)
         );
       `;
+
+      // ---------------- INSERT DATA ----------------
 
       for (const e of ekipe) {
         await tx`INSERT INTO ekipe VALUES (${e.id}, ${e.ime})`;
@@ -162,10 +166,15 @@ export async function GET() {
         `;
       }
 
-      for (const g of tekme) {
+      // ✅ Tekmam dodelimo ekipa_id (da ne rabiš spreminjat placeholder-data)
+      // primer: prva tekma -> ekipe[0], druga -> ekipe[1], tretja -> ekipe[2] ... (krožno)
+      for (let idx = 0; idx < tekme.length; idx++) {
+        const g = tekme[idx];
+        const teamId = ekipe[idx % ekipe.length]?.id ?? ekipe[0].id;
+
         await tx`
-          INSERT INTO tekme
-          VALUES (${g.id}, ${g.cas_tekme}, ${g.kraj_tekme}, ${g.nasprotna_ekipa_id})
+          INSERT INTO tekme (id, ekipa_id, cas_tekme, kraj, nasprotnik_id)
+          VALUES (${g.id}, ${teamId}, ${g.cas_tekme}, ${g.kraj_tekme}, ${g.nasprotna_ekipa_id})
         `;
       }
 

@@ -61,10 +61,11 @@ export async function GET() {
     if (!teamId) {
       return NextResponse.json(
         { error: "Coach has no team assigned.", games: [] },
-        { status: 409 }
+        { status: 400 }
       );
     }
 
+    // ✅ samo tekme trenerjeve ekipe
     const rows = await sql`
       SELECT
         t.id,
