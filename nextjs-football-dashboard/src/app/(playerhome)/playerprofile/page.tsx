@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+
+type Position = {
+  id: string;
+  naziv: string;
+  kratica: string | null;
+};
 
 type PlayerProfile = {
   id: string;
@@ -36,15 +42,24 @@ export default function PlayerProfilePage() {
   const [msg, setMsg] = useState<string | null>(null);
 
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
+  const [positions, setPositions] = useState<Position[]>([]);
 
   // form state
   const [ime, setIme] = useState("");
   const [priimek, setPriimek] = useState("");
   const [email, setEmail] = useState("");
-  const [starost, setStarost] = useState<string>(""); // required
+  const [starost, setStarost] = useState<string>("");
   const [visina, setVisina] = useState<string>("");
   const [dres, setDres] = useState<string>("");
-  const [pozicijaId, setPozicijaId] = useState<string>(""); // optional uuid
+
+  // dropdown value: "" pomeni "Brez pozicije"
+  const [pozicijaValue, setPozicijaValue] = useState<string>("");
+
+  const currentPosLabel = useMemo(() => {
+    if (!profile) return "—";
+    if (!profile.pozicija_naziv) return "—";
+    return `${profile.pozicija_naziv}${profile.pozicija_kratica ? ` (${profile.pozicija_kratica})` : ""}`;
+  }, [profile]);
 
   useEffect(() => {
     (async () => {
@@ -52,17 +67,21 @@ export default function PlayerProfilePage() {
       setMsg(null);
 
       try {
-        const res = await fetch("/api/igralci/moj-profil", {
-          cache: "no-store",
-        });
-        const data = await safeReadJson(res);
+        const [profileRes, positionsRes] = await Promise.all([
+          fetch("/api/igralci/moj-profil", { cache: "no-store" }),
+          fetch("/api/pozicije", { cache: "no-store" }),
+        ]);
 
-        if (!res.ok) {
-          setMsg(data?.error ?? "Napaka pri nalaganju profila.");
+        const profileData = await safeReadJson(profileRes);
+        const positionsData = await safeReadJson(positionsRes);
+
+        if (!profileRes.ok) {
+          setMsg(profileData?.error ?? "Napaka pri nalaganju profila.");
+          setLoading(false);
           return;
         }
 
-        const p = data?.player as PlayerProfile;
+        const p = profileData?.player as PlayerProfile;
         setProfile(p);
 
         setIme(p.ime ?? "");
@@ -71,7 +90,16 @@ export default function PlayerProfilePage() {
         setStarost(String(p.starost ?? ""));
         setVisina(p.visina === null ? "" : String(p.visina));
         setDres(p.stevilka_dresa === null ? "" : String(p.stevilka_dresa));
-        setPozicijaId(p.pozicija_id ?? "");
+
+        // dropdown: če ima pozicijo -> id, sicer ""
+        setPozicijaValue(p.pozicija_id ?? "");
+
+        if (positionsRes.ok) {
+          setPositions((positionsData?.positions ?? []) as Position[]);
+        } else {
+          // pozicije niso kritične za prikaz profila
+          setPositions([]);
+        }
       } catch {
         setMsg("Napaka pri povezavi.");
       } finally {
@@ -99,7 +127,9 @@ export default function PlayerProfilePage() {
         starost: Number(starost),
         visina: visina.trim() === "" ? null : Number(visina),
         stevilka_dresa: dres.trim() === "" ? null : Number(dres),
-        pozicija_id: pozicijaId.trim() === "" ? null : pozicijaId.trim(),
+
+        // ✅ ključ: če je dropdown prazen -> null (Brez pozicije)
+        pozicija_id: pozicijaValue === "" ? null : pozicijaValue,
       };
 
       const res = await fetch("/api/igralci/moj-profil", {
@@ -115,8 +145,12 @@ export default function PlayerProfilePage() {
         return;
       }
 
-      // ✅ API vrača player z JOIN imeni (ekipa_ime, pozicija_naziv...)
-      setProfile(data?.player ?? null);
+      const updated = data?.player as PlayerProfile;
+      setProfile(updated);
+
+      // ✅ po shranjevanju naj dropdown odraža dejansko stanje iz baze
+      setPozicijaValue(updated.pozicija_id ?? "");
+
       setMsg("Profil shranjen ✅");
     } catch {
       setMsg("Napaka pri povezavi.");
@@ -133,62 +167,34 @@ export default function PlayerProfilePage() {
   const btn =
     "inline-flex w-full items-center justify-center rounded-lg bg-primary px-5 py-3 font-medium text-white transition disabled:opacity-60";
 
-  const metaLine = "text-sm text-dark-6 dark:text-white/70";
-
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-6 text-2xl font-bold text-dark dark:text-white">
-        Moj profil
-      </h1>
+      <h1 className="mb-6 text-2xl font-bold text-dark dark:text-white">Moj profil</h1>
 
       <div className={card}>
         {loading ? (
           <p className="text-dark-6 dark:text-white/70">Loading...</p>
         ) : profile ? (
           <form onSubmit={onSave} className="grid gap-5">
-            {/* ✅ Prikaz imena ekipe + pozicije */}
-            <div className={metaLine}>
+            <div className="text-sm text-dark-6 dark:text-white/70">
               Ekipa: {profile.ekipa_ime ?? "—"}
               <br />
-              Pozicija:{" "}
-              {profile.pozicija_naziv
-                ? `${profile.pozicija_naziv}${
-                    profile.pozicija_kratica
-                      ? ` (${profile.pozicija_kratica})`
-                      : ""
-                  }`
-                : "—"}
+              Trenutna pozicija: {currentPosLabel}
             </div>
 
             <div>
               <div className={label}>Ime</div>
-              <input
-                className={input}
-                value={ime}
-                onChange={(e) => setIme(e.target.value)}
-                required
-              />
+              <input className={input} value={ime} onChange={(e) => setIme(e.target.value)} required />
             </div>
 
             <div>
               <div className={label}>Priimek</div>
-              <input
-                className={input}
-                value={priimek}
-                onChange={(e) => setPriimek(e.target.value)}
-                required
-              />
+              <input className={input} value={priimek} onChange={(e) => setPriimek(e.target.value)} required />
             </div>
 
             <div>
               <div className={label}>Email</div>
-              <input
-                className={input}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
 
             <div>
@@ -231,17 +237,26 @@ export default function PlayerProfilePage() {
             </div>
 
             <div>
-              <div className={label}>Pozicija (ID / UUID)</div>
-              <input
+              <div className={label}>Pozicija</div>
+              <select
                 className={input}
-                value={pozicijaId}
-                onChange={(e) => setPozicijaId(e.target.value)}
-                placeholder="pusti prazno za brez"
-              />
-              <p className="mt-2 text-xs text-dark-6 dark:text-white/70">
-                Trenutno je to UUID. Če želiš dropdown s pozicijami, ti naredim
-                endpoint + select.
-              </p>
+                value={pozicijaValue}
+                onChange={(e) => setPozicijaValue(e.target.value)}
+              >
+                <option value="">Brez pozicije</option>
+                {positions.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.naziv}
+                    {p.kratica ? ` (${p.kratica})` : ""}
+                  </option>
+                ))}
+              </select>
+
+              {positions.length === 0 && (
+                <p className="mt-2 text-xs text-dark-6 dark:text-white/70">
+                  Pozicij ni bilo možno naložiti (endpoint /api/pozicije). Profil vseeno dela.
+                </p>
+              )}
             </div>
 
             <button className={btn} disabled={saving} type="submit">
@@ -249,12 +264,7 @@ export default function PlayerProfilePage() {
             </button>
 
             {msg && (
-              <p
-                className={cn(
-                  "text-sm",
-                  msg.includes("✅") ? "text-green-600" : "text-red"
-                )}
-              >
+              <p className={cn("text-sm", msg.includes("✅") ? "text-green-600" : "text-red")}>
                 {msg}
               </p>
             )}

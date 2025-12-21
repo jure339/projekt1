@@ -1,4 +1,8 @@
 import postgres from "postgres";
+import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -10,8 +14,15 @@ export async function GET() {
       ORDER BY naziv ASC;
     `;
 
-    return Response.json({ pozicije: rows }, { status: 200 });
-  } catch (error: any) {
-    return Response.json({ error: error.message ?? "Napaka." }, { status: 500 });
+    return NextResponse.json(
+      { positions: rows },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
+    );
+  } catch (e: any) {
+    console.error("GET /api/pozicije error:", e);
+    return NextResponse.json(
+      { error: e?.message ?? "Napaka pri nalaganju pozicij.", positions: [] },
+      { status: 500 }
+    );
   }
 }
