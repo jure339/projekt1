@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import InputGroup from "@/components/FormElements/InputGroup";
 import { getUser, type StoredUser } from "@/lib/user-store";
@@ -16,6 +17,16 @@ type Payload = {
   nasprotnik_id: string | null;
 };
 
+async function safeReadJson(res: Response) {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export default function AddGamePage() {
   const router = useRouter();
 
@@ -29,7 +40,7 @@ export default function AddGamePage() {
   const [loading, setLoading] = useState(false);
   const [loadingOpp, setLoadingOpp] = useState(false);
 
-  // ✅ samo trener
+  // ✅ coach only
   useEffect(() => {
     const u: StoredUser | null = getUser();
     if (!u) {
@@ -42,29 +53,32 @@ export default function AddGamePage() {
     }
   }, [router]);
 
-  // ✅ naloži nasprotnike za dropdown
-  useEffect(() => {
-    (async () => {
-      setLoadingOpp(true);
-      setMsg(null);
+  async function loadOpponents() {
+    setLoadingOpp(true);
+    setMsg(null);
 
-      try {
-        const res = await fetch("/api/game/nasprotne-ekipe", { cache: "no-store" });
-        const text = await res.text();
-        const data = text ? JSON.parse(text) : null;
+    try {
+      const res = await fetch("/api/game/nasprotne-ekipe", { cache: "no-store" });
+      const data = await safeReadJson(res);
 
-        if (!res.ok) {
-          setMsg(data?.error ?? "Napaka pri nalaganju nasprotnikov.");
-          return;
-        }
-
-        setNasprotniki(data?.teams ?? []);
-      } catch {
-        setMsg("Napaka pri povezavi (nasprotniki).");
-      } finally {
-        setLoadingOpp(false);
+      if (!res.ok) {
+        setMsg(data?.error ?? "Failed to load opponents.");
+        setNasprotniki([]);
+        return;
       }
-    })();
+
+      setNasprotniki(data?.teams ?? []);
+    } catch {
+      setMsg("Connection error (opponents).");
+      setNasprotniki([]);
+    } finally {
+      setLoadingOpp(false);
+    }
+  }
+
+  // ✅ load opponents for dropdown
+  useEffect(() => {
+    loadOpponents();
   }, []);
 
   function toISOFromLocal(local: string) {
@@ -76,7 +90,7 @@ export default function AddGamePage() {
     setMsg(null);
 
     if (!casTekme) {
-      setMsg("Datum in čas tekme sta obvezna.");
+      setMsg("Date and time are required.");
       return;
     }
 
@@ -95,18 +109,17 @@ export default function AddGamePage() {
         body: JSON.stringify(payload),
       });
 
-      const text = await res.text();
-      const data = text ? JSON.parse(text) : null;
+      const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri shranjevanju tekme.");
+        setMsg(data?.error ?? "Failed to save game.");
         return;
       }
 
-      router.push("/dashboard");
+      router.push("/game");
       router.refresh();
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg("Connection error.");
     } finally {
       setLoading(false);
     }
@@ -114,11 +127,11 @@ export default function AddGamePage() {
 
   return (
     <div style={{ maxWidth: 620, margin: "40px auto", padding: 16 }}>
-      <h1>Dodaj tekmo</h1>
+      <h1>Add game</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
         <InputGroup
-          label="Datum in čas tekme"
+          label="Game date & time"
           placeholder=""
           type="datetime-local"
           required
@@ -130,8 +143,8 @@ export default function AddGamePage() {
         />
 
         <InputGroup
-          label="Kraj (opcijsko)"
-          placeholder="npr. Velenje, stadion Rudar"
+          label="Location (optional)"
+          placeholder="e.g. Velenje, Rudar Stadium"
           type="text"
           value={kraj}
           handleChange={(e) => setKraj(e.target.value)}
@@ -140,17 +153,29 @@ export default function AddGamePage() {
           name="kraj"
         />
 
-        {/* Nasprotnik dropdown */}
-        <label className="text-body-sm font-medium text-dark dark:text-white">
-          Nasprotnik (opcijsko)
+        {/* Opponent dropdown + Add opponent button */}
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between">
+            <label className="text-body-sm font-medium text-dark dark:text-white">
+              Opponent (optional)
+            </label>
+
+            <Link
+              href="/addopponent"
+              className="inline-flex items-center rounded-lg border border-stroke px-3 py-1.5 text-sm font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white"
+            >
+              + Add opponent
+            </Link>
+          </div>
+
           <select
             value={nasprotnikId}
             onChange={(e) => setNasprotnikId(e.target.value)}
             disabled={loading || loadingOpp}
-            className="mt-3 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+            className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white"
           >
             <option value="">
-              {loadingOpp ? "Nalagam nasprotnike..." : "Izberi nasprotnika"}
+              {loadingOpp ? "Loading opponents..." : "Select opponent"}
             </option>
 
             {nasprotniki.map((t) => (
@@ -159,14 +184,15 @@ export default function AddGamePage() {
               </option>
             ))}
           </select>
-        </label>
+
+        </div>
 
         <button
           disabled={loading}
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Shranjujem..." : "Dodaj tekmo"}
+          {loading ? "Saving..." : "Add game"}
         </button>
 
         <button
@@ -175,7 +201,7 @@ export default function AddGamePage() {
           disabled={loading}
           className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white"
         >
-          Prekliči
+          Cancel
         </button>
 
         {msg && <p style={{ color: "crimson" }}>{msg}</p>}

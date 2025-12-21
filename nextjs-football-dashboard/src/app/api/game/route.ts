@@ -2,6 +2,7 @@ import postgres from "postgres";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -25,23 +26,6 @@ function getAuthPayload(): TokenPayload | null {
   }
 }
 
-function requireCoach() {
-  const payload = getAuthPayload();
-  if (!payload) {
-    return {
-      ok: false as const,
-      res: NextResponse.json({ error: "Not logged in." }, { status: 401 }),
-    };
-  }
-  if (payload.role !== "trener") {
-    return {
-      ok: false as const,
-      res: NextResponse.json({ error: "Coach only." }, { status: 403 }),
-    };
-  }
-  return { ok: true as const, payload };
-}
-
 async function getCoachTeamId(coachId: string): Promise<string | null> {
   const rows = await sql`
     SELECT ekipa_id
@@ -52,26 +36,31 @@ async function getCoachTeamId(coachId: string): Promise<string | null> {
   return rows[0]?.ekipa_id ?? null;
 }
 
+/**
+ * GET /api/game
+ * Vrne samo tekme ekipe prijavljenega trenerja.
+ */
 export async function GET() {
-  const auth = requireCoach();
-  if (!auth.ok) return auth.res;
-
   try {
-    const teamId = await getCoachTeamId(auth.payload.sub);
-    if (!teamId) {
-      return NextResponse.json(
-        { error: "Coach has no team assigned.", games: [] },
-        { status: 400 }
-      );
+    const payload = getAuthPayload();
+    if (!payload) {
+      return NextResponse.json({ error: "Not logged in.", games: [] }, { status: 401 });
+    }
+    if (payload.role !== "trener") {
+      return NextResponse.json({ error: "Coach only.", games: [] }, { status: 403 });
     }
 
-    // ✅ samo tekme trenerjeve ekipe
+    const teamId = await getCoachTeamId(payload.sub);
+    if (!teamId) {
+      return NextResponse.json({ error: "Coach has no team assigned.", games: [] }, { status: 409 });
+    }
+
     const rows = await sql`
       SELECT
         t.id,
-        t.cas_tekme::text as cas_tekme,
+        t.cas_tekme::text AS cas_tekme,
         t.kraj,
-        n.ime as nasprotnik
+        n.ime AS nasprotnik
       FROM tekme t
       LEFT JOIN nasprotne_ekipe n ON n.id = t.nasprotnik_id
       WHERE t.ekipa_id = ${teamId}
@@ -86,6 +75,83 @@ export async function GET() {
     console.error("GET /api/game error:", e);
     return NextResponse.json(
       { error: e?.message ?? "Failed to load games.", games: [] },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/game
+ * Ustvari tekmo in jo pripne na ekipo trenerja.
+ */
+export async function POST(req: Request) {
+  try {
+    const payload = getAuthPayload();
+    if (!payload) {
+      return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+    }
+    if (payload.role !== "trener") {
+      return NextResponse.json({ error: "Coach only." }, { status: 403 });
+    }
+
+    const teamId = await getCoachTeamId(payload.sub);
+    if (!teamId) {
+      return NextResponse.json({ error: "Coach has no team assigned." }, { status: 409 });
+    }
+
+    const body = (await req.json()) as Partial<{
+      cas_tekme: string;        // ISO
+      kraj: string | null;
+      nasprotnik_id: string | null;
+    }>;
+
+    const cas_tekme = typeof body.cas_tekme === "string" ? body.cas_tekme : "";
+    const kraj = body.kraj === null ? null : typeof body.kraj === "string" ? body.kraj.trim() : null;
+    const nasprotnik_id =
+      body.nasprotnik_id === null
+        ? null
+        : typeof body.nasprotnik_id === "string" && body.nasprotnik_id.trim()
+        ? body.nasprotnik_id.trim()
+        : null;
+
+    if (!cas_tekme) {
+      return NextResponse.json({ error: "Game date & time is required." }, { status: 400 });
+    }
+
+    const d = new Date(cas_tekme);
+    if (Number.isNaN(d.getTime())) {
+      return NextResponse.json({ error: "Invalid date/time." }, { status: 400 });
+    }
+
+    const id = randomUUID();
+
+    await sql`
+      INSERT INTO tekme (id, ekipa_id, cas_tekme, kraj, nasprotnik_id)
+      VALUES (${id}, ${teamId}, ${cas_tekme}, ${kraj}, ${nasprotnik_id});
+    `;
+
+    // vrni še joined zapis (za UI)
+    const rows = await sql`
+      SELECT
+        t.id,
+        t.cas_tekme::text AS cas_tekme,
+        t.kraj,
+        t.nasprotnik_id,
+        n.ime AS nasprotnik_ime
+      FROM tekme t
+      LEFT JOIN nasprotne_ekipe n ON n.id = t.nasprotnik_id
+      WHERE t.id = ${id}
+      LIMIT 1;
+    `;
+
+    return NextResponse.json(
+      { success: true, game: rows[0] },
+      { status: 201, headers: { "Cache-Control": "no-store" } }
+    );
+  } catch (e: any) {
+    console.error("POST /api/game error:", e);
+    return NextResponse.json(
+      { error: e?.message ?? "Failed to create game." },
       { status: 500 }
     );
   }
