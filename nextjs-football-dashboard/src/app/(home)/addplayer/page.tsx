@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import InputGroup from "@/components/FormElements/InputGroup";
 import { getUser, type StoredUser } from "@/lib/user-store";
@@ -33,11 +33,35 @@ async function safeReadJson(res: Response) {
   }
 }
 
+/** Robust parsing: supports {pozicije:[]}, {positions:[]}, {data:[]}, or [] */
+function normalizePositions(data: any): Pozicija[] {
+  const raw =
+    (data?.pozicije ??
+      data?.positions ??
+      data?.data ??
+      data?.rows ??
+      data) ?? [];
+
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((p: any) => ({
+      id: String(p?.id ?? ""),
+      // support naziv/name/position_name etc.
+      naziv: String(p?.naziv ?? p?.name ?? p?.position ?? p?.title ?? ""),
+      kratica:
+        p?.kratica === undefined || p?.kratica === null
+          ? null
+          : String(p.kratica),
+    }))
+    .filter((p: Pozicija) => p.id && p.naziv);
+}
+
 export default function DodajIgralcaPage() {
   const router = useRouter();
 
   const [ekipaId, setEkipaId] = useState<string>("");
-  const [ekipaIme, setEkipaIme] = useState<string>(""); // ✅ show name instead of ID
+  const [ekipaIme, setEkipaIme] = useState<string>("");
 
   const [pozicije, setPozicije] = useState<Pozicija[]>([]);
   const [pozicijaId, setPozicijaId] = useState<string>("");
@@ -56,6 +80,11 @@ export default function DodajIgralcaPage() {
   const [loading, setLoading] = useState(false);
   const [loadingPozicije, setLoadingPozicije] = useState(false);
   const [loadingTeam, setLoadingTeam] = useState(false);
+
+  const teamDisplayValue = useMemo(() => {
+    if (loadingTeam) return "Loading...";
+    return ekipaIme || ekipaId || "—";
+  }, [loadingTeam, ekipaIme, ekipaId]);
 
   // ✅ read coach and set team id + load team name
   useEffect(() => {
@@ -79,47 +108,55 @@ export default function DodajIgralcaPage() {
 
       setEkipaId(u.ekipa_id);
 
-      // ✅ load team name for display
       setLoadingTeam(true);
       try {
         const res = await fetch(`/api/ekipa/${u.ekipa_id}`, { cache: "no-store" });
         const data = await safeReadJson(res);
 
         if (!res.ok) {
-          // fallback: show ID if name can't be loaded
-          setEkipaIme(u.ekipa_id);
+          setEkipaIme("");
           return;
         }
 
-        setEkipaIme(data?.ekipa?.ime ?? u.ekipa_id);
+        setEkipaIme(String(data?.ekipa?.ime ?? ""));
       } catch {
-        setEkipaIme(u.ekipa_id);
+        setEkipaIme("");
       } finally {
         setLoadingTeam(false);
       }
     })();
   }, [router]);
 
-  // ✅ load positions
+  // ✅ load positions (robust)
   useEffect(() => {
     (async () => {
       setLoadingPozicije(true);
+
       try {
         const res = await fetch("/api/pozicije", { cache: "no-store" });
         const data = await safeReadJson(res);
 
         if (!res.ok) {
           setMsg(data?.error ?? "Error loading positions.");
+          setPozicije([]);
           return;
         }
 
-        setPozicije(data?.pozicije ?? []);
+        const normalized = normalizePositions(data);
+        setPozicije(normalized);
+
+        // ✅ If current selected is not in list, reset it
+        if (pozicijaId && !normalized.some((p) => p.id === pozicijaId)) {
+          setPozicijaId("");
+        }
       } catch {
         setMsg("Error connecting to server (positions).");
+        setPozicije([]);
       } finally {
         setLoadingPozicije(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function onSubmit(e: React.FormEvent) {
@@ -134,15 +171,15 @@ export default function DodajIgralcaPage() {
     setLoading(true);
 
     const payload: Payload = {
-      ime,
-      priimek,
+      ime: ime.trim(),
+      priimek: priimek.trim(),
       starost: Number(starost),
       visina: visina === "" ? null : Number(visina),
       stevilka_dresa: stevilkaDresa === "" ? null : Number(stevilkaDresa),
-      pozicija_id: pozicijaId || null,
-      email,
+      pozicija_id: pozicijaId ? pozicijaId : null,
+      email: email.trim(),
       password,
-      ekipa_id: ekipaId, // ✅ still send ID
+      ekipa_id: ekipaId,
     };
 
     try {
@@ -179,7 +216,7 @@ export default function DodajIgralcaPage() {
           placeholder="Coach's team"
           type="text"
           required
-          value={loadingTeam ? "Loading..." : (ekipaIme || ekipaId)}
+          value={teamDisplayValue}
           handleChange={() => {}}
           disabled
           active={!!ekipaId}
@@ -258,7 +295,11 @@ export default function DodajIgralcaPage() {
             className="mt-3 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white"
           >
             <option value="">
-              {loadingPozicije ? "Loading positions..." : "Select position (optional)"}
+              {loadingPozicije
+                ? "Loading positions..."
+                : pozicije.length === 0
+                ? "No positions found"
+                : "Select position (optional)"}
             </option>
 
             {pozicije.map((p) => (
