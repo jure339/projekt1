@@ -60,7 +60,7 @@ export default function DodajIgralcaPage() {
     }
 
     if (!u.ekipa_id) {
-      setMsg("Trener nima nastavljene ekipe (ekipa_id je NULL).");
+      setMsg("Coach has no team assigned.");
       return;
     }
 
@@ -77,13 +77,13 @@ export default function DodajIgralcaPage() {
         const data = text ? JSON.parse(text) : null;
 
         if (!res.ok) {
-          setMsg(data?.error ?? "Napaka pri nalaganju pozicij.");
+          setMsg(data?.error ?? "Error loading positions.");
           return;
         }
 
         setPozicije(data?.pozicije ?? []);
       } catch {
-        setMsg("Napaka pri povezavi (pozicije).");
+        setMsg("Error connecting to server (positions).");
       } finally {
         setLoadingPozicije(false);
       }
@@ -95,7 +95,7 @@ export default function DodajIgralcaPage() {
     setMsg(null);
 
     if (!ekipaId) {
-      setMsg("Ekipa trenerja ni nastavljena.");
+      setMsg("Coach has no team assigned.");
       return;
     }
 
@@ -124,14 +124,14 @@ export default function DodajIgralcaPage() {
       const data = text ? JSON.parse(text) : null;
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri shranjevanju igralca.");
+        setMsg(data?.error ?? "Error adding player.");
         return;
       }
 
       router.push("/dashboard");
-      router.refresh();
+      router.refresh
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg("Error connecting to server.");
     } finally {
       setLoading(false);
     }
@@ -139,7 +139,7 @@ export default function DodajIgralcaPage() {
 
   return (
     <div style={{ maxWidth: 560, margin: "40px auto", padding: 16 }}>
-      <h1>Dodaj igralca</h1>
+      <h1>Add player</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
         {/* Ekipa zaklenjena */}
@@ -156,8 +156,8 @@ export default function DodajIgralcaPage() {
         />
 
         <InputGroup
-          label="Ime"
-          placeholder="Vpiši ime"
+          label="Name"
+          placeholder="Name"
           type="text"
           required
           value={ime}
@@ -168,8 +168,8 @@ export default function DodajIgralcaPage() {
         />
 
         <InputGroup
-          label="Priimek"
-          placeholder="Vpiši priimek"
+          label="Last Name"
+          placeholder="Enter last name"
           type="text"
           required
           value={priimek}
@@ -180,7 +180,7 @@ export default function DodajIgralcaPage() {
         />
 
         <InputGroup
-          label="Starost"
+          label="Age"
           placeholder="npr. 16"
           type="number"
           required
@@ -192,7 +192,7 @@ export default function DodajIgralcaPage() {
         />
 
         <InputGroup
-          label="Višina (cm)"
+          label="Height (cm)"
           placeholder="opcijsko"
           type="number"
           value={visina === "" ? "" : String(visina)}
@@ -205,8 +205,8 @@ export default function DodajIgralcaPage() {
         />
 
         <InputGroup
-          label="Številka dresa"
-          placeholder="opcijsko"
+          label="Shirt Number"
+          placeholder="optcional"
           type="number"
           value={stevilkaDresa === "" ? "" : String(stevilkaDresa)}
           handleChange={(e) =>
@@ -219,7 +219,7 @@ export default function DodajIgralcaPage() {
 
         {/* Pozicija dropdown */}
         <label className="text-body-sm font-medium text-dark dark:text-white">
-          Pozicija
+          Position
           <select
             value={pozicijaId}
             onChange={(e) => setPozicijaId(e.target.value)}
@@ -227,7 +227,7 @@ export default function DodajIgralcaPage() {
             className="mt-3 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white"
           >
             <option value="">
-              {loadingPozicije ? "Nalagam pozicije..." : "Izberi pozicijo (opcijsko)"}
+              {loadingPozicije ? "Loading positions..." : "Select position (optional)"}
             </option>
 
             {pozicije.map((p) => (
@@ -242,7 +242,7 @@ export default function DodajIgralcaPage() {
         {/* Email + geslo obvezno */}
         <InputGroup
           label="Email"
-          placeholder="email@primer.si"
+          placeholder="email@gmail.com"
           type="email"
           required
           value={email}
@@ -253,8 +253,8 @@ export default function DodajIgralcaPage() {
         />
 
         <InputGroup
-          label="Geslo"
-          placeholder="Nastavi geslo"
+          label="Password"
+          placeholder="Set password"
           type="password"
           required
           value={password}
@@ -269,7 +269,7 @@ export default function DodajIgralcaPage() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Shranjujem..." : "Dodaj igralca"}
+          {loading ? "Saving..." : "Add player"}
         </button>
 
         <button
@@ -278,7 +278,7 @@ export default function DodajIgralcaPage() {
           disabled={loading}
           className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white"
         >
-          Prekliči
+          Cancel
         </button>
 
         {msg && <p style={{ color: "crimson" }}>{msg}</p>}

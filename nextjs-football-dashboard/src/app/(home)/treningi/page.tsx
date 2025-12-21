@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { getUser } from "@/lib/user-store";
+import { getUser, saveUser } from "@/lib/user-store";
 
 import {
   Table,
@@ -39,26 +39,43 @@ export default function TrainingsList({ className }: { className?: string }) {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // 🔹 read logged-in coach and his team
+  // ✅ vedno preberi coach ekipa_id iz API (cookie), ne iz localStorage
   useEffect(() => {
-    const u = getUser();
-    if (!u) {
-      setMsg("Not logged in.");
-      setLoading(false);
-      return;
-    }
-    if (u.role !== "trener") {
-      setMsg("Access denied (coach only).");
-      setLoading(false);
-      return;
-    }
-    if (!u.ekipa_id) {
-      setMsg("Coach has no team assigned.");
-      setLoading(false);
-      return;
-    }
+    (async () => {
+      setLoading(true);
+      setMsg(null);
 
-    setTeamId(u.ekipa_id);
+      try {
+        const res = await fetch("/api/trenerji/moj-profil", { cache: "no-store" });
+        const data = await safeReadJson(res);
+
+        if (!res.ok) {
+          setMsg(data?.error ?? "Not logged in.");
+          setLoading(false);
+          return;
+        }
+
+        const coach = data?.coach as { ekipa_id: string | null } | undefined;
+        const ekipaId = coach?.ekipa_id ?? null;
+
+        // 🔁 posodobi localStorage userja, da bo tudi UI drugje prav
+        const u = getUser();
+        if (u && u.role === "trener") {
+          saveUser({ ...u, ekipa_id: ekipaId });
+        }
+
+        if (!ekipaId) {
+          setMsg("Coach has no team assigned.");
+          setLoading(false);
+          return;
+        }
+
+        setTeamId(ekipaId);
+      } catch {
+        setMsg("Connection error.");
+        setLoading(false);
+      }
+    })();
   }, []);
 
   async function load(currentTeamId: string) {
@@ -120,7 +137,6 @@ export default function TrainingsList({ className }: { className?: string }) {
 
   return (
     <div className={cn(container, className)}>
-      {/* HEADER */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-body-2xlg font-bold text-dark dark:text-white">
           Trainings

@@ -49,6 +49,12 @@ export const NAV_DATA: NavSection[] = [
         icon: Icons.FootballIcon,
         items: [],
       },
+      {
+        title: "Profile",
+        url: "/profile",
+        icon: Icons.User,
+        items: [],
+      }
     ],
   },
 ];

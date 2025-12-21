@@ -4,26 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import InputGroup from "@/components/FormElements/InputGroup";
 
-type Role = "igralec" | "trener";
-
-export default function RegisterPage() {
+export default function RegisterCoachPage() {
   const router = useRouter();
-  const [role, setRole] = useState<Role>("igralec");
 
-  const [ime, setIme] = useState("");
-  const [priimek, setPriimek] = useState("");
-  const [starost, setStarost] = useState<number>(16);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [age, setAge] = useState<number>(30);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // igralec
-  const [visina, setVisina] = useState<number | "">("");
-  const [stevilka, setStevilka] = useState<number | "">("");
-  const [pozicijaId, setPozicijaId] = useState("");
-
-  // skupno
-  const [ekipaId, setEkipaId] = useState("");
 
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,21 +22,15 @@ export default function RegisterPage() {
     setMsg(null);
     setLoading(true);
 
-    const payload: any = {
-      role,
-      ime,
-      priimek,
-      starost: Number(starost),
-      email,
+    const payload = {
+      role: "trener", // ✅ ALWAYS COACH
+      ime: firstName.trim(),
+      priimek: lastName.trim(),
+      starost: Number(age),
+      email: email.trim(),
       password,
-      ekipa_id: ekipaId || null,
+      ekipa_id: null, // ✅ team will be created next
     };
-
-    if (role === "igralec") {
-      payload.visina = visina === "" ? null : Number(visina);
-      payload.stevilka_dresa = stevilka === "" ? null : Number(stevilka);
-      payload.pozicija_id = pozicijaId || null;
-    }
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -59,13 +42,14 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri registraciji.");
+        setMsg(data?.error ?? "Registration failed.");
         return;
       }
 
-      router.push("/auth/login");
+      // ✅ after register → create team
+      router.push("/createteam");
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg("Connection error.");
     } finally {
       setLoading(false);
     }
@@ -73,103 +57,41 @@ export default function RegisterPage() {
 
   return (
     <div style={{ maxWidth: 520, margin: "40px auto", padding: 16 }}>
-      <h1>Registracija</h1>
+      <h1 className="mb-4 text-2xl font-bold">Coach Registration</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
-        {/* Vloga */}
-        <label className="text-body-sm font-medium text-dark dark:text-white">
-          Vloga
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as Role)}
-            disabled={loading}
-            className="mt-3 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-          >
-            <option value="igralec">Igralec</option>
-            <option value="trener">Trener</option>
-          </select>
-        </label>
-
         <InputGroup
-          label="Ime"
-          placeholder="Vpiši ime"
+          label="First Name"
+          placeholder="Enter first name"
           type="text"
           required
-          value={ime}
-          handleChange={(e) => setIme(e.target.value)}
+          value={firstName}
+          handleChange={(e) => setFirstName(e.target.value)}
           disabled={loading}
-          active={!!ime}
+          active={!!firstName}
         />
 
         <InputGroup
-          label="Priimek"
-          placeholder="Vpiši priimek"
+          label="Last Name"
+          placeholder="Enter last name"
           type="text"
           required
-          value={priimek}
-          handleChange={(e) => setPriimek(e.target.value)}
+          value={lastName}
+          handleChange={(e) => setLastName(e.target.value)}
           disabled={loading}
-          active={!!priimek}
+          active={!!lastName}
         />
 
         <InputGroup
-          label="Starost"
-          placeholder="npr. 18"
+          label="Age"
+          placeholder="e.g. 35"
           type="number"
           required
-          value={String(starost)}
-          handleChange={(e) => setStarost(Number(e.target.value))}
+          value={String(age)}
+          handleChange={(e) => setAge(Number(e.target.value))}
           disabled={loading}
           active
         />
-
-        <InputGroup
-          label="Ekipa ID (UUID)"
-          placeholder="opcijsko"
-          type="text"
-          value={ekipaId}
-          handleChange={(e) => setEkipaId(e.target.value)}
-          disabled={loading}
-          active={!!ekipaId}
-        />
-
-        {role === "igralec" && (
-          <>
-            <InputGroup
-              label="Višina (cm)"
-              placeholder="npr. 175"
-              type="number"
-              value={visina === "" ? "" : String(visina)}
-              handleChange={(e) =>
-                setVisina(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              disabled={loading}
-              active={!!visina}
-            />
-
-            <InputGroup
-              label="Številka dresa"
-              placeholder="npr. 10"
-              type="number"
-              value={stevilka === "" ? "" : String(stevilka)}
-              handleChange={(e) =>
-                setStevilka(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              disabled={loading}
-              active={!!stevilka}
-            />
-
-            <InputGroup
-              label="Pozicija ID (UUID)"
-              placeholder="opcijsko"
-              type="text"
-              value={pozicijaId}
-              handleChange={(e) => setPozicijaId(e.target.value)}
-              disabled={loading}
-              active={!!pozicijaId}
-            />
-          </>
-        )}
 
         <InputGroup
           label="Email"
@@ -183,8 +105,8 @@ export default function RegisterPage() {
         />
 
         <InputGroup
-          label="Geslo"
-          placeholder="Vpiši geslo"
+          label="Password"
+          placeholder="Enter password"
           type="password"
           required
           value={password}
@@ -198,26 +120,19 @@ export default function RegisterPage() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Shranjujem..." : "Ustvari račun"}
+          {loading ? "Creating account..." : "Create coach account"}
         </button>
 
         {msg && <p style={{ color: "crimson" }}>{msg}</p>}
-              <button
+
+        <button
           type="button"
           onClick={() => router.push("/auth/login")}
           className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white"
         >
-          Prijava
-      </button>
+          Back to login
+        </button>
       </form>
-
-
-        
-
-
-
-
-     
     </div>
   );
 }

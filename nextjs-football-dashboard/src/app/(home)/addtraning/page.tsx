@@ -117,13 +117,13 @@ export default function AddTrainingPage() {
 
   return (
     <div style={{ maxWidth: 620, margin: "40px auto", padding: 16 }}>
-      <h1>Dodaj trening</h1>
+      <h1>Add traning</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
         {/* Ekipa zaklenjena (zaenkrat izpišemo ID, ker fetch za ime ti pada) */}
         <InputGroup
-          label="Ekipa (zaklenjeno)"
-          placeholder="Ekipa trenerja"
+          label="Team (locked)"
+          placeholder="Team"
           type="text"
           required
           value={ekipaId}
@@ -134,7 +134,7 @@ export default function AddTrainingPage() {
         />
 
         <InputGroup
-          label="Začetek"
+          label="Start"
           placeholder=""
           type="datetime-local"
           required
@@ -146,7 +146,7 @@ export default function AddTrainingPage() {
         />
 
         <InputGroup
-          label="Konec"
+          label="End"
           placeholder=""
           type="datetime-local"
           required
@@ -158,7 +158,7 @@ export default function AddTrainingPage() {
         />
 
         <label className="text-body-sm font-medium text-dark dark:text-white">
-          Površina
+          Surface
           <select
             value={povrsina}
             onChange={(e) => setPovrsina(e.target.value)}
@@ -174,7 +174,7 @@ export default function AddTrainingPage() {
 
         <div>
           <label className="text-body-sm font-medium text-dark dark:text-white">
-            Opis (opcijsko)
+            Description (optional)
           </label>
           <textarea
             value={opis}
@@ -200,7 +200,7 @@ export default function AddTrainingPage() {
           disabled={loading}
           className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white"
         >
-          Prekliči
+          Back
         </button>
 
         {msg && <p style={{ color: "crimson" }}>{msg}</p>}
