@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getUser, saveUser } from "@/lib/user-store";
+import { getUser, saveUser, type StoredUser } from "@/lib/user-store";
 
 async function safeReadJson(res: Response) {
-  const text = await res.text();
-  if (!text) return null;
+  const t = await res.text();
+  if (!t) return null;
   try {
-    return JSON.parse(text);
+    return JSON.parse(t);
   } catch {
     return null;
   }
@@ -25,6 +25,16 @@ export default function CreateTeamPage() {
     e.preventDefault();
     setMsg(null);
 
+    const u = getUser();
+    if (!u) {
+      setMsg("Not logged in.");
+      return;
+    }
+    if (u.role !== "trener") {
+      setMsg("Only a coach can create a team.");
+      return;
+    }
+
     if (!teamName.trim()) {
       setMsg("Team name is required.");
       return;
@@ -33,27 +43,32 @@ export default function CreateTeamPage() {
     setLoading(true);
 
     try {
-      // ✅ pravilna pot pri tebi je /api/ekipa
+      // ✅ IMPORTANT: your API is /api/ekipa (not /api/ekipe)
+      // ✅ IMPORTANT: credentials include, so cookie "auth" is sent
       const res = await fetch("/api/ekipa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ ime: teamName.trim() }),
       });
 
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(`Failed to create team (${res.status}). ${data?.error ?? ""}`.trim());
+        setMsg(data?.error ?? `Failed to create team (${res.status}).`);
         return;
       }
 
-      // ✅ POSODOBI localStorage userja (da ekipa_id ni več null)
-      const logged = getUser();
-      const newTeamId = data?.coach?.ekipa_id ?? data?.team?.id ?? null;
+      // ✅ API returns { coach: { ... ekipa_id ... }, team: {...} }
+      const updatedCoach = data?.coach;
 
-      if (logged && newTeamId) {
-        saveUser({ ...logged, ekipa_id: newTeamId });
-      }
+      // ✅ Update localStorage user so ekipa_id is no longer null
+      const updatedUser: StoredUser = {
+        ...u,
+        ekipa_id: updatedCoach?.ekipa_id ?? data?.team?.id ?? u.ekipa_id,
+      };
+
+      saveUser(updatedUser);
 
       router.push("/dashboard");
       router.refresh();
