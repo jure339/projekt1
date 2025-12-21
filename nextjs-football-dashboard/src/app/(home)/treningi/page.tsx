@@ -1,19 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getUser } from "@/lib/user-store";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { getUser } from "@/lib/user-store";
 
-type Training = {
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+type TrainingRow = {
   id: string;
-  zacetek: string;
-  konec: string;
+  zacetek: string; // ISO string
+  konec: string; // ISO string
   povrsina: string;
   opis: string | null;
 };
 
-async function safeJson(res: Response) {
+async function safeReadJson(res: Response) {
   const text = await res.text();
   if (!text) return null;
   try {
@@ -23,53 +32,58 @@ async function safeJson(res: Response) {
   }
 }
 
-export default function TrainingListPage() {
+export default function TrainingsList({ className }: { className?: string }) {
   const [ekipaId, setEkipaId] = useState<string | null>(null);
-  const [trainings, setTrainings] = useState<Training[]>([]);
+
+  const [rows, setRows] = useState<TrainingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
+  // ✅ preberemo trenerja in njegovo ekipo
   useEffect(() => {
     const u = getUser();
     if (!u) {
-      setMsg("Nisi prijavljen.");
+      setMsg("Ni prijavljen.");
       setLoading(false);
       return;
     }
     if (u.role !== "trener") {
-      setMsg("Samo trener lahko vidi treninge.");
+      setMsg("Nimaš dostopa (samo trener).");
       setLoading(false);
       return;
     }
     if (!u.ekipa_id) {
-      setMsg("Trener nima nastavljene ekipe.");
+      setMsg("Trener nima ekipe.");
       setLoading(false);
       return;
     }
+
     setEkipaId(u.ekipa_id);
   }, []);
 
-  async function loadTrainings(teamId: string) {
+  async function load(currentEkipaId: string) {
     setLoading(true);
     setMsg(null);
 
     try {
-      const res = await fetch(`/api/treningi?ekipaId=${encodeURIComponent(teamId)}`, {
+      // ✅ tvoj endpoint očitno zahteva ekipaId
+      const res = await fetch(`/api/treningi?ekipaId=${encodeURIComponent(currentEkipaId)}`, {
         cache: "no-store",
       });
 
-      const data = await safeJson(res);
+      const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setTrainings([]);
-        setMsg(data?.error ?? `Napaka pri nalaganju treningov (${res.status}).`);
+        setMsg(data?.error ?? "Napaka pri nalaganju treningov.");
+        setRows([]);
         return;
       }
 
-      setTrainings(data?.trainings ?? []);
+      // pričakovano: { trainings: [...] }
+      setRows(data?.trainings ?? []);
     } catch {
-      setTrainings([]);
       setMsg("Napaka pri povezavi.");
+      setRows([]);
     } finally {
       setLoading(false);
     }
@@ -77,92 +91,112 @@ export default function TrainingListPage() {
 
   useEffect(() => {
     if (!ekipaId) return;
-    loadTrainings(ekipaId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    load(ekipaId);
   }, [ekipaId]);
 
   async function onDelete(id: string) {
-    if (!confirm("Ali res želiš izbrisati ta trening?")) return;
+    if (!confirm("Ali si prepričan, da želiš izbrisati trening?")) return;
 
     try {
       const res = await fetch(`/api/treningi/${id}`, { method: "DELETE" });
-      const data = await safeJson(res);
+      const data = await safeReadJson(res);
 
       if (!res.ok) {
-        alert(data?.error ?? `Napaka pri brisanju (${res.status}).`);
+        alert(data?.error ?? "Napaka pri brisanju.");
         return;
       }
 
-      setTrainings((prev) => prev.filter((t) => t.id !== id));
+      setRows((prev) => prev.filter((t) => t.id !== id));
     } catch {
       alert("Napaka pri povezavi.");
     }
   }
 
-  const cardClass =
-    "rounded-[10px] bg-white p-5 shadow-1 dark:bg-gray-dark dark:shadow-card";
-  const titleClass = "text-2xl font-bold text-dark dark:text-white";
-  const mutedClass = "text-dark-6 dark:text-white/70";
+  const container =
+    "grid rounded-[10px] bg-white px-7.5 pb-4 pt-7.5 shadow-1 dark:bg-gray-dark dark:shadow-card";
+  const actionBtn =
+    "inline-flex items-center rounded-lg border border-stroke px-3 py-1.5 text-sm font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white";
+  const deleteBtn =
+    "inline-flex items-center rounded-lg bg-red px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red/90";
 
   return (
-    <div className="mx-auto mt-10 max-w-4xl px-4">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className={titleClass}>Treningi</h1>
+    <div className={cn(container, className)}>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-body-2xlg font-bold text-dark dark:text-white">
+          Tranings
+        </h2>
 
-        <div className="flex gap-2">
-          <Link
-            href="/addtraning"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-          >
-            + Add training
-          </Link>
-
-          <button
-            onClick={() => ekipaId && loadTrainings(ekipaId)}
-            className="rounded-lg border border-stroke px-4 py-2 text-sm font-medium text-dark transition hover:border-primary dark:border-dark-3 dark:text-white"
-            disabled={!ekipaId || loading}
-          >
-            Refresh
-          </button>
-        </div>
+        <Link
+          href="/addtraning"
+          className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
+        >
+          + Add training
+        </Link>
       </div>
 
       {msg && <p className="mb-3 text-sm text-red">{msg}</p>}
 
-      <div className={cardClass}>
-        {loading ? (
-          <p className={mutedClass}>Loading...</p>
-        ) : trainings.length === 0 ? (
-          <p className={mutedClass}>Ni treningov.</p>
-        ) : (
-          <div className="grid gap-3">
-            {trainings.map((t) => (
-              <div
-                key={t.id}
-                className="flex flex-col gap-3 rounded-lg border border-stroke p-4 dark:border-dark-3 md:flex-row md:items-center md:justify-between"
-              >
-                <div>
-                  <div className="font-medium text-dark dark:text-white">
-                    {new Date(t.zacetek).toLocaleString()} –{" "}
-                    {new Date(t.konec).toLocaleString()}
-                  </div>
-                  <div className={cn("text-sm", mutedClass)}>
-                    Surface: {t.povrsina}
-                    {t.opis ? ` · ${t.opis}` : ""}
-                  </div>
-                </div>
+      <Table>
+        <TableHeader>
+          <TableRow className="border-none uppercase [&>th]:text-center">
+            <TableHead className="!text-left">Začetek</TableHead>
+            <TableHead className="!text-left">Konec</TableHead>
+            <TableHead>Površina</TableHead>
+            <TableHead className="!text-left">Opis</TableHead>
+            <TableHead>Akcije</TableHead>
+          </TableRow>
+        </TableHeader>
 
-                <button
-                  onClick={() => onDelete(t.id)}
-                  className="self-start rounded-lg bg-red px-4 py-2 text-sm font-medium text-white hover:opacity-90 md:self-auto"
+        <TableBody>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-dark dark:text-white">
+                Nalagam...
+              </TableCell>
+            </TableRow>
+          ) : (
+            <>
+              {rows.map((t) => (
+                <TableRow
+                  key={t.id}
+                  className="text-center text-base font-medium text-dark dark:text-white"
                 >
-                  Delete
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  <TableCell className="!text-left">
+                    {new Date(t.zacetek).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="!text-left">
+                    {new Date(t.konec).toLocaleString()}
+                  </TableCell>
+                  <TableCell>{t.povrsina}</TableCell>
+                  <TableCell className="!text-left">{t.opis ?? "—"}</TableCell>
+
+                  <TableCell>
+                    <div className="flex items-center justify-center gap-2">
+                      {/* ✅ EDIT -> odpre /edittraning/[id] */}
+                      <Link href={`/edittrening/${t.id}`} className={actionBtn}>
+                        Edit
+                      </Link>
+
+                      {/* ✅ DELETE */}
+                      <button onClick={() => onDelete(t.id)} className={deleteBtn}>
+                        Delete
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+
+              {rows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-dark dark:text-white">
+                    Ni treningov
+                  </TableCell>
+                </TableRow>
+              )}
+            </>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }
