@@ -16,8 +16,8 @@ import {
 
 type TrainingRow = {
   id: string;
-  zacetek: string; // ISO string
-  konec: string; // ISO string
+  zacetek: string;
+  konec: string;
   povrsina: string;
   opis: string | null;
 };
@@ -33,56 +33,55 @@ async function safeReadJson(res: Response) {
 }
 
 export default function TrainingsList({ className }: { className?: string }) {
-  const [ekipaId, setEkipaId] = useState<string | null>(null);
+  const [teamId, setTeamId] = useState<string | null>(null);
 
   const [rows, setRows] = useState<TrainingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // ✅ preberemo trenerja in njegovo ekipo
+  // 🔹 read logged-in coach and his team
   useEffect(() => {
     const u = getUser();
     if (!u) {
-      setMsg("Ni prijavljen.");
+      setMsg("Not logged in.");
       setLoading(false);
       return;
     }
     if (u.role !== "trener") {
-      setMsg("Nimaš dostopa (samo trener).");
+      setMsg("Access denied (coach only).");
       setLoading(false);
       return;
     }
     if (!u.ekipa_id) {
-      setMsg("Trener nima ekipe.");
+      setMsg("Coach has no team assigned.");
       setLoading(false);
       return;
     }
 
-    setEkipaId(u.ekipa_id);
+    setTeamId(u.ekipa_id);
   }, []);
 
-  async function load(currentEkipaId: string) {
+  async function load(currentTeamId: string) {
     setLoading(true);
     setMsg(null);
 
     try {
-      // ✅ tvoj endpoint očitno zahteva ekipaId
-      const res = await fetch(`/api/treningi?ekipaId=${encodeURIComponent(currentEkipaId)}`, {
-        cache: "no-store",
-      });
+      const res = await fetch(
+        `/api/treningi?ekipaId=${encodeURIComponent(currentTeamId)}`,
+        { cache: "no-store" }
+      );
 
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri nalaganju treningov.");
+        setMsg(data?.error ?? "Failed to load trainings.");
         setRows([]);
         return;
       }
 
-      // pričakovano: { trainings: [...] }
       setRows(data?.trainings ?? []);
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg("Connection error.");
       setRows([]);
     } finally {
       setLoading(false);
@@ -90,25 +89,25 @@ export default function TrainingsList({ className }: { className?: string }) {
   }
 
   useEffect(() => {
-    if (!ekipaId) return;
-    load(ekipaId);
-  }, [ekipaId]);
+    if (!teamId) return;
+    load(teamId);
+  }, [teamId]);
 
   async function onDelete(id: string) {
-    if (!confirm("Ali si prepričan, da želiš izbrisati trening?")) return;
+    if (!confirm("Are you sure you want to delete this training?")) return;
 
     try {
       const res = await fetch(`/api/treningi/${id}`, { method: "DELETE" });
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        alert(data?.error ?? "Napaka pri brisanju.");
+        alert(data?.error ?? "Delete failed.");
         return;
       }
 
       setRows((prev) => prev.filter((t) => t.id !== id));
     } catch {
-      alert("Napaka pri povezavi.");
+      alert("Connection error.");
     }
   }
 
@@ -121,17 +120,33 @@ export default function TrainingsList({ className }: { className?: string }) {
 
   return (
     <div className={cn(container, className)}>
+      {/* HEADER */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-body-2xlg font-bold text-dark dark:text-white">
-          Tranings
+          Trainings
         </h2>
 
-        <Link
-          href="/addtraning"
-          className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
-        >
-          + Add training
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/addtraning"
+            className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
+          >
+            + Add training
+          </Link>
+
+          <button
+            onClick={() => teamId && load(teamId)}
+            disabled={!teamId || loading}
+            className={cn(
+              "inline-flex items-center rounded-lg border border-stroke px-4 py-2 text-sm font-medium transition dark:border-dark-3",
+              loading
+                ? "cursor-not-allowed opacity-50 text-dark-6 dark:text-white/60"
+                : "text-dark hover:border-primary hover:text-primary dark:text-white"
+            )}
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {msg && <p className="mb-3 text-sm text-red">{msg}</p>}
@@ -139,11 +154,11 @@ export default function TrainingsList({ className }: { className?: string }) {
       <Table>
         <TableHeader>
           <TableRow className="border-none uppercase [&>th]:text-center">
-            <TableHead className="!text-left">Začetek</TableHead>
-            <TableHead className="!text-left">Konec</TableHead>
-            <TableHead>Površina</TableHead>
-            <TableHead className="!text-left">Opis</TableHead>
-            <TableHead>Akcije</TableHead>
+            <TableHead className="!text-left">Start</TableHead>
+            <TableHead className="!text-left">End</TableHead>
+            <TableHead>Surface</TableHead>
+            <TableHead className="!text-left">Description</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -151,49 +166,41 @@ export default function TrainingsList({ className }: { className?: string }) {
           {loading ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center text-dark dark:text-white">
-                Nalagam...
+                Loading...
+              </TableCell>
+            </TableRow>
+          ) : rows.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-dark dark:text-white">
+                No trainings found
               </TableCell>
             </TableRow>
           ) : (
-            <>
-              {rows.map((t) => (
-                <TableRow
-                  key={t.id}
-                  className="text-center text-base font-medium text-dark dark:text-white"
-                >
-                  <TableCell className="!text-left">
-                    {new Date(t.zacetek).toLocaleString()}
-                  </TableCell>
-                  <TableCell className="!text-left">
-                    {new Date(t.konec).toLocaleString()}
-                  </TableCell>
-                  <TableCell>{t.povrsina}</TableCell>
-                  <TableCell className="!text-left">{t.opis ?? "—"}</TableCell>
-
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-2">
-                      {/* ✅ EDIT -> odpre /edittraning/[id] */}
-                      <Link href={`/edittrening/${t.id}`} className={actionBtn}>
-                        Edit
-                      </Link>
-
-                      {/* ✅ DELETE */}
-                      <button onClick={() => onDelete(t.id)} className={deleteBtn}>
-                        Delete
-                      </button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-
-              {rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-dark dark:text-white">
-                    Ni treningov
-                  </TableCell>
-                </TableRow>
-              )}
-            </>
+            rows.map((t) => (
+              <TableRow
+                key={t.id}
+                className="text-center text-base font-medium text-dark dark:text-white"
+              >
+                <TableCell className="!text-left">
+                  {new Date(t.zacetek).toLocaleString()}
+                </TableCell>
+                <TableCell className="!text-left">
+                  {new Date(t.konec).toLocaleString()}
+                </TableCell>
+                <TableCell>{t.povrsina}</TableCell>
+                <TableCell className="!text-left">{t.opis ?? "—"}</TableCell>
+                <TableCell>
+                  <div className="flex items-center justify-center gap-2">
+                    <Link href={`/edittrening/${t.id}`} className={actionBtn}>
+                      Edit
+                    </Link>
+                    <button onClick={() => onDelete(t.id)} className={deleteBtn}>
+                      Delete
+                    </button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
           )}
         </TableBody>
       </Table>

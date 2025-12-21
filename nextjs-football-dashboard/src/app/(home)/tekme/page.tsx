@@ -16,7 +16,7 @@ async function safeJson(res: Response) {
   return t ? JSON.parse(t) : null;
 }
 
-export default function GamesListPage() {
+export default function GamePage() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
@@ -60,55 +60,81 @@ export default function GamesListPage() {
   }
 
   return (
-    <div className="mx-auto mt-10 max-w-4xl px-4">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-dark dark:text-white">Tekme</h1>
-        <div className="flex gap-2">
-          <Link
-            href="/addgame"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white"
-          >
-            + Add game
-          </Link>
-          <button
-            onClick={load}
-            className="rounded-lg border border-stroke px-4 py-2 text-sm font-medium text-dark dark:border-dark-3 dark:text-white"
-          >
-            Refresh
-          </button>
+    <div className="mx-auto mt-10 max-w-6xl px-4">
+      {/* CARD */}
+      <div className="rounded-[14px] bg-white p-6 shadow-1 dark:bg-gray-dark dark:shadow-card">
+        {/* HEADER */}
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-dark dark:text-white">
+            Games
+          </h1>
+
+          <div className="flex gap-2">
+            <Link
+              href="/addgame"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white"
+            >
+              + Add game
+            </Link>
+
+            <button
+              onClick={load}
+              className="rounded-lg border border-stroke px-4 py-2 text-sm font-medium text-dark transition dark:border-dark-3 dark:text-white"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
-      </div>
 
-      {msg && <p className="mb-3 text-sm text-red">{msg}</p>}
+        {msg && <p className="mb-4 text-sm text-red">{msg}</p>}
 
-      <div className={cn("rounded-[10px] bg-white p-5 shadow-1 dark:bg-gray-dark dark:shadow-card")}>
+        {/* TABLE HEADER */}
+        <div className="grid grid-cols-12 border-b border-stroke pb-3 text-sm font-semibold uppercase text-dark-6 dark:border-dark-3 dark:text-white/70">
+          <div className="col-span-4">Date & time</div>
+          <div className="col-span-4">Opponent</div>
+          <div className="col-span-2">Location</div>
+          <div className="col-span-2 text-right">Actions</div>
+        </div>
+
+        {/* ROWS */}
         {loading ? (
-          <p className="text-dark-6 dark:text-white/70">Loading...</p>
+          <p className="mt-4 text-dark-6 dark:text-white/70">Loading...</p>
         ) : games.length === 0 ? (
-          <p className="text-dark-6 dark:text-white/70">Ni tekem.</p>
+          <p className="mt-4 text-dark-6 dark:text-white/70">Ni tekem.</p>
         ) : (
-          <div className="grid gap-3">
+          <div className="divide-y divide-stroke dark:divide-dark-3">
             {games.map((g) => (
               <div
                 key={g.id}
-                className="flex flex-col justify-between gap-3 rounded-lg border border-stroke p-4 dark:border-dark-3 md:flex-row md:items-center"
+                className="grid grid-cols-12 items-center py-4 text-dark dark:text-white"
               >
-                <div>
-                  <div className="font-medium text-dark dark:text-white">
-                    {new Date(g.cas_tekme).toLocaleString()}
-                  </div>
-                  <div className="text-sm text-dark-6 dark:text-white/70">
-                    {g.nasprotnik ? `Opponent: ${g.nasprotnik}` : "Opponent not set"}
-                    {g.kraj ? ` · Location: ${g.kraj}` : ""}
-                  </div>
+                <div className="col-span-4 font-medium">
+                  {new Date(g.cas_tekme).toLocaleString()}
                 </div>
 
-                <button
-                  onClick={() => onDelete(g.id)}
-                  className="self-start rounded-lg bg-red px-4 py-2 text-sm font-medium text-white md:self-auto"
-                >
-                  Delete
-                </button>
+                <div className="col-span-4">
+                  {g.nasprotnik ?? "—"}
+                </div>
+
+                <div className="col-span-2">
+                  {g.kraj ?? "—"}
+                </div>
+
+                <div className="col-span-2 flex justify-end gap-2">
+                  <Link
+                    href={`/editgame/${g.id}`}
+                    className="rounded-lg border border-stroke px-3 py-1.5 text-sm font-medium transition hover:border-primary dark:border-dark-3"
+                  >
+                    Edit
+                  </Link>
+
+                  <button
+                    onClick={() => onDelete(g.id)}
+                    className="rounded-lg bg-red px-3 py-1.5 text-sm font-medium text-white"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
