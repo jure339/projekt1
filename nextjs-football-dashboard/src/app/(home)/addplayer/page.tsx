@@ -144,8 +144,8 @@ export default function DodajIgralcaPage() {
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
         {/* Ekipa zaklenjena */}
         <InputGroup
-          label="Ekipa (zaklenjeno)"
-          placeholder="Ekipa trenerja"
+          label="Team (locked)"
+          placeholder="Coach's team"
           type="text"
           required
           value={ekipaId}

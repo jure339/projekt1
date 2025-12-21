@@ -1,75 +1,90 @@
 import postgres from "postgres";
-import crypto from "crypto";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const JWT_SECRET = process.env.JWT_SECRET!;
 
-/* =========================
-   GET – seznam tekem
-========================= */
-export async function GET() {
+type TokenPayload = {
+  sub: string;
+  role: "igralec" | "trener";
+  email: string;
+};
+
+function getAuthPayload(): TokenPayload | null {
+  const token = cookies().get("auth")?.value;
+  if (!token) return null;
   try {
-    const rows = await sql`
-      SELECT
-        t.id,
-        t.cas_tekme::text,
-        t.kraj,
-        n.ime AS nasprotnik
-      FROM tekme t
-      LEFT JOIN nasprotne_ekipe n ON n.id = t.nasprotnik_id
-      ORDER BY t.cas_tekme ASC;
-    `;
-
-    return Response.json(
-      { games: rows },
-      { headers: { "Cache-Control": "no-store" } }
-    );
-  } catch (e: any) {
-    console.error("GET /api/game error:", e);
-    return Response.json(
-      { error: e?.message ?? "Napaka", games: [] },
-      { status: 500 }
-    );
+    return jwt.verify(token, JWT_SECRET) as TokenPayload;
+  } catch {
+    return null;
   }
 }
 
-/* =========================
-   POST – dodaj tekmo (INSERT)
-========================= */
-export async function POST(req: Request) {
+function requireCoach() {
+  const payload = getAuthPayload();
+  if (!payload) {
+    return {
+      ok: false as const,
+      res: NextResponse.json({ error: "Not logged in." }, { status: 401 }),
+    };
+  }
+  if (payload.role !== "trener") {
+    return {
+      ok: false as const,
+      res: NextResponse.json({ error: "Coach only." }, { status: 403 }),
+    };
+  }
+  return { ok: true as const, payload };
+}
+
+async function getCoachTeamId(coachId: string): Promise<string | null> {
+  const rows = await sql`
+    SELECT ekipa_id
+    FROM trenerji
+    WHERE id = ${coachId}
+    LIMIT 1;
+  `;
+  return rows[0]?.ekipa_id ?? null;
+}
+
+export async function GET() {
+  const auth = requireCoach();
+  if (!auth.ok) return auth.res;
+
   try {
-    const body = await req.json();
-
-    const cas_tekme = body?.cas_tekme;
-    const kraj = body?.kraj;
-    const nasprotnik_id = body?.nasprotnik_id ?? null;
-
-    if (!cas_tekme || !kraj) {
-      return Response.json(
-        { error: "Manjkajo obvezni podatki (cas_tekme ali kraj)." },
-        { status: 400 }
+    const teamId = await getCoachTeamId(auth.payload.sub);
+    if (!teamId) {
+      return NextResponse.json(
+        { error: "Coach has no team assigned.", games: [] },
+        { status: 409 }
       );
     }
 
-    // ✅ ročno generiran ID (UUID string)
-    const id = crypto.randomUUID();
-
-    const inserted = await sql`
-      INSERT INTO tekme (id, cas_tekme, kraj, nasprotnik_id)
-      VALUES (${id}, ${cas_tekme}, ${kraj}, ${nasprotnik_id})
-      RETURNING id;
+    const rows = await sql`
+      SELECT
+        t.id,
+        t.cas_tekme::text as cas_tekme,
+        t.kraj,
+        n.ime as nasprotnik
+      FROM tekme t
+      LEFT JOIN nasprotne_ekipe n ON n.id = t.nasprotnik_id
+      WHERE t.ekipa_id = ${teamId}
+      ORDER BY t.cas_tekme ASC;
     `;
 
-    return Response.json(
-      { success: true, id: inserted[0]?.id ?? id },
-      { status: 201 }
+    return NextResponse.json(
+      { games: rows },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   } catch (e: any) {
-    console.error("POST /api/game error:", e);
-    return Response.json(
-      { error: e?.message ?? "Napaka pri shranjevanju tekme." },
+    console.error("GET /api/game error:", e);
+    return NextResponse.json(
+      { error: e?.message ?? "Failed to load games.", games: [] },
       { status: 500 }
     );
   }
