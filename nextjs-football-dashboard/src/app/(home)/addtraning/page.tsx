@@ -9,28 +9,41 @@ type Payload = {
   ekipa_id: string;
   trener_id: string;
   zacetek: string; // ISO
-  konec: string;   // ISO
+  konec: string; // ISO
   povrsina: string;
   opis: string | null;
 };
 
+async function safeJson(res: Response) {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export default function AddTrainingPage() {
   const router = useRouter();
 
-  const [ekipaId, setEkipaId] = useState<string>("");
-  const [trenerId, setTrenerId] = useState<string>("");
+  const [teamId, setTeamId] = useState<string>("");
+  const [teamName, setTeamName] = useState<string>("");
+
+  const [coachId, setCoachId] = useState<string>("");
 
   // datetime-local format: YYYY-MM-DDTHH:mm
-  const [zacetek, setZacetek] = useState<string>("");
-  const [konec, setKonec] = useState<string>("");
+  const [startLocal, setStartLocal] = useState<string>("");
+  const [endLocal, setEndLocal] = useState<string>("");
 
-  const [povrsina, setPovrsina] = useState<string>("umetna");
-  const [opis, setOpis] = useState<string>("");
+  const [surface, setSurface] = useState<string>("umetna");
+  const [description, setDescription] = useState<string>("");
 
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingTeam, setLoadingTeam] = useState(false);
 
-  // ✅ preberi trenerja iz localStorage in nastavi ekipo (enako kot AddPlayer)
+  // ✅ coach only + set teamId + coachId
   useEffect(() => {
     const u: StoredUser | null = getUser();
 
@@ -45,16 +58,40 @@ export default function AddTrainingPage() {
     }
 
     if (!u.ekipa_id) {
-      setMsg("Trener nima nastavljene ekipe (ekipa_id je NULL).");
+      setMsg("Coach has no team assigned.");
       return;
     }
 
-    setTrenerId(u.id);
-    setEkipaId(u.ekipa_id);
+    setCoachId(u.id);
+    setTeamId(u.ekipa_id);
   }, [router]);
 
+  // ✅ load team name for display
+  useEffect(() => {
+    (async () => {
+      if (!teamId) return;
+
+      setLoadingTeam(true);
+      try {
+        // ⚠️ you said you have /api/ekipa/[id]
+        const res = await fetch(`/api/ekipa/${teamId}`, { cache: "no-store" });
+        const data = await safeJson(res);
+
+        if (!res.ok) {
+          setTeamName("Unknown team");
+          return;
+        }
+
+        setTeamName(data?.ekipa?.ime ?? "Unknown team");
+      } catch {
+        setTeamName("Unknown team");
+      } finally {
+        setLoadingTeam(false);
+      }
+    })();
+  }, [teamId]);
+
   function toISOFromLocal(local: string) {
-    // local: "YYYY-MM-DDTHH:mm" -> ISO (UTC)
     return new Date(local).toISOString();
   }
 
@@ -62,33 +99,33 @@ export default function AddTrainingPage() {
     e.preventDefault();
     setMsg(null);
 
-    if (!ekipaId || !trenerId) {
-      setMsg("Ekipa ali trener ni nastavljen.");
+    if (!teamId || !coachId) {
+      setMsg("Team or coach is missing.");
       return;
     }
 
-    if (!zacetek || !konec) {
-      setMsg("Začetek in konec sta obvezna.");
+    if (!startLocal || !endLocal) {
+      setMsg("Start and end are required.");
       return;
     }
 
-    const startISO = toISOFromLocal(zacetek);
-    const endISO = toISOFromLocal(konec);
+    const startISO = toISOFromLocal(startLocal);
+    const endISO = toISOFromLocal(endLocal);
 
     if (new Date(endISO).getTime() <= new Date(startISO).getTime()) {
-      setMsg("Konec mora biti po začetku.");
+      setMsg("End time must be after start time.");
       return;
     }
 
     setLoading(true);
 
     const payload: Payload = {
-      ekipa_id: ekipaId,
-      trener_id: trenerId,
+      ekipa_id: teamId,
+      trener_id: coachId,
       zacetek: startISO,
       konec: endISO,
-      povrsina,
-      opis: opis.trim() ? opis.trim() : null,
+      povrsina: surface,
+      opis: description.trim() ? description.trim() : null,
     };
 
     try {
@@ -98,18 +135,17 @@ export default function AddTrainingPage() {
         body: JSON.stringify(payload),
       });
 
-      const text = await res.text();
-      const data = text ? JSON.parse(text) : null;
+      const data = await safeJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri shranjevanju treninga.");
+        setMsg(data?.error ?? "Failed to save training.");
         return;
       }
 
-      router.push("/dashboard");
+      router.push("/treningi"); // ✅ usually better than dashboard after creating
       router.refresh();
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg("Connection error.");
     } finally {
       setLoading(false);
     }
@@ -117,20 +153,20 @@ export default function AddTrainingPage() {
 
   return (
     <div style={{ maxWidth: 620, margin: "40px auto", padding: 16 }}>
-      <h1>Add traning</h1>
+      <h1>Add training</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
-        {/* Ekipa zaklenjena (zaenkrat izpišemo ID, ker fetch za ime ti pada) */}
+        {/* ✅ Team name locked (display only) */}
         <InputGroup
           label="Team (locked)"
-          placeholder="Team"
+          placeholder="Coach's team"
           type="text"
           required
-          value={ekipaId}
+          value={loadingTeam ? "Loading team..." : (teamName || "—")}
           handleChange={() => {}}
           disabled
-          active={!!ekipaId}
-          name="ekipa_id"
+          active={!!teamName}
+          name="team_name"
         />
 
         <InputGroup
@@ -138,10 +174,10 @@ export default function AddTrainingPage() {
           placeholder=""
           type="datetime-local"
           required
-          value={zacetek}
-          handleChange={(e) => setZacetek(e.target.value)}
+          value={startLocal}
+          handleChange={(e) => setStartLocal(e.target.value)}
           disabled={loading}
-          active={!!zacetek}
+          active={!!startLocal}
           name="zacetek"
         />
 
@@ -150,25 +186,26 @@ export default function AddTrainingPage() {
           placeholder=""
           type="datetime-local"
           required
-          value={konec}
-          handleChange={(e) => setKonec(e.target.value)}
+          value={endLocal}
+          handleChange={(e) => setEndLocal(e.target.value)}
           disabled={loading}
-          active={!!konec}
+          active={!!endLocal}
           name="konec"
         />
 
         <label className="text-body-sm font-medium text-dark dark:text-white">
           Surface
           <select
-            value={povrsina}
-            onChange={(e) => setPovrsina(e.target.value)}
+            value={surface}
+            onChange={(e) => setSurface(e.target.value)}
             disabled={loading}
             className="mt-3 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white"
           >
-            <option value="umetna">Umetna</option>
-            <option value="naravna">Naravna</option>
-            <option value="dvorana">Dvorana</option>
-            <option value="drugo">Drugo</option>
+            {/* Values stay the same as your DB expects */}
+            <option value="umetna">Artificial turf</option>
+            <option value="naravna">Grass</option>
+            <option value="dvorana">Indoor</option>
+            <option value="drugo">Other</option>
           </select>
         </label>
 
@@ -177,10 +214,10 @@ export default function AddTrainingPage() {
             Description (optional)
           </label>
           <textarea
-            value={opis}
-            onChange={(e) => setOpis(e.target.value)}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             disabled={loading}
-            placeholder="npr. taktika, kondicija, zaključki..."
+            placeholder="e.g. tactics, conditioning, finishing..."
             className="mt-3 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 text-dark outline-none transition focus:border-primary disabled:cursor-default disabled:bg-gray-2 dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:focus:border-primary"
             rows={4}
           />
@@ -191,7 +228,7 @@ export default function AddTrainingPage() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Shranjujem..." : "Dodaj trening"}
+          {loading ? "Saving..." : "Add training"}
         </button>
 
         <button
@@ -200,7 +237,7 @@ export default function AddTrainingPage() {
           disabled={loading}
           className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white"
         >
-          Back
+          Cancel
         </button>
 
         {msg && <p style={{ color: "crimson" }}>{msg}</p>}

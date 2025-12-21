@@ -18,15 +18,26 @@ type Payload = {
   visina: number | null;
   pozicija_id: string | null;
   stevilka_dresa: number | null;
-  email: string;      // obvezno
-  password: string;   // obvezno
-  ekipa_id: string;   // obvezno (iz trenerja)
+  email: string;
+  password: string;
+  ekipa_id: string; // still sent as ID
 };
+
+async function safeReadJson(res: Response) {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
 
 export default function DodajIgralcaPage() {
   const router = useRouter();
 
   const [ekipaId, setEkipaId] = useState<string>("");
+  const [ekipaIme, setEkipaIme] = useState<string>(""); // ✅ show name instead of ID
 
   const [pozicije, setPozicije] = useState<Pozicija[]>([]);
   const [pozicijaId, setPozicijaId] = useState<string>("");
@@ -44,37 +55,58 @@ export default function DodajIgralcaPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingPozicije, setLoadingPozicije] = useState(false);
+  const [loadingTeam, setLoadingTeam] = useState(false);
 
-  // ✅ preberi trenerja iz localStorage in nastavi ekipo
+  // ✅ read coach and set team id + load team name
   useEffect(() => {
-    const u: StoredUser | null = getUser();
+    (async () => {
+      const u: StoredUser | null = getUser();
 
-    if (!u) {
-      router.push("/auth/login");
-      return;
-    }
+      if (!u) {
+        router.push("/auth/login");
+        return;
+      }
 
-    if (u.role !== "trener") {
-      router.push("/dashboard");
-      return;
-    }
+      if (u.role !== "trener") {
+        router.push("/dashboard");
+        return;
+      }
 
-    if (!u.ekipa_id) {
-      setMsg("Coach has no team assigned.");
-      return;
-    }
+      if (!u.ekipa_id) {
+        setMsg("Coach has no team assigned.");
+        return;
+      }
 
-    setEkipaId(u.ekipa_id);
+      setEkipaId(u.ekipa_id);
+
+      // ✅ load team name for display
+      setLoadingTeam(true);
+      try {
+        const res = await fetch(`/api/ekipa/${u.ekipa_id}`, { cache: "no-store" });
+        const data = await safeReadJson(res);
+
+        if (!res.ok) {
+          // fallback: show ID if name can't be loaded
+          setEkipaIme(u.ekipa_id);
+          return;
+        }
+
+        setEkipaIme(data?.ekipa?.ime ?? u.ekipa_id);
+      } catch {
+        setEkipaIme(u.ekipa_id);
+      } finally {
+        setLoadingTeam(false);
+      }
+    })();
   }, [router]);
 
-  // ✅ naloži pozicije za dropdown
+  // ✅ load positions
   useEffect(() => {
     (async () => {
       setLoadingPozicije(true);
       try {
-        const res = await fetch("/api/pozicije");
-        const text = await res.text();
-        const data = text ? JSON.parse(text) : null;
+        const res = await fetch("/api/pozicije", { cache: "no-store" });
+        const data = await safeReadJson(res);
 
         if (!res.ok) {
           setMsg(data?.error ?? "Error loading positions.");
@@ -110,7 +142,7 @@ export default function DodajIgralcaPage() {
       pozicija_id: pozicijaId || null,
       email,
       password,
-      ekipa_id: ekipaId, // ✅ vedno iz trenerja
+      ekipa_id: ekipaId, // ✅ still send ID
     };
 
     try {
@@ -120,8 +152,7 @@ export default function DodajIgralcaPage() {
         body: JSON.stringify(payload),
       });
 
-      const text = await res.text();
-      const data = text ? JSON.parse(text) : null;
+      const data = await safeReadJson(res);
 
       if (!res.ok) {
         setMsg(data?.error ?? "Error adding player.");
@@ -129,7 +160,7 @@ export default function DodajIgralcaPage() {
       }
 
       router.push("/dashboard");
-      router.refresh
+      router.refresh();
     } catch {
       setMsg("Error connecting to server.");
     } finally {
@@ -142,17 +173,17 @@ export default function DodajIgralcaPage() {
       <h1>Add player</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
-        {/* Ekipa zaklenjena */}
+        {/* Team locked - show NAME */}
         <InputGroup
           label="Team (locked)"
           placeholder="Coach's team"
           type="text"
           required
-          value={ekipaId}
+          value={loadingTeam ? "Loading..." : (ekipaIme || ekipaId)}
           handleChange={() => {}}
           disabled
           active={!!ekipaId}
-          name="ekipa_id"
+          name="ekipa_ime"
         />
 
         <InputGroup
@@ -181,7 +212,7 @@ export default function DodajIgralcaPage() {
 
         <InputGroup
           label="Age"
-          placeholder="npr. 16"
+          placeholder="e.g. 16"
           type="number"
           required
           value={String(starost)}
@@ -193,7 +224,7 @@ export default function DodajIgralcaPage() {
 
         <InputGroup
           label="Height (cm)"
-          placeholder="opcijsko"
+          placeholder="optional"
           type="number"
           value={visina === "" ? "" : String(visina)}
           handleChange={(e) =>
@@ -206,7 +237,7 @@ export default function DodajIgralcaPage() {
 
         <InputGroup
           label="Shirt Number"
-          placeholder="optcional"
+          placeholder="optional"
           type="number"
           value={stevilkaDresa === "" ? "" : String(stevilkaDresa)}
           handleChange={(e) =>
@@ -217,7 +248,7 @@ export default function DodajIgralcaPage() {
           name="stevilka_dresa"
         />
 
-        {/* Pozicija dropdown */}
+        {/* Position dropdown */}
         <label className="text-body-sm font-medium text-dark dark:text-white">
           Position
           <select
@@ -239,7 +270,6 @@ export default function DodajIgralcaPage() {
           </select>
         </label>
 
-        {/* Email + geslo obvezno */}
         <InputGroup
           label="Email"
           placeholder="email@gmail.com"
