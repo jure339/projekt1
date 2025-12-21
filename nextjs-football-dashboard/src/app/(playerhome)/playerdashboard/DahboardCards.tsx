@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getUser } from "@/lib/user-store";
 import { cn } from "@/lib/utils";
 
 type Training = {
@@ -46,34 +45,80 @@ export default function DashboardCards({ className }: Props) {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // 🔹 preberi uporabnika
+  // 1) Najprej ugotovi uporabnika (cookie-based)
   useEffect(() => {
-    const u = getUser();
-    if (!u) {
-      setLoading(false);
-      return;
-    }
+    (async () => {
+      setLoading(true);
+      setMsg(null);
 
-    setRole(u.role);
+      try {
+        // ✅ kdo sem (iz cookie tokena)
+        const meRes = await fetch("/api/auth/me", { cache: "no-store" });
+        const meData = await safeReadJson(meRes);
 
-    if (u.role === "trener" && u.ekipa_id) {
-      setEkipaId(u.ekipa_id);
-    } else {
-      setLoading(false);
-    }
+        if (!meRes.ok) {
+          setMsg(meData?.error ?? "Ni prijavljen.");
+          return;
+        }
+
+        const u = meData?.user as { role: Role; ekipa_id?: string | null } | null;
+        if (!u) {
+          setMsg("Ni prijavljen.");
+          return;
+        }
+
+        setRole(u.role);
+
+        // ✅ trener: ekipa_id imaš že (če ga /api/auth/me vrača)
+        if (u.role === "trener") {
+          if (!u.ekipa_id) {
+            setMsg("Trener nima ekipe.");
+            return;
+          }
+          setEkipaId(u.ekipa_id);
+          return;
+        }
+
+        // ✅ igralec: ekipa dobimo prek /api/igralci/moja-ekipa
+        const ekRes = await fetch("/api/igralci/moja-ekipa", { cache: "no-store" });
+        const ekData = await safeReadJson(ekRes);
+
+        if (!ekRes.ok) {
+          setMsg(ekData?.error ?? "Ne morem pridobiti ekipe igralca.");
+          return;
+        }
+
+        const id = ekData?.ekipaId as string | undefined;
+        if (!id) {
+          setMsg("Igralec nima dodeljene ekipe.");
+          return;
+        }
+
+        setEkipaId(id);
+      } catch {
+        setMsg("Napaka pri povezavi.");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  // 🔹 naloži podatke (če je trener)
+  // 2) Ko imamo ekipaId, naložimo training + game
   useEffect(() => {
     (async () => {
       if (!ekipaId) return;
 
       setLoading(true);
+      setMsg(null);
+
       try {
         const [tRes, gRes] = await Promise.all([
-          fetch(`/api/treningi/recent-traning?ekipaId=${ekipaId}`, {
-            cache: "no-store",
-          }),
+          fetch(
+            `/api/treningi/recent-traning?ekipaId=${encodeURIComponent(ekipaId)}`,
+            { cache: "no-store" }
+          ),
+          // Če upcoming-game potrebuje ekipaId, ga dodaj tukaj:
+          // fetch(`/api/game/upcoming-game?ekipaId=${encodeURIComponent(ekipaId)}`, { cache: "no-store" }),
           fetch(`/api/game/upcoming-game`, { cache: "no-store" }),
         ]);
 
@@ -84,7 +129,11 @@ export default function DashboardCards({ className }: Props) {
         setGame(gRes.ok ? gData?.game ?? null : null);
 
         if (!tRes.ok || !gRes.ok) {
-          setMsg("Napaka pri nalaganju podatkov.");
+          setMsg(
+            tData?.error ??
+              gData?.error ??
+              "Napaka pri nalaganju podatkov."
+          );
         }
       } catch {
         setMsg("Napaka pri povezavi.");
@@ -154,11 +203,13 @@ export default function DashboardCards({ className }: Props) {
               <div className="font-medium text-dark dark:text-white">
                 {new Date(game.cas_tekme).toLocaleString()}
               </div>
+
               <div className={muted}>
                 {game.nasprotnik
                   ? `Opponent: ${game.nasprotnik}`
                   : "Opponent not set"}
               </div>
+
               {game.kraj && <div className={muted}>Location: {game.kraj}</div>}
             </>
           ) : (
