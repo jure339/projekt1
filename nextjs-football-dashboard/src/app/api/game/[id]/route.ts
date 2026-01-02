@@ -20,6 +20,7 @@ async function getAuthPayload(): Promise<TokenPayload | null> {
   const cookieStore = await cookies(); // ✅ Next 15
   const token = cookieStore.get("auth")?.value;
   if (!token) return null;
+
   try {
     return jwt.verify(token, JWT_SECRET) as TokenPayload;
   } catch {
@@ -30,10 +31,16 @@ async function getAuthPayload(): Promise<TokenPayload | null> {
 async function requireCoach() {
   const payload = await getAuthPayload();
   if (!payload) {
-    return { ok: false as const, res: NextResponse.json({ error: "Not logged in." }, { status: 401 }) };
+    return {
+      ok: false as const,
+      res: NextResponse.json({ error: "Not logged in." }, { status: 401 }),
+    };
   }
   if (payload.role !== "trener") {
-    return { ok: false as const, res: NextResponse.json({ error: "Coach only." }, { status: 403 }) };
+    return {
+      ok: false as const,
+      res: NextResponse.json({ error: "Coach only." }, { status: 403 }),
+    };
   }
   return { ok: true as const, payload };
 }
@@ -102,32 +109,47 @@ export async function PATCH(req: Request, ctx: any) {
       nasprotnik_id: string | null;
     }>;
 
-    const cas_tekme = typeof body.cas_tekme === "string" ? body.cas_tekme : undefined;
-    const kraj = body.kraj === undefined ? undefined : body.kraj === null ? null : String(body.kraj).trim();
-    const nasprotnik_id =
-      body.nasprotnik_id === undefined ? undefined : body.nasprotnik_id === null ? null : String(body.nasprotnik_id).trim();
+    // ✅ flags: ali je polje sploh prisotno v body?
+    const hasCas = typeof body.cas_tekme === "string";
+    const hasKraj = Object.prototype.hasOwnProperty.call(body, "kraj");
+    const hasOpp = Object.prototype.hasOwnProperty.call(body, "nasprotnik_id");
 
-    if (cas_tekme !== undefined) {
-      const d = new Date(cas_tekme);
+    // ✅ vrednosti (nikoli undefined!)
+    const casVal = hasCas ? String(body.cas_tekme) : ""; // uporabljeno samo če hasCas=true
+    const krajVal =
+      hasKraj ? (body.kraj === null ? null : String(body.kraj ?? "").trim() || null) : null;
+    const oppVal =
+      hasOpp
+        ? body.nasprotnik_id === null
+          ? null
+          : String(body.nasprotnik_id ?? "").trim() || null
+        : null;
+
+    if (hasCas) {
+      const d = new Date(casVal);
       if (Number.isNaN(d.getTime())) {
         return NextResponse.json({ error: "Invalid date/time." }, { status: 400 });
       }
     }
 
+    // ✅ preveri, da je tekma res od njegove ekipe
     const existing = await loadGameForTeam(id, teamId);
-    if (!existing) return NextResponse.json({ error: "Game not found (or not in your team)." }, { status: 404 });
+    if (!existing) {
+      return NextResponse.json({ error: "Game not found (or not in your team)." }, { status: 404 });
+    }
 
+    // ✅ UPDATE brez undefined parametrov
     await sql`
       UPDATE tekme
       SET
-        cas_tekme = COALESCE(${cas_tekme}, cas_tekme),
-        kraj = COALESCE(${kraj}, kraj),
-        nasprotnik_id = COALESCE(${nasprotnik_id}, nasprotnik_id)
+        cas_tekme = CASE WHEN ${hasCas} THEN ${casVal}::timestamp ELSE cas_tekme END,
+        kraj = CASE WHEN ${hasKraj} THEN ${krajVal} ELSE kraj END,
+        nasprotnik_id = CASE WHEN ${hasOpp} THEN ${oppVal} ELSE nasprotnik_id END
       WHERE id = ${id} AND ekipa_id = ${teamId};
     `;
 
     const game = await loadGameForTeam(id, teamId);
-    return NextResponse.json({ success: true, game }, { status: 200 });
+    return NextResponse.json({ success: true, game }, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (e: any) {
     console.error("PATCH /api/game/[id] error:", e);
     return NextResponse.json({ error: e?.message ?? "Failed to save game." }, { status: 500 });
