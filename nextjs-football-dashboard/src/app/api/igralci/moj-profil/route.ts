@@ -15,9 +15,11 @@ type TokenPayload = {
   email: string;
 };
 
-function getAuthPayload() {
-  const token = cookies().get("auth")?.value;
+async function getAuthPayload(): Promise<TokenPayload | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth")?.value;
   if (!token) return null;
+
   try {
     return jwt.verify(token, JWT_SECRET) as TokenPayload;
   } catch {
@@ -48,23 +50,22 @@ async function loadPlayerWithNames(playerId: string) {
     WHERE i.id = ${playerId}
     LIMIT 1;
   `;
-
   return rows[0] ?? null;
 }
 
 export async function GET() {
   try {
-    const payload = getAuthPayload();
+    const payload = await getAuthPayload();
     if (!payload) {
-      return NextResponse.json({ error: "Ni prijavljen." }, { status: 401 });
+      return NextResponse.json({ error: "Not logged in." }, { status: 401 });
     }
     if (payload.role !== "igralec") {
-      return NextResponse.json({ error: "Samo igralec." }, { status: 403 });
+      return NextResponse.json({ error: "Player only." }, { status: 403 });
     }
 
     const player = await loadPlayerWithNames(payload.sub);
     if (!player) {
-      return NextResponse.json({ error: "Igralec ne obstaja." }, { status: 404 });
+      return NextResponse.json({ error: "Player not found." }, { status: 404 });
     }
 
     return NextResponse.json(
@@ -73,18 +74,18 @@ export async function GET() {
     );
   } catch (e) {
     console.error("GET /api/igralci/moj-profil error:", e);
-    return NextResponse.json({ error: "Napaka pri nalaganju profila." }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load profile." }, { status: 500 });
   }
 }
 
 export async function PATCH(req: Request) {
   try {
-    const payload = getAuthPayload();
+    const payload = await getAuthPayload();
     if (!payload) {
-      return NextResponse.json({ error: "Ni prijavljen." }, { status: 401 });
+      return NextResponse.json({ error: "Not logged in." }, { status: 401 });
     }
     if (payload.role !== "igralec") {
-      return NextResponse.json({ error: "Samo igralec." }, { status: 403 });
+      return NextResponse.json({ error: "Player only." }, { status: 403 });
     }
 
     const body = (await req.json()) as Partial<{
@@ -97,95 +98,118 @@ export async function PATCH(req: Request) {
       pozicija_id: string | null;
     }>;
 
-    // --- normalizacija ---
-    const ime = typeof body.ime === "string" ? body.ime.trim() : undefined;
-    const priimek = typeof body.priimek === "string" ? body.priimek.trim() : undefined;
-    const email = typeof body.email === "string" ? body.email.trim() : undefined;
+    // flags (da nikoli ne pošljemo undefined v sql)
+    const hasIme = body.ime !== undefined;
+    const hasPriimek = body.priimek !== undefined;
+    const hasEmail = body.email !== undefined;
+    const hasStarost = body.starost !== undefined;
+    const hasVisina = body.visina !== undefined;
+    const hasStevilka = body.stevilka_dresa !== undefined;
+    const hasPozicija = body.pozicija_id !== undefined;
 
-    const starost = body.starost === undefined ? undefined : Number(body.starost);
-    const visina =
-      body.visina === undefined ? undefined : body.visina === null ? null : Number(body.visina);
-    const stevilka_dresa =
-      body.stevilka_dresa === undefined
-        ? undefined
-        : body.stevilka_dresa === null
+    // values (vedno string/number/null, nikoli undefined)
+    const ime = hasIme ? String(body.ime ?? "").trim() : "";
+    const priimek = hasPriimek ? String(body.priimek ?? "").trim() : "";
+    const email = hasEmail ? String(body.email ?? "").trim() : "";
+
+    const starost = hasStarost ? Number(body.starost) : 0;
+    const visina = hasVisina ? (body.visina === null ? null : Number(body.visina)) : 0;
+    const stevilka_dresa = hasStevilka
+      ? body.stevilka_dresa === null
         ? null
-        : Number(body.stevilka_dresa);
+        : Number(body.stevilka_dresa)
+      : 0;
 
-    // Pozicija: pomembno je razlikovati med:
-    // - undefined (ne spreminjaj)
-    // - null (nastavi NULL)
-    // - string uuid (nastavi uuid)
-    const pozicija_id =
-      body.pozicija_id === undefined
-        ? undefined
-        : body.pozicija_id === null
+    const pozicija_id = hasPozicija
+      ? body.pozicija_id === null
         ? null
-        : String(body.pozicija_id).trim();
+        : String(body.pozicija_id).trim()
+      : null;
 
-    // --- validacije ---
-    if (email !== undefined && !email.includes("@")) {
-      return NextResponse.json({ error: "Neveljaven email." }, { status: 400 });
+    // --- validacije (samo če polje posodabljaš) ---
+    if (hasEmail && email && !email.includes("@")) {
+      return NextResponse.json({ error: "Invalid email." }, { status: 400 });
     }
-    if (starost !== undefined && (!Number.isFinite(starost) || starost < 5 || starost > 90)) {
-      return NextResponse.json({ error: "Neveljavna starost." }, { status: 400 });
+    if (hasStarost && (!Number.isFinite(starost) || starost < 5 || starost > 90)) {
+      return NextResponse.json({ error: "Invalid age." }, { status: 400 });
+    }
+    if (hasVisina && visina !== null && (!Number.isFinite(visina) || visina < 80 || visina > 260)) {
+      return NextResponse.json({ error: "Invalid height." }, { status: 400 });
     }
     if (
-      visina !== undefined &&
-      visina !== null &&
-      (!Number.isFinite(visina) || visina < 80 || visina > 260)
-    ) {
-      return NextResponse.json({ error: "Neveljavna višina." }, { status: 400 });
-    }
-    if (
-      stevilka_dresa !== undefined &&
+      hasStevilka &&
       stevilka_dresa !== null &&
       (!Number.isFinite(stevilka_dresa) || stevilka_dresa < 0 || stevilka_dresa > 99)
     ) {
-      return NextResponse.json({ error: "Neveljavna številka dresa." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid shirt number." }, { status: 400 });
     }
 
-    // --- UPDATE (brez COALESCE za pozicija_id!) ---
-    // COALESCE pri pozicija_id je problem, ker ne moreš nastaviti NULL.
+    // --- UPDATE (vse prek CASE, brez undefined) ---
     await sql`
       UPDATE igralci
       SET
-        ime = COALESCE(${ime}, ime),
-        priimek = COALESCE(${priimek}, priimek),
-        email = COALESCE(${email}, email),
-        starost = COALESCE(${starost}, starost),
-        visina = COALESCE(${visina}, visina),
-        stevilka_dresa = COALESCE(${stevilka_dresa}, stevilka_dresa),
+        ime =
+          CASE WHEN ${hasIme}
+            THEN ${ime}
+            ELSE ime
+          END,
+
+        priimek =
+          CASE WHEN ${hasPriimek}
+            THEN ${priimek}
+            ELSE priimek
+          END,
+
+        email =
+          CASE WHEN ${hasEmail}
+            THEN ${email}
+            ELSE email
+          END,
+
+        starost =
+          CASE WHEN ${hasStarost}
+            THEN ${starost}
+            ELSE starost
+          END,
+
+        visina =
+          CASE WHEN ${hasVisina}
+            THEN ${visina}
+            ELSE visina
+          END,
+
+        stevilka_dresa =
+          CASE WHEN ${hasStevilka}
+            THEN ${stevilka_dresa}
+            ELSE stevilka_dresa
+          END,
+
         pozicija_id =
           CASE
-            WHEN ${pozicija_id}::text IS NULL THEN pozicija_id
-            WHEN ${pozicija_id}::text = '' THEN pozicija_id
+            WHEN ${hasPozicija} = false THEN pozicija_id
+            WHEN ${pozicija_id} IS NULL THEN NULL
+            WHEN ${pozicija_id} = '' THEN pozicija_id
             ELSE ${pozicija_id}::uuid
           END
       WHERE id = ${payload.sub};
     `;
 
-    // ⚠️ zgornji CASE pusti staro, če je undefined, ampak če želiš NULL moraš poslati `null`.
-    // Ker `undefined` sploh ne pride v JSON, je ok.
-
-    // ✅ če je pozicija_id v body eksplicitno null -> nastavi NULL (posebej)
-    if (body.pozicija_id === null) {
-      await sql`UPDATE igralci SET pozicija_id = NULL WHERE id = ${payload.sub};`;
-    }
-
     const player = await loadPlayerWithNames(payload.sub);
     if (!player) {
-      return NextResponse.json({ error: "Igralec ne obstaja." }, { status: 404 });
+      return NextResponse.json({ error: "Player not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, player }, { status: 200 });
+    return NextResponse.json(
+      { success: true, player },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
+    );
   } catch (e: any) {
     const msg = String(e?.message ?? "");
     if (msg.toLowerCase().includes("unique") || msg.toLowerCase().includes("duplicate")) {
-      return NextResponse.json({ error: "Ta email je že v uporabi." }, { status: 409 });
+      return NextResponse.json({ error: "That email is already in use." }, { status: 409 });
     }
 
     console.error("PATCH /api/igralci/moj-profil error:", e);
-    return NextResponse.json({ error: "Napaka pri shranjevanju profila." }, { status: 500 });
+    return NextResponse.json({ error: "Failed to save profile." }, { status: 500 });
   }
 }
