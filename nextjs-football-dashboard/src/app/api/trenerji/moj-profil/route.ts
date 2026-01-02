@@ -12,8 +12,9 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 type TokenPayload = { sub: string; role: "igralec" | "trener"; email: string };
 
-function getAuthPayload(): TokenPayload | null {
-  const token = cookies().get("auth")?.value; // ✅ brez await
+async function getAuthPayload(): Promise<TokenPayload | null> {
+  const cookieStore = await cookies(); // ✅ Next 15
+  const token = cookieStore.get("auth")?.value;
   if (!token) return null;
 
   try {
@@ -35,12 +36,18 @@ async function loadCoach(coachId: string) {
 
 export async function GET() {
   try {
-    const payload = getAuthPayload();
-    if (!payload) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
-    if (payload.role !== "trener") return NextResponse.json({ error: "Coach only." }, { status: 403 });
+    const payload = await getAuthPayload(); // ✅ await
+    if (!payload) {
+      return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+    }
+    if (payload.role !== "trener") {
+      return NextResponse.json({ error: "Coach only." }, { status: 403 });
+    }
 
     const coach = await loadCoach(payload.sub);
-    if (!coach) return NextResponse.json({ error: "Coach not found." }, { status: 404 });
+    if (!coach) {
+      return NextResponse.json({ error: "Coach not found." }, { status: 404 });
+    }
 
     return NextResponse.json(
       { coach },
@@ -48,15 +55,22 @@ export async function GET() {
     );
   } catch (e: any) {
     console.error("GET /api/trenerji/moj-profil error:", e);
-    return NextResponse.json({ error: e?.message ?? "Failed to load coach." }, { status: 500 });
+    return NextResponse.json(
+      { error: e?.message ?? "Failed to load coach." },
+      { status: 500 }
+    );
   }
 }
 
 export async function PATCH(req: Request) {
   try {
-    const payload = getAuthPayload();
-    if (!payload) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
-    if (payload.role !== "trener") return NextResponse.json({ error: "Coach only." }, { status: 403 });
+    const payload = await getAuthPayload(); // ✅ await
+    if (!payload) {
+      return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+    }
+    if (payload.role !== "trener") {
+      return NextResponse.json({ error: "Coach only." }, { status: 403 });
+    }
 
     const body = (await req.json()) as Partial<{
       ime: string;
@@ -70,38 +84,54 @@ export async function PATCH(req: Request) {
     const priimek = typeof body.priimek === "string" ? body.priimek.trim() : undefined;
     const email = typeof body.email === "string" ? body.email.trim() : undefined;
 
-    const starost =
-      body.starost === undefined ? undefined : Number(body.starost);
+    const starost = body.starost === undefined ? undefined : Number(body.starost);
 
     const newPassword =
       typeof body.password === "string" ? body.password.trim() : undefined;
 
-    // ✅ Validacije
+    // ✅ validations
     if (email !== undefined && !email.includes("@")) {
       return NextResponse.json({ error: "Invalid email." }, { status: 400 });
     }
-    if (starost !== undefined && (!Number.isFinite(starost) || starost < 10 || starost > 100)) {
+    if (
+      starost !== undefined &&
+      (!Number.isFinite(starost) || starost < 10 || starost > 100)
+    ) {
       return NextResponse.json({ error: "Invalid age." }, { status: 400 });
     }
     if (newPassword !== undefined && newPassword.length > 0 && newPassword.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters." },
+        { status: 400 }
+      );
     }
 
     const passwordHash =
-      newPassword && newPassword.length > 0 ? await bcrypt.hash(newPassword, 10) : undefined;
+      newPassword && newPassword.length > 0
+        ? await bcrypt.hash(newPassword, 10)
+        : undefined;
 
-    // ✅ Coach obstaja?
+    // ✅ ensure coach exists
     const existing = await loadCoach(payload.sub);
-    if (!existing) return NextResponse.json({ error: "Coach not found." }, { status: 404 });
+    if (!existing) {
+      return NextResponse.json({ error: "Coach not found." }, { status: 404 });
+    }
+
+    // ✅ IMPORTANT: never pass undefined into postgres template
+    const imeParam = ime ?? null;
+    const priimekParam = priimek ?? null;
+    const emailParam = email ?? null;
+    const starostParam = starost ?? null;
+    const passwordParam = passwordHash ?? null;
 
     await sql`
       UPDATE trenerji
       SET
-        ime = COALESCE(${ime ?? null}, ime),
-        priimek = COALESCE(${priimek ?? null}, priimek),
-        email = COALESCE(${email ?? null}, email),
-        starost = COALESCE(${starost ?? null}, starost),
-        password = COALESCE(${passwordHash ?? null}, password)
+        ime = COALESCE(${imeParam}, ime),
+        priimek = COALESCE(${priimekParam}, priimek),
+        email = COALESCE(${emailParam}, email),
+        starost = COALESCE(${starostParam}, starost),
+        password = COALESCE(${passwordParam}, password)
       WHERE id = ${payload.sub};
     `;
 
@@ -119,7 +149,6 @@ export async function PATCH(req: Request) {
     }
 
     console.error("PATCH /api/trenerji/moj-profil error:", e);
-    // ✅ Zelo pomembno: vrni realen message, da vidiš, kaj je narobe
     return NextResponse.json({ error: msg || "Failed to save coach profile." }, { status: 500 });
   }
 }
