@@ -116,7 +116,7 @@ export default function AddGamePage() {
         return;
       }
 
-      router.push("/game");
+      router.push("/tekme");
       router.refresh();
     } catch {
       setMsg("Connection error.");
