@@ -5,7 +5,10 @@ import jwt from "jsonwebtoken";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("Missing JWT_SECRET in environment variables.");
+}
 
 type AuthPayload = {
   sub: string;
@@ -15,18 +18,42 @@ type AuthPayload = {
 
 export async function GET() {
   try {
-    const token = cookies().get("auth")?.value; // ✅ auth (ne token)
+    // ✅ cookies() je async v Next 15
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth")?.value;
+
     if (!token) {
-      return NextResponse.json({ error: "Ni prijavljen." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Ni prijavljen." },
+        { status: 401 }
+      );
     }
 
-    const payload = jwt.verify(token, JWT_SECRET) as AuthPayload;
+    let payload: AuthPayload;
+
+    try {
+      payload = jwt.verify(token, JWT_SECRET) as AuthPayload;
+    } catch {
+      return NextResponse.json(
+        { error: "Neveljaven token." },
+        { status: 401 }
+      );
+    }
 
     return NextResponse.json(
       { user: payload },
-      { status: 200, headers: { "Cache-Control": "no-store" } }
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
     );
-  } catch (e) {
-    return NextResponse.json({ error: "Neveljaven token." }, { status: 401 });
+  } catch (error) {
+    console.error("GET /api/auth/me error:", error);
+    return NextResponse.json(
+      { error: "Napaka na strežniku." },
+      { status: 500 }
+    );
   }
 }
