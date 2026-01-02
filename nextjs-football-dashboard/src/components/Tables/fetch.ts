@@ -11,8 +11,9 @@ type TokenPayload = {
   email: string;
 };
 
-function getAuthPayload(): TokenPayload | null {
-  const token = cookies().get("auth")?.value;
+async function getAuthPayload(): Promise<TokenPayload | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth")?.value;
   if (!token) return null;
 
   try {
@@ -23,7 +24,7 @@ function getAuthPayload(): TokenPayload | null {
 }
 
 async function getTrainerTeamId(): Promise<string | null> {
-  const payload = getAuthPayload();
+  const payload = await getAuthPayload();
   if (!payload || payload.role !== "trener") return null;
 
   const rows = await sql`
