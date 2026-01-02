@@ -16,9 +16,11 @@ type TokenPayload = {
   email: string;
 };
 
-function getAuthPayload(): TokenPayload | null {
-  const token = cookies().get("auth")?.value;
+async function getAuthPayload(): Promise<TokenPayload | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth")?.value;
   if (!token) return null;
+
   try {
     return jwt.verify(token, JWT_SECRET) as TokenPayload;
   } catch {
@@ -38,21 +40,30 @@ async function getCoachTeamId(coachId: string): Promise<string | null> {
 
 /**
  * GET /api/game
- * Vrne samo tekme ekipe prijavljenega trenerja.
+ * Returns only games for the logged-in coach's team.
  */
 export async function GET() {
   try {
-    const payload = getAuthPayload();
+    const payload = await getAuthPayload();
     if (!payload) {
-      return NextResponse.json({ error: "Not logged in.", games: [] }, { status: 401 });
+      return NextResponse.json(
+        { error: "Not logged in.", games: [] },
+        { status: 401 }
+      );
     }
     if (payload.role !== "trener") {
-      return NextResponse.json({ error: "Coach only.", games: [] }, { status: 403 });
+      return NextResponse.json(
+        { error: "Coach only.", games: [] },
+        { status: 403 }
+      );
     }
 
     const teamId = await getCoachTeamId(payload.sub);
     if (!teamId) {
-      return NextResponse.json({ error: "Coach has no team assigned.", games: [] }, { status: 409 });
+      return NextResponse.json(
+        { error: "Coach has no team assigned.", games: [] },
+        { status: 409 }
+      );
     }
 
     const rows = await sql`
@@ -82,11 +93,11 @@ export async function GET() {
 
 /**
  * POST /api/game
- * Ustvari tekmo in jo pripne na ekipo trenerja.
+ * Creates a game and attaches it to the coach's team.
  */
 export async function POST(req: Request) {
   try {
-    const payload = getAuthPayload();
+    const payload = await getAuthPayload();
     if (!payload) {
       return NextResponse.json({ error: "Not logged in." }, { status: 401 });
     }
@@ -96,17 +107,27 @@ export async function POST(req: Request) {
 
     const teamId = await getCoachTeamId(payload.sub);
     if (!teamId) {
-      return NextResponse.json({ error: "Coach has no team assigned." }, { status: 409 });
+      return NextResponse.json(
+        { error: "Coach has no team assigned." },
+        { status: 409 }
+      );
     }
 
     const body = (await req.json()) as Partial<{
-      cas_tekme: string;        // ISO
+      cas_tekme: string; // ISO
       kraj: string | null;
       nasprotnik_id: string | null;
     }>;
 
     const cas_tekme = typeof body.cas_tekme === "string" ? body.cas_tekme : "";
-    const kraj = body.kraj === null ? null : typeof body.kraj === "string" ? body.kraj.trim() : null;
+
+    const kraj =
+      body.kraj === null
+        ? null
+        : typeof body.kraj === "string"
+        ? body.kraj.trim() || null
+        : null;
+
     const nasprotnik_id =
       body.nasprotnik_id === null
         ? null
@@ -115,7 +136,10 @@ export async function POST(req: Request) {
         : null;
 
     if (!cas_tekme) {
-      return NextResponse.json({ error: "Game date & time is required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Game date & time is required." },
+        { status: 400 }
+      );
     }
 
     const d = new Date(cas_tekme);
@@ -130,7 +154,6 @@ export async function POST(req: Request) {
       VALUES (${id}, ${teamId}, ${cas_tekme}, ${kraj}, ${nasprotnik_id});
     `;
 
-    // vrni še joined zapis (za UI)
     const rows = await sql`
       SELECT
         t.id,
