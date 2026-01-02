@@ -16,9 +16,11 @@ type TokenPayload = {
   email: string;
 };
 
-function getAuthPayload(): TokenPayload | null {
-  const token = cookies().get("auth")?.value;
+async function getAuthPayload(): Promise<TokenPayload | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth")?.value;
   if (!token) return null;
+
   try {
     return jwt.verify(token, JWT_SECRET) as TokenPayload;
   } catch {
@@ -26,20 +28,23 @@ function getAuthPayload(): TokenPayload | null {
   }
 }
 
-function requireCoach() {
-  const payload = getAuthPayload();
+async function requireCoach() {
+  const payload = await getAuthPayload();
+
   if (!payload) {
     return {
       ok: false as const,
       res: NextResponse.json({ error: "Not logged in." }, { status: 401 }),
     };
   }
+
   if (payload.role !== "trener") {
     return {
       ok: false as const,
       res: NextResponse.json({ error: "Coach only." }, { status: 403 }),
     };
   }
+
   return { ok: true as const, payload };
 }
 
@@ -67,7 +72,7 @@ export async function GET() {
 
 // ✅ POST: add opponent (coach only)
 export async function POST(req: Request) {
-  const auth = requireCoach();
+  const auth = await requireCoach();
   if (!auth.ok) return auth.res;
 
   try {
@@ -75,7 +80,10 @@ export async function POST(req: Request) {
     const ime = String(body?.ime ?? "").trim();
 
     if (!ime) {
-      return NextResponse.json({ error: "Opponent name is required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Opponent name is required." },
+        { status: 400 }
+      );
     }
 
     // optional: prevent duplicates by name
@@ -85,6 +93,7 @@ export async function POST(req: Request) {
       WHERE LOWER(ime) = LOWER(${ime})
       LIMIT 1;
     `;
+
     if (exists.length > 0) {
       return NextResponse.json(
         { error: "Opponent already exists.", opponent: exists[0] },
