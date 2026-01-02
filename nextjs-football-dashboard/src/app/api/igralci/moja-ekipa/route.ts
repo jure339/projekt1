@@ -17,12 +17,20 @@ type TokenPayload = {
 
 export async function GET() {
   try {
-    const token = cookies().get("auth")?.value; // ✅ auth
+    // ✅ Next 15: cookies() je async
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth")?.value;
+
     if (!token) {
       return NextResponse.json({ error: "Ni prijavljen." }, { status: 401 });
     }
 
-    const payload = jwt.verify(token, JWT_SECRET) as TokenPayload;
+    let payload: TokenPayload;
+    try {
+      payload = jwt.verify(token, JWT_SECRET) as TokenPayload;
+    } catch {
+      return NextResponse.json({ error: "Neveljaven token." }, { status: 401 });
+    }
 
     if (payload.role !== "igralec") {
       return NextResponse.json(
@@ -38,7 +46,9 @@ export async function GET() {
       LIMIT 1;
     `;
 
-    if (rows.length === 0 || !rows[0]?.ekipa_id) {
+    const ekipaId = rows[0]?.ekipa_id ?? null;
+
+    if (!ekipaId) {
       return NextResponse.json(
         { error: "Igralec nima dodeljene ekipe." },
         { status: 404 }
@@ -46,7 +56,7 @@ export async function GET() {
     }
 
     return NextResponse.json(
-      { ekipaId: rows[0].ekipa_id },
+      { ekipaId },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   } catch (e) {
