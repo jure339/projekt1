@@ -1,8 +1,26 @@
+"use client";
+
 import type { PropsWithChildren } from "react";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+
 import { Header } from "@/components/Layouts/header";
 import { SidebarPlayer } from "@/components/Layouts/sidebar copy";
+import { getUser } from "@/lib/user-store";
 
 export default function HomeLayout({ children }: PropsWithChildren) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const user = getUser();
+
+    // ⛔ ni prijavljen → login
+    if (!user) {
+      router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
+    }
+  }, [router, pathname]);
+
   return (
     <div className="flex min-h-screen">
       <SidebarPlayer />
