@@ -58,7 +58,7 @@ export default function DashboardCards({ className }: Props) {
       try {
         const [tRes, gRes] = await Promise.all([
           fetch(`/api/treningi/recent-traning?ekipaId=${ekipaId}`, { cache: "no-store" }),
-          fetch(`/api/game/upcoming-game`, { cache: "no-store" }),
+          fetch(`/api/game/upcoming-game?ekipaId=${ekipaId}`, { cache: "no-store" }),
         ]);
 
         const tData = await safeReadJson(tRes);
