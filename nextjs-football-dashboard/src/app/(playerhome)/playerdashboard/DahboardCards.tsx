@@ -45,14 +45,14 @@ export default function DashboardCards({ className }: Props) {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // 1) Najprej ugotovi uporabnika (cookie-based)
+  // 1) Najprej ugotovi uporabnika + ekipo (EKIPA vedno iz igralca)
   useEffect(() => {
     (async () => {
       setLoading(true);
       setMsg(null);
 
       try {
-        // ✅ kdo sem (iz cookie tokena)
+        // ✅ kdo sem (iz cookie tokena) -> samo za role (da skrijemo gumbe)
         const meRes = await fetch("/api/auth/me", { cache: "no-store" });
         const meData = await safeReadJson(meRes);
 
@@ -61,7 +61,7 @@ export default function DashboardCards({ className }: Props) {
           return;
         }
 
-        const u = meData?.user as { role: Role; ekipa_id?: string | null } | null;
+        const u = meData?.user as { role: Role } | null;
         if (!u) {
           setMsg("Ni prijavljen.");
           return;
@@ -69,17 +69,7 @@ export default function DashboardCards({ className }: Props) {
 
         setRole(u.role);
 
-        // ✅ trener: ekipa_id imaš že (če ga /api/auth/me vrača)
-        if (u.role === "trener") {
-          if (!u.ekipa_id) {
-            setMsg("Trener nima ekipe.");
-            return;
-          }
-          setEkipaId(u.ekipa_id);
-          return;
-        }
-
-        // ✅ igralec: ekipa dobimo prek /api/igralci/moja-ekipa
+        // ✅ EKIPA ID vedno pridobimo iz igralca (ne iz trenerja)
         const ekRes = await fetch("/api/igralci/moja-ekipa", { cache: "no-store" });
         const ekData = await safeReadJson(ekRes);
 
@@ -113,13 +103,12 @@ export default function DashboardCards({ className }: Props) {
 
       try {
         const [tRes, gRes] = await Promise.all([
-          fetch(
-            `/api/treningi/recent-traning?ekipaId=${encodeURIComponent(ekipaId)}`,
-            { cache: "no-store" }
-          ),
-          // Če upcoming-game potrebuje ekipaId, ga dodaj tukaj:
-          // fetch(`/api/game/upcoming-game?ekipaId=${encodeURIComponent(ekipaId)}`, { cache: "no-store" }),
-          fetch(`/api/game/upcoming-game`, { cache: "no-store" }),
+          fetch(`/api/treningi/recent-traning?ekipaId=${encodeURIComponent(ekipaId)}`, {
+            cache: "no-store",
+          }),
+          fetch(`/api/game/upcoming-game?ekipaId=${encodeURIComponent(ekipaId)}`, {
+            cache: "no-store",
+          }),
         ]);
 
         const tData = await safeReadJson(tRes);
@@ -129,11 +118,7 @@ export default function DashboardCards({ className }: Props) {
         setGame(gRes.ok ? gData?.game ?? null : null);
 
         if (!tRes.ok || !gRes.ok) {
-          setMsg(
-            tData?.error ??
-              gData?.error ??
-              "Napaka pri nalaganju podatkov."
-          );
+          setMsg(tData?.error ?? gData?.error ?? "Napaka pri nalaganju podatkov.");
         }
       } catch {
         setMsg("Napaka pri povezavi.");
@@ -205,9 +190,7 @@ export default function DashboardCards({ className }: Props) {
               </div>
 
               <div className={muted}>
-                {game.nasprotnik
-                  ? `Opponent: ${game.nasprotnik}`
-                  : "Opponent not set"}
+                {game.nasprotnik ? `Opponent: ${game.nasprotnik}` : "Opponent not set"}
               </div>
 
               {game.kraj && <div className={muted}>Location: {game.kraj}</div>}

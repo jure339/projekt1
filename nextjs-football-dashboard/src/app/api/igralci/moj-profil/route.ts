@@ -53,20 +53,20 @@ async function loadPlayerWithNames(playerId: string) {
   return rows[0] ?? null;
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
 export async function GET() {
   try {
     const payload = await getAuthPayload();
-    if (!payload) {
-      return NextResponse.json({ error: "Not logged in." }, { status: 401 });
-    }
-    if (payload.role !== "igralec") {
-      return NextResponse.json({ error: "Player only." }, { status: 403 });
-    }
+    if (!payload) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+    if (payload.role !== "igralec") return NextResponse.json({ error: "Player only." }, { status: 403 });
 
     const player = await loadPlayerWithNames(payload.sub);
-    if (!player) {
-      return NextResponse.json({ error: "Player not found." }, { status: 404 });
-    }
+    if (!player) return NextResponse.json({ error: "Player not found." }, { status: 404 });
 
     return NextResponse.json(
       { player },
@@ -81,14 +81,11 @@ export async function GET() {
 export async function PATCH(req: Request) {
   try {
     const payload = await getAuthPayload();
-    if (!payload) {
-      return NextResponse.json({ error: "Not logged in." }, { status: 401 });
-    }
-    if (payload.role !== "igralec") {
-      return NextResponse.json({ error: "Player only." }, { status: 403 });
-    }
+    if (!payload) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+    if (payload.role !== "igralec") return NextResponse.json({ error: "Player only." }, { status: 403 });
 
-    const body = (await req.json()) as Partial<{
+    // varno preberi JSON
+    let body: Partial<{
       ime: string;
       priimek: string;
       email: string;
@@ -96,18 +93,24 @@ export async function PATCH(req: Request) {
       visina: number | null;
       stevilka_dresa: number | null;
       pozicija_id: string | null;
-    }>;
+    }> = {};
 
-    // flags (da nikoli ne pošljemo undefined v sql)
+    try {
+      body = (await req.json()) ?? {};
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    }
+
+    // flags: ali se polje posodablja
     const hasIme = body.ime !== undefined;
     const hasPriimek = body.priimek !== undefined;
     const hasEmail = body.email !== undefined;
     const hasStarost = body.starost !== undefined;
     const hasVisina = body.visina !== undefined;
     const hasStevilka = body.stevilka_dresa !== undefined;
-    const hasPozicija = body.pozicija_id !== undefined;
+    const hasPozicijaRaw = body.pozicija_id !== undefined;
 
-    // values (vedno string/number/null, nikoli undefined)
+    // vrednosti (nikoli undefined)
     const ime = hasIme ? String(body.ime ?? "").trim() : "";
     const priimek = hasPriimek ? String(body.priimek ?? "").trim() : "";
     const email = hasEmail ? String(body.email ?? "").trim() : "";
@@ -120,13 +123,38 @@ export async function PATCH(req: Request) {
         : Number(body.stevilka_dresa)
       : 0;
 
-    const pozicija_id = hasPozicija
-      ? body.pozicija_id === null
-        ? null
-        : String(body.pozicija_id).trim()
-      : null;
+    // pozicija_id: 3 stanja
+    // - ne posodobi (ni v body ali je "")
+    // - nastavi NULL
+    // - nastavi UUID
+    let setPozNull = false;
+    let setPozVal = false;
+    let pozicijaUuid = "";
 
-    // --- validacije (samo če polje posodabljaš) ---
+    if (hasPozicijaRaw) {
+      if (body.pozicija_id === null) {
+        setPozNull = true;
+      } else {
+        const p = String(body.pozicija_id ?? "").trim();
+        if (p === "") {
+          // prazno -> ne posodobi
+        } else {
+          if (!isUuid(p)) {
+            return NextResponse.json(
+              { error: "Invalid pozicija_id (must be UUID)." },
+              { status: 400 }
+            );
+          }
+          setPozVal = true;
+          pozicijaUuid = p;
+        }
+      }
+    }
+
+    // validacije samo, če posodabljaš
+    if (hasIme && !ime) return NextResponse.json({ error: "First name is required." }, { status: 400 });
+    if (hasPriimek && !priimek) return NextResponse.json({ error: "Last name is required." }, { status: 400 });
+
     if (hasEmail && email && !email.includes("@")) {
       return NextResponse.json({ error: "Invalid email." }, { status: 400 });
     }
@@ -144,60 +172,38 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Invalid shirt number." }, { status: 400 });
     }
 
-    // --- UPDATE (vse prek CASE, brez undefined) ---
+    // ničesar ne posodabljaš?
+    const nothingToUpdate =
+      !hasIme && !hasPriimek && !hasEmail && !hasStarost && !hasVisina && !hasStevilka && !hasPozicijaRaw;
+
+    if (nothingToUpdate) {
+      const player = await loadPlayerWithNames(payload.sub);
+      return NextResponse.json(
+        { success: true, player },
+        { status: 200, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    // UPDATE brez undefined + varno
     await sql`
       UPDATE igralci
       SET
-        ime =
-          CASE WHEN ${hasIme}
-            THEN ${ime}
-            ELSE ime
-          END,
-
-        priimek =
-          CASE WHEN ${hasPriimek}
-            THEN ${priimek}
-            ELSE priimek
-          END,
-
-        email =
-          CASE WHEN ${hasEmail}
-            THEN ${email}
-            ELSE email
-          END,
-
-        starost =
-          CASE WHEN ${hasStarost}
-            THEN ${starost}
-            ELSE starost
-          END,
-
-        visina =
-          CASE WHEN ${hasVisina}
-            THEN ${visina}
-            ELSE visina
-          END,
-
-        stevilka_dresa =
-          CASE WHEN ${hasStevilka}
-            THEN ${stevilka_dresa}
-            ELSE stevilka_dresa
-          END,
-
-        pozicija_id =
-          CASE
-            WHEN ${hasPozicija} = false THEN pozicija_id
-            WHEN ${pozicija_id} IS NULL THEN NULL
-            WHEN ${pozicija_id} = '' THEN pozicija_id
-            ELSE ${pozicija_id}::uuid
-          END
+        ime = CASE WHEN ${hasIme} THEN ${ime} ELSE ime END,
+        priimek = CASE WHEN ${hasPriimek} THEN ${priimek} ELSE priimek END,
+        email = CASE WHEN ${hasEmail} THEN ${email} ELSE email END,
+        starost = CASE WHEN ${hasStarost} THEN ${starost} ELSE starost END,
+        visina = CASE WHEN ${hasVisina} THEN ${visina} ELSE visina END,
+        stevilka_dresa = CASE WHEN ${hasStevilka} THEN ${stevilka_dresa} ELSE stevilka_dresa END,
+        pozicija_id = CASE
+          WHEN ${setPozNull} THEN NULL
+          WHEN ${setPozVal} THEN ${pozicijaUuid}::uuid
+          ELSE pozicija_id
+        END
       WHERE id = ${payload.sub};
     `;
 
     const player = await loadPlayerWithNames(payload.sub);
-    if (!player) {
-      return NextResponse.json({ error: "Player not found." }, { status: 404 });
-    }
+    if (!player) return NextResponse.json({ error: "Player not found." }, { status: 404 });
 
     return NextResponse.json(
       { success: true, player },
@@ -205,6 +211,7 @@ export async function PATCH(req: Request) {
     );
   } catch (e: any) {
     const msg = String(e?.message ?? "");
+
     if (msg.toLowerCase().includes("unique") || msg.toLowerCase().includes("duplicate")) {
       return NextResponse.json({ error: "That email is already in use." }, { status: 409 });
     }
