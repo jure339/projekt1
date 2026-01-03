@@ -47,7 +47,7 @@ export default function RegisterCoachPage() {
       }
 
       // ✅ after register → create team
-      router.push("/createteam");
+      router.push("/auth/login");
     } catch {
       setMsg("Connection error.");
     } finally {
