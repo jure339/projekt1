@@ -11,11 +11,11 @@ import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | NextAdmin - Next.js Dashboard Kit",
-    default: "NextAdmin - Next.js Dashboard Kit",
+    template: "FootballTeamManager",
+    default: "FootballTeamManager",
   },
   description:
-    "Next.js admin dashboard toolkit with 200+ templates, UI components, and integrations for fast dashboard development.",
+    "FootballTeamManager - Manage your football team with ease using our comprehensive dashboard featuring player management, training schedules, game fixtures, and performance analytics.",
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {
