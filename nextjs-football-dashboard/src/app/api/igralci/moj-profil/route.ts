@@ -68,10 +68,7 @@ export async function GET() {
     const player = await loadPlayerWithNames(payload.sub);
     if (!player) return NextResponse.json({ error: "Player not found." }, { status: 404 });
 
-    return NextResponse.json(
-      { player },
-      { status: 200, headers: { "Cache-Control": "no-store" } }
-    );
+    return NextResponse.json({ player }, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     console.error("GET /api/igralci/moj-profil error:", e);
     return NextResponse.json({ error: "Failed to load profile." }, { status: 500 });
@@ -93,6 +90,9 @@ export async function PATCH(req: Request) {
       visina: number | null;
       stevilka_dresa: number | null;
       pozicija_id: string | null;
+
+      // ✅ novo geslo (opcijsko)
+      password: string;
     }> = {};
 
     try {
@@ -101,7 +101,6 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
-    // flags: ali se polje posodablja
     const hasIme = body.ime !== undefined;
     const hasPriimek = body.priimek !== undefined;
     const hasEmail = body.email !== undefined;
@@ -110,7 +109,10 @@ export async function PATCH(req: Request) {
     const hasStevilka = body.stevilka_dresa !== undefined;
     const hasPozicijaRaw = body.pozicija_id !== undefined;
 
-    // vrednosti (nikoli undefined)
+    // ✅ password: posodobi samo če je vpisan (ne prazen)
+    const password = body.password !== undefined ? String(body.password ?? "") : "";
+    const hasPassword = body.password !== undefined && password.trim().length > 0;
+
     const ime = hasIme ? String(body.ime ?? "").trim() : "";
     const priimek = hasPriimek ? String(body.priimek ?? "").trim() : "";
     const email = hasEmail ? String(body.email ?? "").trim() : "";
@@ -124,9 +126,6 @@ export async function PATCH(req: Request) {
       : 0;
 
     // pozicija_id: 3 stanja
-    // - ne posodobi (ni v body ali je "")
-    // - nastavi NULL
-    // - nastavi UUID
     let setPozNull = false;
     let setPozVal = false;
     let pozicijaUuid = "";
@@ -136,14 +135,9 @@ export async function PATCH(req: Request) {
         setPozNull = true;
       } else {
         const p = String(body.pozicija_id ?? "").trim();
-        if (p === "") {
-          // prazno -> ne posodobi
-        } else {
+        if (p !== "") {
           if (!isUuid(p)) {
-            return NextResponse.json(
-              { error: "Invalid pozicija_id (must be UUID)." },
-              { status: 400 }
-            );
+            return NextResponse.json({ error: "Invalid pozicija_id (must be UUID)." }, { status: 400 });
           }
           setPozVal = true;
           pozicijaUuid = p;
@@ -151,7 +145,7 @@ export async function PATCH(req: Request) {
       }
     }
 
-    // validacije samo, če posodabljaš
+    // validacije (brez dolžine gesla)
     if (hasIme && !ime) return NextResponse.json({ error: "First name is required." }, { status: 400 });
     if (hasPriimek && !priimek) return NextResponse.json({ error: "Last name is required." }, { status: 400 });
 
@@ -172,19 +166,21 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Invalid shirt number." }, { status: 400 });
     }
 
-    // ničesar ne posodabljaš?
     const nothingToUpdate =
-      !hasIme && !hasPriimek && !hasEmail && !hasStarost && !hasVisina && !hasStevilka && !hasPozicijaRaw;
+      !hasIme &&
+      !hasPriimek &&
+      !hasEmail &&
+      !hasStarost &&
+      !hasVisina &&
+      !hasStevilka &&
+      !hasPozicijaRaw &&
+      !hasPassword;
 
     if (nothingToUpdate) {
       const player = await loadPlayerWithNames(payload.sub);
-      return NextResponse.json(
-        { success: true, player },
-        { status: 200, headers: { "Cache-Control": "no-store" } }
-      );
+      return NextResponse.json({ success: true, player }, { status: 200, headers: { "Cache-Control": "no-store" } });
     }
 
-    // UPDATE brez undefined + varno
     await sql`
       UPDATE igralci
       SET
@@ -198,6 +194,10 @@ export async function PATCH(req: Request) {
           WHEN ${setPozNull} THEN NULL
           WHEN ${setPozVal} THEN ${pozicijaUuid}::uuid
           ELSE pozicija_id
+        END,
+        "password" = CASE
+          WHEN ${hasPassword} THEN ${password}
+          ELSE "password"
         END
       WHERE id = ${payload.sub};
     `;
@@ -205,10 +205,7 @@ export async function PATCH(req: Request) {
     const player = await loadPlayerWithNames(payload.sub);
     if (!player) return NextResponse.json({ error: "Player not found." }, { status: 404 });
 
-    return NextResponse.json(
-      { success: true, player },
-      { status: 200, headers: { "Cache-Control": "no-store" } }
-    );
+    return NextResponse.json({ success: true, player }, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (e: any) {
     const msg = String(e?.message ?? "");
 

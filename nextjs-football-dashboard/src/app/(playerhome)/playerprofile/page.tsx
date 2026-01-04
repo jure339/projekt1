@@ -52,6 +52,9 @@ export default function PlayerProfilePage() {
   const [visina, setVisina] = useState<string>("");
   const [dres, setDres] = useState<string>("");
 
+  // ✅ password (optional) - samo 1x
+  const [password, setPassword] = useState("");
+
   // dropdown value: "" pomeni "Brez pozicije"
   const [pozicijaValue, setPozicijaValue] = useState<string>("");
 
@@ -77,7 +80,6 @@ export default function PlayerProfilePage() {
 
         if (!profileRes.ok) {
           setMsg(profileData?.error ?? "Napaka pri nalaganju profila.");
-          setLoading(false);
           return;
         }
 
@@ -91,13 +93,14 @@ export default function PlayerProfilePage() {
         setVisina(p.visina === null ? "" : String(p.visina));
         setDres(p.stevilka_dresa === null ? "" : String(p.stevilka_dresa));
 
-        // dropdown: če ima pozicijo -> id, sicer ""
         setPozicijaValue(p.pozicija_id ?? "");
+
+        // ✅ reset password
+        setPassword("");
 
         if (positionsRes.ok) {
           setPositions((positionsData?.positions ?? []) as Position[]);
         } else {
-          // pozicije niso kritične za prikaz profila
           setPositions([]);
         }
       } catch {
@@ -120,17 +123,20 @@ export default function PlayerProfilePage() {
     setSaving(true);
 
     try {
-      const payload = {
+      const payload: any = {
         ime: ime.trim(),
         priimek: priimek.trim(),
         email: email.trim(),
         starost: Number(starost),
         visina: visina.trim() === "" ? null : Number(visina),
         stevilka_dresa: dres.trim() === "" ? null : Number(dres),
-
-        // ✅ ključ: če je dropdown prazen -> null (Brez pozicije)
         pozicija_id: pozicijaValue === "" ? null : pozicijaValue,
       };
+
+      // ✅ dodaj password samo, če je vpisan (brez dodatnih pravil)
+      if (password.trim().length > 0) {
+        payload.password = password;
+      }
 
       const res = await fetch("/api/igralci/moj-profil", {
         method: "PATCH",
@@ -145,11 +151,14 @@ export default function PlayerProfilePage() {
         return;
       }
 
-      const updated = data?.player as PlayerProfile;
-      setProfile(updated);
+      const updated = (data?.player ?? data?.updated ?? data?.profile) as PlayerProfile;
+      if (updated) {
+        setProfile(updated);
+        setPozicijaValue(updated.pozicija_id ?? "");
+      }
 
-      // ✅ po shranjevanju naj dropdown odraža dejansko stanje iz baze
-      setPozicijaValue(updated.pozicija_id ?? "");
+      // ✅ po uspehu pobriši polje za geslo
+      setPassword("");
 
       setMsg("Profile saved ✅");
     } catch {
@@ -238,11 +247,7 @@ export default function PlayerProfilePage() {
 
             <div>
               <div className={label}>Position</div>
-              <select
-                className={input}
-                value={pozicijaValue}
-                onChange={(e) => setPozicijaValue(e.target.value)}
-              >
+              <select className={input} value={pozicijaValue} onChange={(e) => setPozicijaValue(e.target.value)}>
                 <option value="">No position</option>
                 {positions.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -259,15 +264,29 @@ export default function PlayerProfilePage() {
               )}
             </div>
 
+            {/* ✅ Password change (optional) - samo 1 polje */}
+            <div>
+              <div className="mb-2 text-sm font-semibold text-dark dark:text-white">Change password (optional)</div>
+
+              <div>
+                <div className={label}>New password</div>
+                <input
+                  className={input}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Leave empty to keep current"
+                  autoComplete="new-password"
+                />
+              </div>
+
+            </div>
+
             <button className={btn} disabled={saving} type="submit">
               {saving ? "Saving..." : "Save changes"}
             </button>
 
-            {msg && (
-              <p className={cn("text-sm", msg.includes("✅") ? "text-green-600" : "text-red")}>
-                {msg}
-              </p>
-            )}
+            {msg && <p className={cn("text-sm", msg.includes("✅") ? "text-green-600" : "text-red")}>{msg}</p>}
           </form>
         ) : (
           <p className="text-red">{msg ?? "Profil ni na voljo."}</p>
