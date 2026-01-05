@@ -19,6 +19,13 @@ export const revalidate = 0;
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
+function toIsoUtc(value: any) {
+  // spreključi: Date | string | number
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
 export async function GET() {
   try {
     await sql.begin(async (tx) => {
@@ -83,24 +90,25 @@ export async function GET() {
         );
       `;
 
+      // ✅ TIMEZONE SAFE
       await tx`
         CREATE TABLE treningi (
           id UUID PRIMARY KEY,
           ekipa_id UUID REFERENCES ekipe(id),
           trener_id UUID REFERENCES trenerji(id),
-          zacetek TIMESTAMP NOT NULL,
-          konec TIMESTAMP NOT NULL,
+          zacetek TIMESTAMPTZ NOT NULL,
+          konec TIMESTAMPTZ NOT NULL,
           povrsina TEXT NOT NULL,
           opis TEXT
         );
       `;
 
-      // ✅ KLJUČNO: dodan ekipa_id v tekme
+      // ✅ TIMEZONE SAFE + ekipa_id
       await tx`
         CREATE TABLE tekme (
           id UUID PRIMARY KEY,
           ekipa_id UUID REFERENCES ekipe(id) ON DELETE CASCADE,
-          cas_tekme TIMESTAMP NOT NULL,
+          cas_tekme TIMESTAMPTZ NOT NULL,
           kraj TEXT,
           nasprotnik_id UUID REFERENCES nasprotne_ekipe(id)
         );
@@ -159,35 +167,47 @@ export async function GET() {
         await tx`INSERT INTO nasprotne_ekipe VALUES (${n.id}, ${n.ime_ekipe})`;
       }
 
+      // ✅ treningi: normaliziraj v ISO UTC
       for (const tr of treningi) {
+        const zacetekIso = toIsoUtc(tr.zacetek);
+        const konecIso = toIsoUtc(tr.konec);
+
+        if (!zacetekIso || !konecIso) {
+          throw new Error(`Invalid treningi date for trening id=${tr.id}`);
+        }
+
         await tx`
-          INSERT INTO treningi
-          VALUES (${tr.id}, ${tr.ekipa_id}, ${tr.trener_id}, ${tr.zacetek}, ${tr.konec}, ${tr.povrsina}, ${tr.opis})
+          INSERT INTO treningi (id, ekipa_id, trener_id, zacetek, konec, povrsina, opis)
+          VALUES (${tr.id}, ${tr.ekipa_id}, ${tr.trener_id}, ${zacetekIso}, ${konecIso}, ${tr.povrsina}, ${tr.opis})
         `;
       }
 
-      // ✅ Tekmam dodelimo ekipa_id (da ne rabiš spreminjat placeholder-data)
-      // primer: prva tekma -> ekipe[0], druga -> ekipe[1], tretja -> ekipe[2] ... (krožno)
+      // ✅ tekme: dodeli ekipa_id + normaliziraj v ISO UTC
       for (let idx = 0; idx < tekme.length; idx++) {
         const g = tekme[idx];
         const teamId = ekipe[idx % ekipe.length]?.id ?? ekipe[0].id;
 
+        const casIso = toIsoUtc(g.cas_tekme);
+        if (!casIso) {
+          throw new Error(`Invalid tekme date for tekma id=${g.id}`);
+        }
+
         await tx`
           INSERT INTO tekme (id, ekipa_id, cas_tekme, kraj, nasprotnik_id)
-          VALUES (${g.id}, ${teamId}, ${g.cas_tekme}, ${g.kraj_tekme}, ${g.nasprotna_ekipa_id})
+          VALUES (${g.id}, ${teamId}, ${casIso}, ${g.kraj_tekme}, ${g.nasprotna_ekipa_id})
         `;
       }
 
       for (const it of igralecTrening) {
         await tx`
-          INSERT INTO igralec_trening
+          INSERT INTO igralec_trening (id, igralec_id, trening_id, prisoten)
           VALUES (${uuidv4()}, ${it.igralec_id}, ${it.trening_id}, ${it.prisoten})
         `;
       }
 
       for (const ig of igralecTekma) {
         await tx`
-          INSERT INTO igralec_tekma
+          INSERT INTO igralec_tekma (id, igralec_id, tekma_id, minute, pozicija_id)
           VALUES (${uuidv4()}, ${ig.igralec_id}, ${ig.tekma_id}, ${ig.minute}, ${ig.pozicija_id})
         `;
       }
@@ -196,6 +216,6 @@ export async function GET() {
     return Response.json({ message: "Database seeded successfully" });
   } catch (e: any) {
     console.error("SEED ERROR:", e);
-    return Response.json({ error: e.message }, { status: 500 });
+    return Response.json({ error: e.message ?? "Seed failed" }, { status: 500 });
   }
 }
