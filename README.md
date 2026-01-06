@@ -1,4 +1,4 @@
-# ⚽ Football Team Management Dashboard
+# ⚽ Football Team Management 
 
 Spletna aplikacija za upravljanje nogometne ekipe, namenjena trenerjem in igralcem.  
 Aplikacija omogoča pregled in upravljanje treningov, tekem, igralcev ter uporabniških profilov z varno avtentikacijo.
