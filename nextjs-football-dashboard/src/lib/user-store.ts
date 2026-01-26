@@ -7,23 +7,31 @@ export type StoredUser = {
   role: "igralec" | "trener";
 };
 
-const KEY = "logged_user";
+const STORAGE_KEY = "logged_user";
 
-/* ===============================
-   SHRANI UPORABNIKA
-   =============================== */
-export function saveUser(user: StoredUser) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(KEY, JSON.stringify(user));
+/**
+ * Helper: localStorage je na voljo samo v browserju.
+ */
+function isBrowser(): boolean {
+  return typeof window !== "undefined";
 }
 
-/* ===============================
-   PREBERI UPORABNIKA
-   =============================== */
-export function getUser(): StoredUser | null {
-  if (typeof window === "undefined") return null;
+/**
+ * Shrani prijavljenega uporabnika v localStorage.
+ */
+export function saveUser(user: StoredUser): void {
+  if (!isBrowser()) return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+}
 
-  const raw = localStorage.getItem(KEY);
+/**
+ * Prebere prijavljenega uporabnika iz localStorage.
+ * Vrne null, če ni podatkov ali če je JSON pokvarjen.
+ */
+export function getUser(): StoredUser | null {
+  if (!isBrowser()) return null;
+
+  const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
 
   try {
@@ -33,10 +41,10 @@ export function getUser(): StoredUser | null {
   }
 }
 
-/* ===============================
-   ODJAVA
-   =============================== */
-export function clearUser() {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(KEY);
+/**
+ * Odjavi uporabnika (pobriše localStorage).
+ */
+export function clearUser(): void {
+  if (!isBrowser()) return;
+  localStorage.removeItem(STORAGE_KEY);
 }
