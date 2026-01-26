@@ -55,7 +55,7 @@ Projekt je zgrajen z **Next.js (App Router)**, **PostgreSQL** in gostovan na **V
 
 ---
 
-## 🛠️ Tehnologije
+### 🛠️ Tehnologije
 
 - **Frontend**
   - Next.js 15 (App Router)
@@ -99,15 +99,10 @@ Projekt je zgrajen z **Next.js (App Router)**, **PostgreSQL** in gostovan na **V
 Datumi:
 - `treningi.zacetek`, `treningi.konec`
 - `tekme.cas_tekme`
-
-➡️ **TIMESTAMPTZ (UTC)**
-
+  
 ---
 
-## ▶️ Zagon projekta lokalno
----
-
-## 🔧 Environment variables
+### 🔧 Environment variables
 
 - Ustvari datoteko `.env.local` v rootu projekta.
 
@@ -115,17 +110,17 @@ Datumi:
 
 ### env
 
-## Database (PostgreSQL)
+### Database (PostgreSQL)
 - POSTGRES_URL="postgresql://USER:PASSWORD@HOST:PORT/DB_NAME?sslmode=require"
 
-## Auth / JWT (primer – prilagodi po projektu)
+### Auth / JWT (primer – prilagodi po projektu)
 JWT_SECRET="change-me-to-a-long-random-string"
 
 ## NextAuth (če uporabljaš next-auth)
 NEXTAUTH_URL="http://localhost:3000"
 - NEXTAUTH_SECRET="change-me-to-a-long-random-string"
 
-## 📜 Scripts
+### 📜 Scripts
 
 | Ukaz | Opis |
 |------|------|
@@ -145,7 +140,7 @@ NEXTAUTH_URL="http://localhost:3000"
 git clone https://github.com/USERNAME/REPO_NAME.git
 cd REPO_NAME
 
-## 🔁 CI/CD & Branch strategy
+### 🔁 CI/CD & Branch strategy
 
 ### Branching model
 
