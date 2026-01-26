@@ -1,6 +1,11 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
+  testDir: './e2e', // ✅ samo E2E testi iz mape e2e
+
+  // (optional) dodatno zaklene, da pobere samo *.spec.*
+  testMatch: /.*\.spec\.(ts|js)/,
+
   use: {
     baseURL: 'http://127.0.0.1:3000',
   },
