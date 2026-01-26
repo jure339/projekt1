@@ -1,24 +1,24 @@
-import postgres from "postgres";
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import postgres from 'postgres';
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 const JWT_SECRET = process.env.JWT_SECRET!;
-if (!JWT_SECRET) throw new Error("Missing JWT_SECRET in env.");
+if (!JWT_SECRET) throw new Error('Missing JWT_SECRET in env.');
 
 type TokenPayload = {
   sub: string;
-  role: "igralec" | "trener";
+  role: 'igralec' | 'trener';
   email: string;
 };
 
 async function getAuthPayload(): Promise<TokenPayload | null> {
   const cookieStore = await cookies(); // ✅ Next 15
-  const token = cookieStore.get("auth")?.value;
+  const token = cookieStore.get('auth')?.value;
   if (!token) return null;
 
   try {
@@ -33,13 +33,13 @@ async function requireCoach() {
   if (!payload) {
     return {
       ok: false as const,
-      res: NextResponse.json({ error: "Not logged in." }, { status: 401 }),
+      res: NextResponse.json({ error: 'Not logged in.' }, { status: 401 }),
     };
   }
-  if (payload.role !== "trener") {
+  if (payload.role !== 'trener') {
     return {
       ok: false as const,
-      res: NextResponse.json({ error: "Coach only." }, { status: 403 }),
+      res: NextResponse.json({ error: 'Coach only.' }, { status: 403 }),
     };
   }
   return { ok: true as const, payload };
@@ -76,19 +76,21 @@ export async function GET(_req: Request, ctx: any) {
   if (!auth.ok) return auth.res;
 
   try {
-    const id = String(ctx?.params?.id ?? "");
-    if (!id) return NextResponse.json({ error: "Missing game id." }, { status: 400 });
+    const id = String(ctx?.params?.id ?? '');
+    if (!id) return NextResponse.json({ error: 'Missing game id.' }, { status: 400 });
 
     const teamId = await getCoachTeamId(auth.payload.sub);
-    if (!teamId) return NextResponse.json({ error: "Coach has no team assigned." }, { status: 409 });
+    if (!teamId)
+      return NextResponse.json({ error: 'Coach has no team assigned.' }, { status: 409 });
 
     const game = await loadGameForTeam(id, teamId);
-    if (!game) return NextResponse.json({ error: "Game not found (or not in your team)." }, { status: 404 });
+    if (!game)
+      return NextResponse.json({ error: 'Game not found (or not in your team).' }, { status: 404 });
 
-    return NextResponse.json({ game }, { status: 200, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ game }, { status: 200, headers: { 'Cache-Control': 'no-store' } });
   } catch (e) {
-    console.error("GET /api/game/[id] error:", e);
-    return NextResponse.json({ error: "Failed to load game." }, { status: 500 });
+    console.error('GET /api/game/[id] error:', e);
+    return NextResponse.json({ error: 'Failed to load game.' }, { status: 500 });
   }
 }
 
@@ -97,11 +99,12 @@ export async function PATCH(req: Request, ctx: any) {
   if (!auth.ok) return auth.res;
 
   try {
-    const id = String(ctx?.params?.id ?? "");
-    if (!id) return NextResponse.json({ error: "Missing game id." }, { status: 400 });
+    const id = String(ctx?.params?.id ?? '');
+    if (!id) return NextResponse.json({ error: 'Missing game id.' }, { status: 400 });
 
     const teamId = await getCoachTeamId(auth.payload.sub);
-    if (!teamId) return NextResponse.json({ error: "Coach has no team assigned." }, { status: 409 });
+    if (!teamId)
+      return NextResponse.json({ error: 'Coach has no team assigned.' }, { status: 409 });
 
     const body = (await req.json()) as Partial<{
       cas_tekme: string;
@@ -110,32 +113,34 @@ export async function PATCH(req: Request, ctx: any) {
     }>;
 
     // ✅ flags: ali je polje sploh prisotno v body?
-    const hasCas = typeof body.cas_tekme === "string";
-    const hasKraj = Object.prototype.hasOwnProperty.call(body, "kraj");
-    const hasOpp = Object.prototype.hasOwnProperty.call(body, "nasprotnik_id");
+    const hasCas = typeof body.cas_tekme === 'string';
+    const hasKraj = Object.prototype.hasOwnProperty.call(body, 'kraj');
+    const hasOpp = Object.prototype.hasOwnProperty.call(body, 'nasprotnik_id');
 
     // ✅ vrednosti (nikoli undefined!)
-    const casVal = hasCas ? String(body.cas_tekme) : ""; // uporabljeno samo če hasCas=true
-    const krajVal =
-      hasKraj ? (body.kraj === null ? null : String(body.kraj ?? "").trim() || null) : null;
-    const oppVal =
-      hasOpp
-        ? body.nasprotnik_id === null
-          ? null
-          : String(body.nasprotnik_id ?? "").trim() || null
-        : null;
+    const casVal = hasCas ? String(body.cas_tekme) : ''; // uporabljeno samo če hasCas=true
+    const krajVal = hasKraj
+      ? body.kraj === null
+        ? null
+        : String(body.kraj ?? '').trim() || null
+      : null;
+    const oppVal = hasOpp
+      ? body.nasprotnik_id === null
+        ? null
+        : String(body.nasprotnik_id ?? '').trim() || null
+      : null;
 
     if (hasCas) {
       const d = new Date(casVal);
       if (Number.isNaN(d.getTime())) {
-        return NextResponse.json({ error: "Invalid date/time." }, { status: 400 });
+        return NextResponse.json({ error: 'Invalid date/time.' }, { status: 400 });
       }
     }
 
     // ✅ preveri, da je tekma res od njegove ekipe
     const existing = await loadGameForTeam(id, teamId);
     if (!existing) {
-      return NextResponse.json({ error: "Game not found (or not in your team)." }, { status: 404 });
+      return NextResponse.json({ error: 'Game not found (or not in your team).' }, { status: 404 });
     }
 
     // ✅ UPDATE brez undefined parametrov
@@ -149,10 +154,13 @@ export async function PATCH(req: Request, ctx: any) {
     `;
 
     const game = await loadGameForTeam(id, teamId);
-    return NextResponse.json({ success: true, game }, { status: 200, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(
+      { success: true, game },
+      { status: 200, headers: { 'Cache-Control': 'no-store' } },
+    );
   } catch (e: any) {
-    console.error("PATCH /api/game/[id] error:", e);
-    return NextResponse.json({ error: e?.message ?? "Failed to save game." }, { status: 500 });
+    console.error('PATCH /api/game/[id] error:', e);
+    return NextResponse.json({ error: e?.message ?? 'Failed to save game.' }, { status: 500 });
   }
 }
 
@@ -161,11 +169,12 @@ export async function DELETE(_req: Request, ctx: any) {
   if (!auth.ok) return auth.res;
 
   try {
-    const id = String(ctx?.params?.id ?? "");
-    if (!id) return NextResponse.json({ error: "Missing game id." }, { status: 400 });
+    const id = String(ctx?.params?.id ?? '');
+    if (!id) return NextResponse.json({ error: 'Missing game id.' }, { status: 400 });
 
     const teamId = await getCoachTeamId(auth.payload.sub);
-    if (!teamId) return NextResponse.json({ error: "Coach has no team assigned." }, { status: 409 });
+    if (!teamId)
+      return NextResponse.json({ error: 'Coach has no team assigned.' }, { status: 409 });
 
     const result = await sql`
       DELETE FROM tekme
@@ -173,12 +182,12 @@ export async function DELETE(_req: Request, ctx: any) {
     `;
 
     if (result.count === 0) {
-      return NextResponse.json({ error: "Game not found (or not in your team)." }, { status: 404 });
+      return NextResponse.json({ error: 'Game not found (or not in your team).' }, { status: 404 });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (e: any) {
-    console.error("DELETE /api/game/[id] error:", e);
-    return NextResponse.json({ error: e?.message ?? "Failed to delete game." }, { status: 500 });
+    console.error('DELETE /api/game/[id] error:', e);
+    return NextResponse.json({ error: e?.message ?? 'Failed to delete game.' }, { status: 500 });
   }
 }

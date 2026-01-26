@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 const CheckboxThree = () => {
   const [isChecked, setIsChecked] = useState<boolean>(false);
@@ -21,15 +21,11 @@ const CheckboxThree = () => {
           <div
             className={`box mr-2 flex h-5 w-5 items-center justify-center rounded border ${
               isChecked
-                ? "border-primary bg-gray-2 dark:bg-transparent"
-                : "border-dark-5 dark:border-dark-6"
+                ? 'border-primary bg-gray-2 dark:bg-transparent'
+                : 'border-dark-5 dark:border-dark-6'
             }`}
           >
-            <span
-              className={`text-primary opacity-0 ${
-                isChecked && "!opacity-100"
-              }`}
-            >
+            <span className={`text-primary opacity-0 ${isChecked && '!opacity-100'}`}>
               <svg
                 className="fill-current"
                 width="11"

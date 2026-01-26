@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
-import postgres from "postgres";
-import bcrypt from "bcryptjs";
-import { v4 as uuidv4 } from "uuid";
+import { NextResponse } from 'next/server';
+import postgres from 'postgres';
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
-type Role = "igralec" | "trener";
+type Role = 'igralec' | 'trener';
 
 export async function POST(req: Request) {
   try {
@@ -22,12 +22,12 @@ export async function POST(req: Request) {
     };
 
     if (!role || !ime || !priimek || !starost || !email || !password) {
-      return NextResponse.json({ error: "Manjkajo podatki." }, { status: 400 });
+      return NextResponse.json({ error: 'Manjkajo podatki.' }, { status: 400 });
     }
 
     const hashed = await bcrypt.hash(password, 10);
 
-    if (role === "trener") {
+    if (role === 'trener') {
       // trenerji: (id, ime, priimek, starost, email UNIQUE, password, ekipa_id)
       const id = uuidv4();
 
@@ -38,13 +38,17 @@ export async function POST(req: Request) {
         `;
       } catch (err: any) {
         // UNIQUE email
-        if (String(err?.message || "").toLowerCase().includes("duplicate")) {
-          return NextResponse.json({ error: "Email je že v uporabi." }, { status: 409 });
+        if (
+          String(err?.message || '')
+            .toLowerCase()
+            .includes('duplicate')
+        ) {
+          return NextResponse.json({ error: 'Email je že v uporabi.' }, { status: 409 });
         }
         throw err;
       }
 
-      return NextResponse.json({ message: "Registracija uspešna", user: { id, role, email } });
+      return NextResponse.json({ message: 'Registracija uspešna', user: { id, role, email } });
     }
 
     // igralci: (id, ime, priimek, starost, visina, pozicija_id, stevilka_dresa, email UNIQUE, password, ekipa_id)
@@ -65,15 +69,19 @@ export async function POST(req: Request) {
            ${email}, ${hashed}, ${ekipa_id ?? null})
       `;
     } catch (err: any) {
-      if (String(err?.message || "").toLowerCase().includes("duplicate")) {
-        return NextResponse.json({ error: "Email je že v uporabi." }, { status: 409 });
+      if (
+        String(err?.message || '')
+          .toLowerCase()
+          .includes('duplicate')
+      ) {
+        return NextResponse.json({ error: 'Email je že v uporabi.' }, { status: 409 });
       }
       throw err;
     }
 
-    return NextResponse.json({ message: "Registracija uspešna", user: { id, role, email } });
+    return NextResponse.json({ message: 'Registracija uspešna', user: { id, role, email } });
   } catch (e: any) {
-    console.error("REGISTER ERROR:", e);
-    return NextResponse.json({ error: "Napaka pri registraciji." }, { status: 500 });
+    console.error('REGISTER ERROR:', e);
+    return NextResponse.json({ error: 'Napaka pri registraciji.' }, { status: 500 });
   }
 }

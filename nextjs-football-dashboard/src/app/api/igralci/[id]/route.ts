@@ -1,16 +1,16 @@
-import postgres from "postgres";
+import postgres from 'postgres';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 export async function DELETE(_req: Request, ctx: any) {
   try {
-    const id = String(ctx?.params?.id ?? "");
+    const id = String(ctx?.params?.id ?? '');
 
     if (!id) {
-      return Response.json({ error: "Manjka ID igralca." }, { status: 400 });
+      return Response.json({ error: 'Manjka ID igralca.' }, { status: 400 });
     }
 
     // Če je id v bazi integer, raje:
@@ -25,18 +25,12 @@ export async function DELETE(_req: Request, ctx: any) {
     const result = await sql`DELETE FROM igralci WHERE id = ${id};`;
 
     if (result.count === 0) {
-      return Response.json(
-        { error: "Igralec ne obstaja ali je že izbrisan." },
-        { status: 404 }
-      );
+      return Response.json({ error: 'Igralec ne obstaja ali je že izbrisan.' }, { status: 404 });
     }
 
     return Response.json({ success: true }, { status: 200 });
   } catch (e: any) {
-    console.error("DELETE /api/igralci/[id] error:", e);
-    return Response.json(
-      { error: e?.message ?? "Napaka pri brisanju igralca." },
-      { status: 500 }
-    );
+    console.error('DELETE /api/igralci/[id] error:', e);
+    return Response.json({ error: e?.message ?? 'Napaka pri brisanju igralca.' }, { status: 500 });
   }
 }

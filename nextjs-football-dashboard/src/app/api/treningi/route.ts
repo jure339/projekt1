@@ -1,18 +1,18 @@
-import postgres from "postgres";
-import { v4 as uuidv4 } from "uuid";
+import postgres from 'postgres';
+import { v4 as uuidv4 } from 'uuid';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const ekipaId = searchParams.get("ekipaId");
+    const ekipaId = searchParams.get('ekipaId');
 
     if (!ekipaId) {
-      return Response.json({ error: "Missing ekipaId", trainings: [] }, { status: 400 });
+      return Response.json({ error: 'Missing ekipaId', trainings: [] }, { status: 400 });
     }
 
     const rows = await sql`
@@ -22,10 +22,10 @@ export async function GET(req: Request) {
       ORDER BY zacetek ASC;
     `;
 
-    return Response.json({ trainings: rows }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ trainings: rows }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (e: any) {
-    console.error("GET /api/treningi error:", e);
-    return Response.json({ error: e.message ?? "Napaka", trainings: [] }, { status: 500 });
+    console.error('GET /api/treningi error:', e);
+    return Response.json({ error: e.message ?? 'Napaka', trainings: [] }, { status: 500 });
   }
 }
 
@@ -35,15 +35,15 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const id = uuidv4();
-    const ekipa_id = String(body.ekipa_id ?? "");
-    const trener_id = String(body.trener_id ?? "");
-    const zacetek = String(body.zacetek ?? "");
-    const konec = String(body.konec ?? "");
-    const povrsina = String(body.povrsina ?? "");
+    const ekipa_id = String(body.ekipa_id ?? '');
+    const trener_id = String(body.trener_id ?? '');
+    const zacetek = String(body.zacetek ?? '');
+    const konec = String(body.konec ?? '');
+    const povrsina = String(body.povrsina ?? '');
     const opis = body.opis ? String(body.opis) : null;
 
     if (!ekipa_id || !zacetek || !konec || !povrsina) {
-      return Response.json({ error: "Manjkajo podatki." }, { status: 400 });
+      return Response.json({ error: 'Manjkajo podatki.' }, { status: 400 });
     }
 
     const rows = await sql`
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
 
     return Response.json({ training: rows[0] }, { status: 201 });
   } catch (e: any) {
-    console.error("POST /api/treningi error:", e);
-    return Response.json({ error: e.message ?? "Napaka" }, { status: 500 });
+    console.error('POST /api/treningi error:', e);
+    return Response.json({ error: e.message ?? 'Napaka' }, { status: 500 });
   }
 }

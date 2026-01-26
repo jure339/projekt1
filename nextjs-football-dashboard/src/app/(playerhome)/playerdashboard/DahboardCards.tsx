@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 type Training = {
   id: string;
@@ -19,7 +19,7 @@ type Game = {
   nasprotnik: string | null;
 };
 
-type Role = "igralec" | "trener";
+type Role = 'igralec' | 'trener';
 
 type Props = {
   className?: string;
@@ -53,40 +53,40 @@ export default function DashboardCards({ className }: Props) {
 
       try {
         // ✅ kdo sem (iz cookie tokena) -> samo za role (da skrijemo gumbe)
-        const meRes = await fetch("/api/auth/me", { cache: "no-store" });
+        const meRes = await fetch('/api/auth/me', { cache: 'no-store' });
         const meData = await safeReadJson(meRes);
 
         if (!meRes.ok) {
-          setMsg(meData?.error ?? "Ni prijavljen.");
+          setMsg(meData?.error ?? 'Ni prijavljen.');
           return;
         }
 
         const u = meData?.user as { role: Role } | null;
         if (!u) {
-          setMsg("Ni prijavljen.");
+          setMsg('Ni prijavljen.');
           return;
         }
 
         setRole(u.role);
 
         // ✅ EKIPA ID vedno pridobimo iz igralca (ne iz trenerja)
-        const ekRes = await fetch("/api/igralci/moja-ekipa", { cache: "no-store" });
+        const ekRes = await fetch('/api/igralci/moja-ekipa', { cache: 'no-store' });
         const ekData = await safeReadJson(ekRes);
 
         if (!ekRes.ok) {
-          setMsg(ekData?.error ?? "Ne morem pridobiti ekipe igralca.");
+          setMsg(ekData?.error ?? 'Ne morem pridobiti ekipe igralca.');
           return;
         }
 
         const id = ekData?.ekipaId as string | undefined;
         if (!id) {
-          setMsg("Igralec nima dodeljene ekipe.");
+          setMsg('Igralec nima dodeljene ekipe.');
           return;
         }
 
         setEkipaId(id);
       } catch {
-        setMsg("Napaka pri povezavi.");
+        setMsg('Napaka pri povezavi.');
       } finally {
         setLoading(false);
       }
@@ -104,24 +104,24 @@ export default function DashboardCards({ className }: Props) {
       try {
         const [tRes, gRes] = await Promise.all([
           fetch(`/api/treningi/recent-traning?ekipaId=${encodeURIComponent(ekipaId)}`, {
-            cache: "no-store",
+            cache: 'no-store',
           }),
           fetch(`/api/game/upcoming-game?ekipaId=${encodeURIComponent(ekipaId)}`, {
-            cache: "no-store",
+            cache: 'no-store',
           }),
         ]);
 
         const tData = await safeReadJson(tRes);
         const gData = await safeReadJson(gRes);
 
-        setTraining(tRes.ok ? tData?.training ?? null : null);
-        setGame(gRes.ok ? gData?.game ?? null : null);
+        setTraining(tRes.ok ? (tData?.training ?? null) : null);
+        setGame(gRes.ok ? (gData?.game ?? null) : null);
 
         if (!tRes.ok || !gRes.ok) {
-          setMsg(tData?.error ?? gData?.error ?? "Napaka pri nalaganju podatkov.");
+          setMsg(tData?.error ?? gData?.error ?? 'Napaka pri nalaganju podatkov.');
         }
       } catch {
-        setMsg("Napaka pri povezavi.");
+        setMsg('Napaka pri povezavi.');
       } finally {
         setLoading(false);
       }
@@ -129,16 +129,16 @@ export default function DashboardCards({ className }: Props) {
   }, [ekipaId]);
 
   const card =
-    "rounded-[14px] border border-stroke bg-white p-6 shadow-1 dark:border-primary/30 dark:bg-gray-dark dark:shadow-card";
-  const title = "text-xl font-bold text-dark dark:text-white";
-  const muted = "text-dark-6 dark:text-white/70";
+    'rounded-[14px] border border-stroke bg-white p-6 shadow-1 dark:border-primary/30 dark:bg-gray-dark dark:shadow-card';
+  const title = 'text-xl font-bold text-dark dark:text-white';
+  const muted = 'text-dark-6 dark:text-white/70';
   const btn =
-    "inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90";
+    'inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90';
 
-  const isTrainer = role === "trener";
+  const isTrainer = role === 'trener';
 
   return (
-    <div className={cn("col-span-12", className)}>
+    <div className={cn('col-span-12', className)}>
       {msg && <p className="mb-3 text-sm text-red">{msg}</p>}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -165,7 +165,7 @@ export default function DashboardCards({ className }: Props) {
               {training.opis && <div className={muted}>{training.opis}</div>}
             </>
           ) : (
-            <p className={cn("text-center", muted)}>No trainings</p>
+            <p className={cn('text-center', muted)}>No trainings</p>
           )}
         </div>
 
@@ -190,13 +190,13 @@ export default function DashboardCards({ className }: Props) {
               </div>
 
               <div className={muted}>
-                {game.nasprotnik ? `Opponent: ${game.nasprotnik}` : "Opponent not set"}
+                {game.nasprotnik ? `Opponent: ${game.nasprotnik}` : 'Opponent not set'}
               </div>
 
               {game.kraj && <div className={muted}>Location: {game.kraj}</div>}
             </>
           ) : (
-            <p className={cn("text-center", muted)}>No games</p>
+            <p className={cn('text-center', muted)}>No games</p>
           )}
         </div>
       </div>

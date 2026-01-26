@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
-import postgres from "postgres";
-import bcrypt from "bcryptjs";
-import { signAuthToken, type Role } from "@/lib/auth";
+import { NextResponse } from 'next/server';
+import postgres from 'postgres';
+import bcrypt from 'bcryptjs';
+import { signAuthToken, type Role } from '@/lib/auth';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 export async function POST(req: Request) {
   try {
@@ -14,10 +14,10 @@ export async function POST(req: Request) {
     };
 
     if (!email || !password || !role) {
-      return NextResponse.json({ error: "Manjkajo podatki." }, { status: 400 });
+      return NextResponse.json({ error: 'Manjkajo podatki.' }, { status: 400 });
     }
 
-    const table = role === "igralec" ? "igralci" : "trenerji";
+    const table = role === 'igralec' ? 'igralci' : 'trenerji';
 
     const rows = await sql`
       SELECT id, ime, priimek, email, password, ekipa_id
@@ -27,14 +27,14 @@ export async function POST(req: Request) {
     `;
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: "Napačen email ali geslo." }, { status: 401 });
+      return NextResponse.json({ error: 'Napačen email ali geslo.' }, { status: 401 });
     }
 
     const user = rows[0];
     const ok = await bcrypt.compare(password, user.password);
 
     if (!ok) {
-      return NextResponse.json({ error: "Napačen email ali geslo." }, { status: 401 });
+      return NextResponse.json({ error: 'Napačen email ali geslo.' }, { status: 401 });
     }
 
     const token = await signAuthToken({
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     });
 
     const res = NextResponse.json({
-      message: "OK",
+      message: 'OK',
       user: {
         id: user.id,
         ime: user.ime,
@@ -55,17 +55,17 @@ export async function POST(req: Request) {
       },
     });
 
-    res.cookies.set("auth", token, {
+    res.cookies.set('auth', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 dni
     });
 
     return res;
   } catch (e: any) {
-    console.error("LOGIN ERROR:", e);
-    return NextResponse.json({ error: "Napaka pri prijavi." }, { status: 500 });
+    console.error('LOGIN ERROR:', e);
+    return NextResponse.json({ error: 'Napaka pri prijavi.' }, { status: 500 });
   }
 }

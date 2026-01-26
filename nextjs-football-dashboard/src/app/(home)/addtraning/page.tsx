@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import InputGroup from "@/components/FormElements/InputGroup";
-import { getUser, type StoredUser } from "@/lib/user-store";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import InputGroup from '@/components/FormElements/InputGroup';
+import { getUser, type StoredUser } from '@/lib/user-store';
 
 type Payload = {
   ekipa_id: string;
@@ -27,17 +27,17 @@ async function safeJson(res: Response) {
 export default function AddTrainingPage() {
   const router = useRouter();
 
-  const [teamId, setTeamId] = useState<string>("");
-  const [teamName, setTeamName] = useState<string>("");
+  const [teamId, setTeamId] = useState<string>('');
+  const [teamName, setTeamName] = useState<string>('');
 
-  const [coachId, setCoachId] = useState<string>("");
+  const [coachId, setCoachId] = useState<string>('');
 
   // datetime-local format: YYYY-MM-DDTHH:mm
-  const [startLocal, setStartLocal] = useState<string>("");
-  const [endLocal, setEndLocal] = useState<string>("");
+  const [startLocal, setStartLocal] = useState<string>('');
+  const [endLocal, setEndLocal] = useState<string>('');
 
-  const [surface, setSurface] = useState<string>("umetna");
-  const [description, setDescription] = useState<string>("");
+  const [surface, setSurface] = useState<string>('umetna');
+  const [description, setDescription] = useState<string>('');
 
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,17 +48,17 @@ export default function AddTrainingPage() {
     const u: StoredUser | null = getUser();
 
     if (!u) {
-      router.push("/auth/login");
+      router.push('/auth/login');
       return;
     }
 
-    if (u.role !== "trener") {
-      router.push("/dashboard");
+    if (u.role !== 'trener') {
+      router.push('/dashboard');
       return;
     }
 
     if (!u.ekipa_id) {
-      setMsg("Coach has no team assigned.");
+      setMsg('Coach has no team assigned.');
       return;
     }
 
@@ -74,17 +74,17 @@ export default function AddTrainingPage() {
       setLoadingTeam(true);
       try {
         // ⚠️ you said you have /api/ekipa/[id]
-        const res = await fetch(`/api/ekipa/${teamId}`, { cache: "no-store" });
+        const res = await fetch(`/api/ekipa/${teamId}`, { cache: 'no-store' });
         const data = await safeJson(res);
 
         if (!res.ok) {
-          setTeamName("Unknown team");
+          setTeamName('Unknown team');
           return;
         }
 
-        setTeamName(data?.ekipa?.ime ?? "Unknown team");
+        setTeamName(data?.ekipa?.ime ?? 'Unknown team');
       } catch {
-        setTeamName("Unknown team");
+        setTeamName('Unknown team');
       } finally {
         setLoadingTeam(false);
       }
@@ -100,12 +100,12 @@ export default function AddTrainingPage() {
     setMsg(null);
 
     if (!teamId || !coachId) {
-      setMsg("Team or coach is missing.");
+      setMsg('Team or coach is missing.');
       return;
     }
 
     if (!startLocal || !endLocal) {
-      setMsg("Start and end are required.");
+      setMsg('Start and end are required.');
       return;
     }
 
@@ -113,7 +113,7 @@ export default function AddTrainingPage() {
     const endISO = toISOFromLocal(endLocal);
 
     if (new Date(endISO).getTime() <= new Date(startISO).getTime()) {
-      setMsg("End time must be after start time.");
+      setMsg('End time must be after start time.');
       return;
     }
 
@@ -129,40 +129,40 @@ export default function AddTrainingPage() {
     };
 
     try {
-      const res = await fetch("/api/treningi", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/treningi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       const data = await safeJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Failed to save training.");
+        setMsg(data?.error ?? 'Failed to save training.');
         return;
       }
 
-      router.push("/treningi"); // ✅ usually better than dashboard after creating
+      router.push('/treningi'); // ✅ usually better than dashboard after creating
       router.refresh();
     } catch {
-      setMsg("Connection error.");
+      setMsg('Connection error.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 620, margin: "40px auto", padding: 16 }}>
+    <div style={{ maxWidth: 620, margin: '40px auto', padding: 16 }}>
       <h1>Add training</h1>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
+      <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14 }}>
         {/* ✅ Team name locked (display only) */}
         <InputGroup
           label="Team (locked)"
           placeholder="Coach's team"
           type="text"
           required
-          value={loadingTeam ? "Loading team..." : (teamName || "—")}
+          value={loadingTeam ? 'Loading team...' : teamName || '—'}
           handleChange={() => {}}
           disabled
           active={!!teamName}
@@ -228,7 +228,7 @@ export default function AddTrainingPage() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Saving..." : "Add training"}
+          {loading ? 'Saving...' : 'Add training'}
         </button>
 
         <button
@@ -240,7 +240,7 @@ export default function AddTrainingPage() {
           Cancel
         </button>
 
-        {msg && <p style={{ color: "crimson" }}>{msg}</p>}
+        {msg && <p style={{ color: 'crimson' }}>{msg}</p>}
       </form>
     </div>
   );

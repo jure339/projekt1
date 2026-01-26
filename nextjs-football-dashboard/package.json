@@ -2,23 +2,19 @@
   "name": "free-nextadmin-nextjs",
   "version": "1.2.1",
   "private": true,
-"scripts": {
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start",
-
-  "lint": "next lint",
-  "lint:fix": "next lint --fix",
-
-  "format": "prettier . --write",
-  "format:check": "prettier . --check",
-
-  "typecheck": "tsc --noEmit",
-
-  "test": "vitest",
-  "test:ci": "vitest run --coverage",
-  "test:e2e": "playwright test"
-},
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:ci": "vitest run --coverage",
+    "test:e2e": "playwright test"
+  },
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.19",
     "@fullcalendar/interaction": "^6.1.19",

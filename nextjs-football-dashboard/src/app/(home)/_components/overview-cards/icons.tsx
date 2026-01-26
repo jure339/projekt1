@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import type { SVGProps } from 'react';
 
 type SVGPropsType = SVGProps<SVGSVGElement>;
 
@@ -6,10 +6,7 @@ export function Views(props: SVGPropsType) {
   return (
     <svg width={58} height={58} viewBox="0 0 58 58" fill="none" {...props}>
       <circle cx={29} cy={29} r={29} fill="#3FD97F" />
-      <path
-        d="M26.562 29a2.437 2.437 0 114.875 0 2.437 2.437 0 01-4.875 0z"
-        fill="#fff"
-      />
+      <path d="M26.562 29a2.437 2.437 0 114.875 0 2.437 2.437 0 01-4.875 0z" fill="#fff" />
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -50,20 +47,8 @@ export function Users(props: SVGPropsType) {
   return (
     <svg width={58} height={58} viewBox="0 0 58 58" fill="none" {...props}>
       <circle cx={29} cy={29} r={29} fill="#18BFFF" />
-      <ellipse
-        cx={25.7511}
-        cy={22.4998}
-        rx={4.33333}
-        ry={4.33333}
-        fill="#fff"
-      />
-      <ellipse
-        cx={25.7511}
-        cy={34.4178}
-        rx={7.58333}
-        ry={4.33333}
-        fill="#fff"
-      />
+      <ellipse cx={25.7511} cy={22.4998} rx={4.33333} ry={4.33333} fill="#fff" />
+      <ellipse cx={25.7511} cy={34.4178} rx={7.58333} ry={4.33333} fill="#fff" />
       <path
         d="M38.75 34.417c0 1.795-2.206 3.25-4.898 3.25.793-.867 1.339-1.955 1.339-3.248 0-1.295-.547-2.384-1.342-3.252 2.693 0 4.9 1.455 4.9 3.25zM35.5 22.501a3.25 3.25 0 01-4.364 3.054 6.163 6.163 0 00.805-3.055c0-1.11-.293-2.152-.804-3.053A3.25 3.25 0 0135.5 22.5z"
         fill="#fff"

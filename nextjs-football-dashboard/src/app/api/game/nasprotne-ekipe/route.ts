@@ -1,24 +1,24 @@
-import postgres from "postgres";
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
-import { randomUUID } from "crypto";
+import postgres from 'postgres';
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 type TokenPayload = {
   sub: string;
-  role: "igralec" | "trener";
+  role: 'igralec' | 'trener';
   email: string;
 };
 
 async function getAuthPayload(): Promise<TokenPayload | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get("auth")?.value;
+  const token = cookieStore.get('auth')?.value;
   if (!token) return null;
 
   try {
@@ -34,14 +34,14 @@ async function requireCoach() {
   if (!payload) {
     return {
       ok: false as const,
-      res: NextResponse.json({ error: "Not logged in." }, { status: 401 }),
+      res: NextResponse.json({ error: 'Not logged in.' }, { status: 401 }),
     };
   }
 
-  if (payload.role !== "trener") {
+  if (payload.role !== 'trener') {
     return {
       ok: false as const,
-      res: NextResponse.json({ error: "Coach only." }, { status: 403 }),
+      res: NextResponse.json({ error: 'Coach only.' }, { status: 403 }),
     };
   }
 
@@ -59,13 +59,13 @@ export async function GET() {
 
     return NextResponse.json(
       { teams: rows },
-      { status: 200, headers: { "Cache-Control": "no-store" } }
+      { status: 200, headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (e: any) {
-    console.error("GET /api/game/nasprotne-ekipe error:", e);
+    console.error('GET /api/game/nasprotne-ekipe error:', e);
     return NextResponse.json(
-      { error: e?.message ?? "Failed to load opponents.", teams: [] },
-      { status: 500 }
+      { error: e?.message ?? 'Failed to load opponents.', teams: [] },
+      { status: 500 },
     );
   }
 }
@@ -77,13 +77,10 @@ export async function POST(req: Request) {
 
   try {
     const body = (await req.json()) as { ime?: string };
-    const ime = String(body?.ime ?? "").trim();
+    const ime = String(body?.ime ?? '').trim();
 
     if (!ime) {
-      return NextResponse.json(
-        { error: "Opponent name is required." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Opponent name is required.' }, { status: 400 });
     }
 
     // optional: prevent duplicates by name
@@ -96,8 +93,8 @@ export async function POST(req: Request) {
 
     if (exists.length > 0) {
       return NextResponse.json(
-        { error: "Opponent already exists.", opponent: exists[0] },
-        { status: 409 }
+        { error: 'Opponent already exists.', opponent: exists[0] },
+        { status: 409 },
       );
     }
 
@@ -110,13 +107,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { success: true, opponent: { id, ime } },
-      { status: 201, headers: { "Cache-Control": "no-store" } }
+      { status: 201, headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (e: any) {
-    console.error("POST /api/game/nasprotne-ekipe error:", e);
+    console.error('POST /api/game/nasprotne-ekipe error:', e);
     return NextResponse.json(
-      { error: e?.message ?? "Failed to create opponent." },
-      { status: 500 }
+      { error: e?.message ?? 'Failed to create opponent.' },
+      { status: 500 },
     );
   }
 }

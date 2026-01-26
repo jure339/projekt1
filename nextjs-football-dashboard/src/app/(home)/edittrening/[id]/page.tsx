@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { getUser } from "@/lib/user-store";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { getUser } from '@/lib/user-store';
+import { cn } from '@/lib/utils';
 
 type Training = {
   id: string;
   zacetek: string; // ISO
-  konec: string;   // ISO
+  konec: string; // ISO
   povrsina: string;
   opis: string | null;
   ekipa_id?: string | null;
@@ -27,9 +27,9 @@ async function safeReadJson(res: Response) {
 // helper: za <input type="datetime-local" />
 function toDateTimeLocalValue(iso: string) {
   const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
+  const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
+    d.getHours(),
   )}:${pad(d.getMinutes())}`;
 }
 
@@ -37,7 +37,7 @@ export default function EditTreningPage() {
   const params = useParams();
   const router = useRouter();
 
-  const id = String((params as any)?.id ?? "");
+  const id = String((params as any)?.id ?? '');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,27 +46,27 @@ export default function EditTreningPage() {
   const [training, setTraining] = useState<Training | null>(null);
 
   // form
-  const [zacetek, setZacetek] = useState("");
-  const [konec, setKonec] = useState("");
-  const [povrsina, setPovrsina] = useState("");
-  const [opis, setOpis] = useState("");
+  const [zacetek, setZacetek] = useState('');
+  const [konec, setKonec] = useState('');
+  const [povrsina, setPovrsina] = useState('');
+  const [opis, setOpis] = useState('');
 
   useEffect(() => {
     // zaščita: samo trener
     const u = getUser();
     if (!u) {
-      setMsg("Ni prijavljen.");
+      setMsg('Ni prijavljen.');
       setLoading(false);
       return;
     }
-    if (u.role !== "trener") {
-      setMsg("Nimaš dostopa (samo trener).");
+    if (u.role !== 'trener') {
+      setMsg('Nimaš dostopa (samo trener).');
       setLoading(false);
       return;
     }
 
     if (!id) {
-      setMsg("Manjka ID treninga.");
+      setMsg('Manjka ID treninga.');
       setLoading(false);
       return;
     }
@@ -77,13 +77,13 @@ export default function EditTreningPage() {
 
       try {
         const res = await fetch(`/api/treningi/${encodeURIComponent(id)}`, {
-          cache: "no-store",
+          cache: 'no-store',
         });
 
         const data = await safeReadJson(res);
 
         if (!res.ok) {
-          setMsg(data?.error ?? "Napaka pri nalaganju treninga.");
+          setMsg(data?.error ?? 'Napaka pri nalaganju treninga.');
           setTraining(null);
           return;
         }
@@ -91,12 +91,12 @@ export default function EditTreningPage() {
         const t = (data?.training ?? data) as Training; // odvisno kaj vrača endpoint
         setTraining(t);
 
-        setZacetek(t.zacetek ? toDateTimeLocalValue(t.zacetek) : "");
-        setKonec(t.konec ? toDateTimeLocalValue(t.konec) : "");
-        setPovrsina(t.povrsina ?? "");
-        setOpis(t.opis ?? "");
+        setZacetek(t.zacetek ? toDateTimeLocalValue(t.zacetek) : '');
+        setKonec(t.konec ? toDateTimeLocalValue(t.konec) : '');
+        setPovrsina(t.povrsina ?? '');
+        setOpis(t.opis ?? '');
       } catch {
-        setMsg("Napaka pri povezavi.");
+        setMsg('Napaka pri povezavi.');
       } finally {
         setLoading(false);
       }
@@ -108,7 +108,7 @@ export default function EditTreningPage() {
     setMsg(null);
 
     if (!zacetek || !konec || !povrsina.trim()) {
-      setMsg("Začetek, konec in površina so obvezni.");
+      setMsg('Začetek, konec in površina so obvezni.');
       return;
     }
 
@@ -119,47 +119,45 @@ export default function EditTreningPage() {
         zacetek: new Date(zacetek).toISOString(),
         konec: new Date(konec).toISOString(),
         povrsina: povrsina.trim(),
-        opis: opis.trim() === "" ? null : opis.trim(),
+        opis: opis.trim() === '' ? null : opis.trim(),
       };
 
       const res = await fetch(`/api/treningi/${encodeURIComponent(id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri shranjevanju.");
+        setMsg(data?.error ?? 'Napaka pri shranjevanju.');
         return;
       }
 
-      setMsg("Shranjeno ✅");
+      setMsg('Shranjeno ✅');
 
       // če želiš nazaj na seznam treningov:
-      router.push("/treningi"); // ← popravi, če je tvoja pot drugačna
+      router.push('/treningi'); // ← popravi, če je tvoja pot drugačna
       router.refresh();
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg('Napaka pri povezavi.');
     } finally {
       setSaving(false);
     }
   }
 
   const card =
-    "rounded-[14px] border border-stroke bg-white p-6 shadow-1 dark:border-primary/30 dark:bg-gray-dark dark:shadow-card";
-  const label = "text-body-sm font-medium text-dark dark:text-white";
+    'rounded-[14px] border border-stroke bg-white p-6 shadow-1 dark:border-primary/30 dark:bg-gray-dark dark:shadow-card';
+  const label = 'text-body-sm font-medium text-dark dark:text-white';
   const input =
-    "mt-2 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-4 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white";
+    'mt-2 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-4 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white';
   const btn =
-    "inline-flex w-full items-center justify-center rounded-lg bg-primary px-5 py-3 font-medium text-white transition disabled:opacity-60";
+    'inline-flex w-full items-center justify-center rounded-lg bg-primary px-5 py-3 font-medium text-white transition disabled:opacity-60';
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-6 text-2xl font-bold text-dark dark:text-white">
-        Edit traning
-      </h1>
+      <h1 className="mb-6 text-2xl font-bold text-dark dark:text-white">Edit traning</h1>
 
       <div className={card}>
         {loading ? (
@@ -202,7 +200,7 @@ export default function EditTreningPage() {
             <div>
               <div className={label}>Description</div>
               <textarea
-                className={cn(input, "min-h-[120px]")}
+                className={cn(input, 'min-h-[120px]')}
                 value={opis}
                 onChange={(e) => setOpis(e.target.value)}
                 placeholder="Optional..."
@@ -210,22 +208,17 @@ export default function EditTreningPage() {
             </div>
 
             <button className={btn} disabled={saving} type="submit">
-              {saving ? "Saving..." : "Save"}
+              {saving ? 'Saving...' : 'Save'}
             </button>
 
             {msg && (
-              <p
-                className={cn(
-                  "text-sm",
-                  msg.includes("✅") ? "text-green-600" : "text-red"
-                )}
-              >
+              <p className={cn('text-sm', msg.includes('✅') ? 'text-green-600' : 'text-red')}>
                 {msg}
               </p>
             )}
           </form>
         ) : (
-          <p className="text-red">{msg ?? "Trening ni na voljo."}</p>
+          <p className="text-red">{msg ?? 'Trening ni na voljo.'}</p>
         )}
       </div>
     </div>

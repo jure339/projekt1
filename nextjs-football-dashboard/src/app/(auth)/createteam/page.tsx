@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { getUser, saveUser, type StoredUser } from "@/lib/user-store";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { getUser, saveUser, type StoredUser } from '@/lib/user-store';
 
 async function safeReadJson(res: Response) {
   const t = await res.text();
@@ -17,7 +17,7 @@ async function safeReadJson(res: Response) {
 export default function CreateTeamPage() {
   const router = useRouter();
 
-  const [teamName, setTeamName] = useState("");
+  const [teamName, setTeamName] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -27,16 +27,16 @@ export default function CreateTeamPage() {
 
     const u = getUser();
     if (!u) {
-      setMsg("Not logged in.");
+      setMsg('Not logged in.');
       return;
     }
-    if (u.role !== "trener") {
-      setMsg("Only a coach can create a team.");
+    if (u.role !== 'trener') {
+      setMsg('Only a coach can create a team.');
       return;
     }
 
     if (!teamName.trim()) {
-      setMsg("Team name is required.");
+      setMsg('Team name is required.');
       return;
     }
 
@@ -45,10 +45,10 @@ export default function CreateTeamPage() {
     try {
       // ✅ IMPORTANT: your API is /api/ekipa (not /api/ekipe)
       // ✅ IMPORTANT: credentials include, so cookie "auth" is sent
-      const res = await fetch("/api/ekipa", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+      const res = await fetch('/api/ekipa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ ime: teamName.trim() }),
       });
 
@@ -70,10 +70,10 @@ export default function CreateTeamPage() {
 
       saveUser(updatedUser);
 
-      router.push("/dashboard");
+      router.push('/dashboard');
       router.refresh();
     } catch {
-      setMsg("Connection error.");
+      setMsg('Connection error.');
     } finally {
       setLoading(false);
     }
@@ -81,9 +81,7 @@ export default function CreateTeamPage() {
 
   return (
     <div className="mx-auto mt-12 max-w-xl rounded-lg bg-white p-6 shadow-1 dark:bg-gray-dark dark:shadow-card">
-      <h1 className="mb-4 text-2xl font-bold text-dark dark:text-white">
-        Create Your Team
-      </h1>
+      <h1 className="mb-4 text-2xl font-bold text-dark dark:text-white">Create Your Team</h1>
 
       <p className="mb-6 text-sm text-dark-6 dark:text-white/70">
         Before you can manage players, trainings and games, you must create your team.
@@ -106,7 +104,7 @@ export default function CreateTeamPage() {
           disabled={loading}
           className="mt-2 rounded-lg bg-primary px-5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Creating team..." : "Create team"}
+          {loading ? 'Creating team...' : 'Create team'}
         </button>
 
         {msg && <p className="text-sm text-red">{msg}</p>}

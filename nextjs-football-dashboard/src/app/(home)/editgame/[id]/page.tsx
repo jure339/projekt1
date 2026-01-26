@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 
 type Game = {
   id: string;
@@ -25,9 +25,9 @@ async function safeReadJson(res: Response) {
 
 function toDatetimeLocal(value: string) {
   const dt = new Date(value);
-  const pad = (n: number) => String(n).padStart(2, "0");
+  const pad = (n: number) => String(n).padStart(2, '0');
   return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(
-    dt.getDate()
+    dt.getDate(),
   )}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
 }
 
@@ -42,9 +42,9 @@ export default function EditGamePage() {
   const [game, setGame] = useState<Game | null>(null);
   const [opponents, setOpponents] = useState<Opponent[]>([]);
 
-  const [cas, setCas] = useState("");
-  const [kraj, setKraj] = useState("");
-  const [nasprotnikId, setNasprotnikId] = useState("");
+  const [cas, setCas] = useState('');
+  const [kraj, setKraj] = useState('');
+  const [nasprotnikId, setNasprotnikId] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -53,16 +53,16 @@ export default function EditGamePage() {
 
       try {
         const [gRes, oRes] = await Promise.all([
-          fetch(`/api/game/${id}`, { cache: "no-store" }),
+          fetch(`/api/game/${id}`, { cache: 'no-store' }),
           // ✅ tvoj endpoint je v /api/game/nasprotne-ekipe
-          fetch(`/api/game/nasprotne-ekipe`, { cache: "no-store" }),
+          fetch(`/api/game/nasprotne-ekipe`, { cache: 'no-store' }),
         ]);
 
         const gData = await safeReadJson(gRes);
         const oData = await safeReadJson(oRes);
 
         if (!gRes.ok) {
-          setMsg(gData?.error ?? "Napaka pri nalaganju tekme.");
+          setMsg(gData?.error ?? 'Napaka pri nalaganju tekme.');
           setGame(null);
           return;
         }
@@ -71,12 +71,12 @@ export default function EditGamePage() {
         setGame(gg);
 
         setCas(toDatetimeLocal(gg.cas_tekme));
-        setKraj(gg.kraj ?? "");
-        setNasprotnikId(gg.nasprotnik_id ?? "");
+        setKraj(gg.kraj ?? '');
+        setNasprotnikId(gg.nasprotnik_id ?? '');
 
         if (oRes.ok) setOpponents(oData?.teams ?? []);
       } catch {
-        setMsg("Napaka pri povezavi.");
+        setMsg('Napaka pri povezavi.');
       } finally {
         setLoading(false);
       }
@@ -88,25 +88,25 @@ export default function EditGamePage() {
     setMsg(null);
 
     if (!cas.trim()) {
-      setMsg("Čas tekme je obvezen.");
+      setMsg('Čas tekme je obvezen.');
       return;
     }
 
     setSaving(true);
     try {
       const res = await fetch(`/api/game/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cas_tekme: new Date(cas).toISOString(),
-          kraj: kraj.trim() === "" ? null : kraj.trim(),
-          nasprotnik_id: nasprotnikId.trim() === "" ? null : nasprotnikId.trim(),
+          kraj: kraj.trim() === '' ? null : kraj.trim(),
+          nasprotnik_id: nasprotnikId.trim() === '' ? null : nasprotnikId.trim(),
         }),
       });
 
       const data = await safeReadJson(res);
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri shranjevanju.");
+        setMsg(data?.error ?? 'Napaka pri shranjevanju.');
         return;
       }
 
@@ -114,47 +114,45 @@ export default function EditGamePage() {
       const updated = data?.game as Game | undefined;
       if (updated) setGame(updated);
 
-      setMsg("Shranjeno ✅");
+      setMsg('Shranjeno ✅');
 
       // ✅ po shranjevanju nazaj na seznam tekem
-      router.push("/tekme"); // če imaš stran na /tekme, zamenjaj v "/tekme"
+      router.push('/tekme'); // če imaš stran na /tekme, zamenjaj v "/tekme"
       router.refresh();
     } catch {
-      setMsg("Napaka pri povezavi.");
+      setMsg('Napaka pri povezavi.');
     } finally {
       setSaving(false);
     }
   }
 
   async function onDelete() {
-    if (!confirm("Res želiš izbrisati tekmo?")) return;
+    if (!confirm('Res želiš izbrisati tekmo?')) return;
 
     try {
-      const res = await fetch(`/api/game/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/game/${id}`, { method: 'DELETE' });
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        alert(data?.error ?? "Napaka pri brisanju.");
+        alert(data?.error ?? 'Napaka pri brisanju.');
         return;
       }
 
       // ✅ po brisanju nazaj na seznam tekem
-      router.push("/game"); // če imaš stran na /tekme, zamenjaj v "/tekme"
+      router.push('/game'); // če imaš stran na /tekme, zamenjaj v "/tekme"
       router.refresh();
     } catch {
-      alert("Napaka pri povezavi.");
+      alert('Napaka pri povezavi.');
     }
   }
 
   if (loading) return <div className="p-6">Loading...</div>;
-  if (!game) return <div className="p-6">{msg ?? "Tekma ni na voljo."}</div>;
+  if (!game) return <div className="p-6">{msg ?? 'Tekma ni na voljo.'}</div>;
 
   return (
     <div className="mx-auto max-w-3xl p-6">
       <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-dark dark:text-white">
-          Uredi tekmo
-        </h1>
+        <h1 className="text-2xl font-bold text-dark dark:text-white">Uredi tekmo</h1>
 
         <button
           onClick={onDelete}
@@ -203,9 +201,8 @@ export default function EditGamePage() {
               </option>
             ))}
           </select>
-
           <p className="mt-2 text-xs text-dark-6 dark:text-white/70">
-            Trenutno: {game.nasprotnik_ime ?? "—"}
+            Trenutno: {game.nasprotnik_ime ?? '—'}
           </p>
         </label>
 
@@ -214,7 +211,7 @@ export default function EditGamePage() {
           className="rounded-lg bg-primary px-5 py-3 font-medium text-white transition disabled:opacity-60"
           type="submit"
         >
-          {saving ? "Shranjujem..." : "Shrani"}
+          {saving ? 'Shranjujem...' : 'Shrani'}
         </button>
 
         {msg && <p className="text-sm text-dark-6 dark:text-white/70">{msg}</p>}

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import InputGroup from "@/components/FormElements/InputGroup";
-import { getUser, type StoredUser } from "@/lib/user-store";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import InputGroup from '@/components/FormElements/InputGroup';
+import { getUser, type StoredUser } from '@/lib/user-store';
 
 async function safeReadJson(res: Response) {
   const text = await res.text();
@@ -18,7 +18,7 @@ async function safeReadJson(res: Response) {
 export default function AddOpponentPage() {
   const router = useRouter();
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -26,11 +26,11 @@ export default function AddOpponentPage() {
   useEffect(() => {
     const u: StoredUser | null = getUser();
     if (!u) {
-      router.push("/auth/login");
+      router.push('/auth/login');
       return;
     }
-    if (u.role !== "trener") {
-      router.push("/dashboard");
+    if (u.role !== 'trener') {
+      router.push('/dashboard');
       return;
     }
   }, [router]);
@@ -40,41 +40,41 @@ export default function AddOpponentPage() {
     setMsg(null);
 
     if (!name.trim()) {
-      setMsg("Opponent name is required.");
+      setMsg('Opponent name is required.');
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch("/api/game/nasprotne-ekipe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/game/nasprotne-ekipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ime: name.trim() }),
       });
 
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Failed to create opponent.");
+        setMsg(data?.error ?? 'Failed to create opponent.');
         return;
       }
 
       // ✅ after create -> go back to add game (or game list)
-      router.push("/addgame");
+      router.push('/addgame');
       router.refresh();
     } catch {
-      setMsg("Connection error.");
+      setMsg('Connection error.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 620, margin: "40px auto", padding: 16 }}>
+    <div style={{ maxWidth: 620, margin: '40px auto', padding: 16 }}>
       <h1>Add Opponent</h1>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
+      <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14 }}>
         <InputGroup
           label="Opponent name"
           placeholder="e.g. NK Maribor"
@@ -92,7 +92,7 @@ export default function AddOpponentPage() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Saving..." : "Add opponent"}
+          {loading ? 'Saving...' : 'Add opponent'}
         </button>
 
         <button
@@ -104,7 +104,7 @@ export default function AddOpponentPage() {
           Cancel
         </button>
 
-        {msg && <p style={{ color: "crimson" }}>{msg}</p>}
+        {msg && <p style={{ color: 'crimson' }}>{msg}</p>}
       </form>
     </div>
   );

@@ -1,7 +1,7 @@
-import { compactFormat } from "@/lib/format-number";
-import { getOverviewData } from "../../fetch";
-import { OverviewCard } from "./card";
-import * as icons from "./icons";
+import { compactFormat } from '@/lib/format-number';
+import { getOverviewData } from '../../fetch';
+import { OverviewCard } from './card';
+import * as icons from './icons';
 
 export async function OverviewCardsGroup() {
   const { views, profit, products, users } = await getOverviewData();
@@ -21,7 +21,7 @@ export async function OverviewCardsGroup() {
         label="Total Profit"
         data={{
           ...profit,
-          value: "$" + compactFormat(profit.value),
+          value: '$' + compactFormat(profit.value),
         }}
         Icon={icons.Profit}
       />

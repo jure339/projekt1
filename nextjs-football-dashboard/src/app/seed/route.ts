@@ -1,6 +1,6 @@
-import bcrypt from "bcryptjs";
-import postgres from "postgres";
-import { v4 as uuidv4 } from "uuid";
+import bcrypt from 'bcryptjs';
+import postgres from 'postgres';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   pozicije,
@@ -12,12 +12,12 @@ import {
   tekme,
   igralecTrening,
   igralecTekma,
-} from "@/lib/placeholder-data";
+} from '@/lib/placeholder-data';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 function toIsoUtc(value: any) {
   // spreključi: Date | string | number
@@ -213,9 +213,9 @@ export async function GET() {
       }
     });
 
-    return Response.json({ message: "Database seeded successfully" });
+    return Response.json({ message: 'Database seeded successfully' });
   } catch (e: any) {
-    console.error("SEED ERROR:", e);
-    return Response.json({ error: e.message ?? "Seed failed" }, { status: 500 });
+    console.error('SEED ERROR:', e);
+    return Response.json({ error: e.message ?? 'Seed failed' }, { status: 500 });
   }
 }

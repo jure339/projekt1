@@ -1,16 +1,11 @@
-import InputGroup from "@/components/FormElements/InputGroup";
-import { ShowcaseSection } from "@/components/Layouts/showcase-section";
+import InputGroup from '@/components/FormElements/InputGroup';
+import { ShowcaseSection } from '@/components/Layouts/showcase-section';
 
 export function SignUpForm() {
   return (
     <ShowcaseSection title="Sign Up Form" className="!p-6.5">
       <form action="#">
-        <InputGroup
-          label="Name"
-          type="text"
-          placeholder="Enter full name"
-          className="mb-4.5"
-        />
+        <InputGroup label="Name" type="text" placeholder="Enter full name" className="mb-4.5" />
 
         <InputGroup
           label="Email"
