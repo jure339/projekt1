@@ -107,13 +107,14 @@ Projekt je zgrajen z **Next.js (App Router)**, **PostgreSQL** in gostovan na **V
 
 git clone https://github.com/USERNAME/REPO_NAME.git
 cd REPO_NAME
-##🔧 Environment variables
+
+### 🔧 Environment variables
 Ustvari datoteko .env.local v rootu projekta.
 
 Minimalno (primer)
 env
 Kopiraj kodo
-# Database (PostgreSQL)
+Database (PostgreSQL)
 POSTGRES_URL="postgresql://USER:PASSWORD@HOST:PORT/DB_NAME?sslmode=require"
 
 ### Auth / JWT
@@ -122,7 +123,9 @@ JWT_SECRET="change-me-to-a-long-random-string"
 ### NextAuth (če uporabljaš next-auth)
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="change-me-to-a-long-random-string"
-📜 Scripts
+
+### 📜 Scripts
+
 Ukaz	Opis
 pnpm dev	Zagon aplikacije v development načinu
 pnpm build	Production build
@@ -132,7 +135,7 @@ pnpm test	Unit / component testi
 pnpm test:ci	Testi + coverage (CI)
 pnpm test:e2e	End-to-End testi (Playwright)
 
-###🔁 CI/CD & Branch strategy
+### 🔁 CI/CD & Branch strategy
 
 Branching model:
 feature/<ime> – razvoj novih funkcionalnosti
