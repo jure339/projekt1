@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import InputGroup from "@/components/FormElements/InputGroup";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import InputGroup from '@/components/FormElements/InputGroup';
 
 export default function RegisterCoachPage() {
   const router = useRouter();
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [age, setAge] = useState<number>(30);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export default function RegisterCoachPage() {
     setLoading(true);
 
     const payload = {
-      role: "trener", // ✅ ALWAYS COACH
+      role: 'trener', // ✅ ALWAYS COACH
       ime: firstName.trim(),
       priimek: lastName.trim(),
       starost: Number(age),
@@ -33,9 +33,9 @@ export default function RegisterCoachPage() {
     };
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
@@ -57,24 +57,24 @@ export default function RegisterCoachPage() {
     }
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Registration failed.");
+        setMsg(data?.error ?? 'Registration failed.');
         return;
       }
 
       // ✅ after register → create team
-      router.push("/auth/login");
+      router.push('/auth/login');
     } catch {
-      setMsg("Connection error.");
+      setMsg('Connection error.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: "40px auto", padding: 16 }}>
+    <div style={{ maxWidth: 520, margin: '40px auto', padding: 16 }}>
       <h1 className="mb-4 text-2xl font-bold">Coach Registration</h1>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
+      <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14 }}>
         <InputGroup
           label="First Name"
           placeholder="Enter first name"
@@ -135,14 +135,14 @@ export default function RegisterCoachPage() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Creating account..." : "Create coach account"}
+          {loading ? 'Creating account...' : 'Create coach account'}
         </button>
 
-        {msg && <p style={{ color: "crimson" }}>{msg}</p>}
+        {msg && <p style={{ color: 'crimson' }}>{msg}</p>}
 
         <button
           type="button"
-          onClick={() => router.push("/auth/login")}
+          onClick={() => router.push('/auth/login')}
           className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white"
         >
           Back to login

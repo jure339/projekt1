@@ -1,24 +1,24 @@
-import postgres from "postgres";
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
-import { randomUUID } from "crypto";
+import postgres from 'postgres';
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 type TokenPayload = {
   sub: string;
-  role: "igralec" | "trener";
+  role: 'igralec' | 'trener';
   email: string;
 };
 
 async function getAuthPayload(): Promise<TokenPayload | null> {
   const cookieStore = await cookies(); // ✅ Next.js 15
-  const token = cookieStore.get("auth")?.value;
+  const token = cookieStore.get('auth')?.value;
   if (!token) return null;
 
   try {
@@ -32,20 +32,17 @@ export async function POST(req: Request) {
   try {
     const payload = await getAuthPayload();
     if (!payload) {
-      return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+      return NextResponse.json({ error: 'Not logged in.' }, { status: 401 });
     }
-    if (payload.role !== "trener") {
-      return NextResponse.json(
-        { error: "Only coach can create a team." },
-        { status: 403 }
-      );
+    if (payload.role !== 'trener') {
+      return NextResponse.json({ error: 'Only coach can create a team.' }, { status: 403 });
     }
 
     const body = (await req.json()) as { ime?: string };
-    const ime = String(body?.ime ?? "").trim();
+    const ime = String(body?.ime ?? '').trim();
 
     if (!ime) {
-      return NextResponse.json({ error: "Team name is required." }, { status: 400 });
+      return NextResponse.json({ error: 'Team name is required.' }, { status: 400 });
     }
 
     // ✅ preberi trenerja
@@ -58,15 +55,12 @@ export async function POST(req: Request) {
     const coach = coachRows[0];
 
     if (!coach) {
-      return NextResponse.json({ error: "Coach does not exist." }, { status: 404 });
+      return NextResponse.json({ error: 'Coach does not exist.' }, { status: 404 });
     }
 
     // Če hočeš dovoliti samo eno ekipo:
     if (coach.ekipa_id) {
-      return NextResponse.json(
-        { error: "Coach already has a team assigned." },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: 'Coach already has a team assigned.' }, { status: 409 });
     }
 
     const teamId = randomUUID();
@@ -87,7 +81,7 @@ export async function POST(req: Request) {
 
       if (!updated[0]?.ekipa_id) {
         // če bi se iz kakršnegakoli razloga update “spregledal”
-        throw new Error("Failed to assign team to coach.");
+        throw new Error('Failed to assign team to coach.');
       }
     });
 
@@ -105,13 +99,10 @@ export async function POST(req: Request) {
         team: { id: teamId, ime },
         coach: updatedCoachRows[0],
       },
-      { status: 201, headers: { "Cache-Control": "no-store" } }
+      { status: 201, headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (e: any) {
-    console.error("POST /api/ekipa error:", e);
-    return NextResponse.json(
-      { error: e?.message ?? "Failed to create team." },
-      { status: 500 }
-    );
+    console.error('POST /api/ekipa error:', e);
+    return NextResponse.json({ error: e?.message ?? 'Failed to create team.' }, { status: 500 });
   }
 }

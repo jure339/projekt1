@@ -1,7 +1,7 @@
-import { AttendanceDonut } from "@/components/Charts/used-devices";
-import { PlayersList } from "@/components/Tables/top-channels";
-import { createTimeFrameExtractor } from "@/utils/timeframe-extractor";
-import DashboardCards from "./DahboardCards";
+import { AttendanceDonut } from '@/components/Charts/used-devices';
+import { PlayersList } from '@/components/Tables/top-channels';
+import { createTimeFrameExtractor } from '@/utils/timeframe-extractor';
+import DashboardCards from './DahboardCards';
 
 type PropsType = {
   searchParams: Promise<{

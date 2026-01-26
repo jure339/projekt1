@@ -1,12 +1,7 @@
-import {
-  CallIcon,
-  EmailIcon,
-  PencilSquareIcon,
-  UserIcon,
-} from "@/assets/icons";
-import InputGroup from "@/components/FormElements/InputGroup";
-import { TextAreaGroup } from "@/components/FormElements/InputGroup/text-area";
-import { ShowcaseSection } from "@/components/Layouts/showcase-section";
+import { CallIcon, EmailIcon, PencilSquareIcon, UserIcon } from '@/assets/icons';
+import InputGroup from '@/components/FormElements/InputGroup';
+import { TextAreaGroup } from '@/components/FormElements/InputGroup/text-area';
+import { ShowcaseSection } from '@/components/Layouts/showcase-section';
 
 export function PersonalInfoForm() {
   return (
@@ -31,7 +26,7 @@ export function PersonalInfoForm() {
             name="phoneNumber"
             label="Phone Number"
             placeholder="+990 3343 7865"
-            defaultValue={"+990 3343 7865"}
+            defaultValue={'+990 3343 7865'}
             icon={<CallIcon />}
             iconPosition="left"
             height="sm"

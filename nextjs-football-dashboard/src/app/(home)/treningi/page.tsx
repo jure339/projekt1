@@ -1,7 +1,7 @@
 // src/app/(home)/treningi/page.tsx
-import TrainingsList from "../treningi/TrainingsList";
+import TrainingsList from '../treningi/TrainingsList';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default function Page() {

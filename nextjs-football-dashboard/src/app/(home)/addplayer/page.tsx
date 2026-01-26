@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import InputGroup from "@/components/FormElements/InputGroup";
-import { getUser, type StoredUser } from "@/lib/user-store";
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import InputGroup from '@/components/FormElements/InputGroup';
+import { getUser, type StoredUser } from '@/lib/user-store';
 
 type Pozicija = {
   id: string;
@@ -35,24 +35,16 @@ async function safeReadJson(res: Response) {
 
 /** Robust parsing: supports {pozicije:[]}, {positions:[]}, {data:[]}, or [] */
 function normalizePositions(data: any): Pozicija[] {
-  const raw =
-    (data?.pozicije ??
-      data?.positions ??
-      data?.data ??
-      data?.rows ??
-      data) ?? [];
+  const raw = data?.pozicije ?? data?.positions ?? data?.data ?? data?.rows ?? data ?? [];
 
   if (!Array.isArray(raw)) return [];
 
   return raw
     .map((p: any) => ({
-      id: String(p?.id ?? ""),
+      id: String(p?.id ?? ''),
       // support naziv/name/position_name etc.
-      naziv: String(p?.naziv ?? p?.name ?? p?.position ?? p?.title ?? ""),
-      kratica:
-        p?.kratica === undefined || p?.kratica === null
-          ? null
-          : String(p.kratica),
+      naziv: String(p?.naziv ?? p?.name ?? p?.position ?? p?.title ?? ''),
+      kratica: p?.kratica === undefined || p?.kratica === null ? null : String(p.kratica),
     }))
     .filter((p: Pozicija) => p.id && p.naziv);
 }
@@ -60,21 +52,21 @@ function normalizePositions(data: any): Pozicija[] {
 export default function DodajIgralcaPage() {
   const router = useRouter();
 
-  const [ekipaId, setEkipaId] = useState<string>("");
-  const [ekipaIme, setEkipaIme] = useState<string>("");
+  const [ekipaId, setEkipaId] = useState<string>('');
+  const [ekipaIme, setEkipaIme] = useState<string>('');
 
   const [pozicije, setPozicije] = useState<Pozicija[]>([]);
-  const [pozicijaId, setPozicijaId] = useState<string>("");
+  const [pozicijaId, setPozicijaId] = useState<string>('');
 
-  const [ime, setIme] = useState("");
-  const [priimek, setPriimek] = useState("");
+  const [ime, setIme] = useState('');
+  const [priimek, setPriimek] = useState('');
   const [starost, setStarost] = useState<number>(16);
 
-  const [visina, setVisina] = useState<number | "">("");
-  const [stevilkaDresa, setStevilkaDresa] = useState<number | "">("");
+  const [visina, setVisina] = useState<number | ''>('');
+  const [stevilkaDresa, setStevilkaDresa] = useState<number | ''>('');
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -82,8 +74,8 @@ export default function DodajIgralcaPage() {
   const [loadingTeam, setLoadingTeam] = useState(false);
 
   const teamDisplayValue = useMemo(() => {
-    if (loadingTeam) return "Loading...";
-    return ekipaIme || ekipaId || "—";
+    if (loadingTeam) return 'Loading...';
+    return ekipaIme || ekipaId || '—';
   }, [loadingTeam, ekipaIme, ekipaId]);
 
   // ✅ read coach and set team id + load team name
@@ -92,17 +84,17 @@ export default function DodajIgralcaPage() {
       const u: StoredUser | null = getUser();
 
       if (!u) {
-        router.push("/auth/login");
+        router.push('/auth/login');
         return;
       }
 
-      if (u.role !== "trener") {
-        router.push("/dashboard");
+      if (u.role !== 'trener') {
+        router.push('/dashboard');
         return;
       }
 
       if (!u.ekipa_id) {
-        setMsg("Coach has no team assigned.");
+        setMsg('Coach has no team assigned.');
         return;
       }
 
@@ -110,17 +102,17 @@ export default function DodajIgralcaPage() {
 
       setLoadingTeam(true);
       try {
-        const res = await fetch(`/api/ekipa/${u.ekipa_id}`, { cache: "no-store" });
+        const res = await fetch(`/api/ekipa/${u.ekipa_id}`, { cache: 'no-store' });
         const data = await safeReadJson(res);
 
         if (!res.ok) {
-          setEkipaIme("");
+          setEkipaIme('');
           return;
         }
 
-        setEkipaIme(String(data?.ekipa?.ime ?? ""));
+        setEkipaIme(String(data?.ekipa?.ime ?? ''));
       } catch {
-        setEkipaIme("");
+        setEkipaIme('');
       } finally {
         setLoadingTeam(false);
       }
@@ -133,11 +125,11 @@ export default function DodajIgralcaPage() {
       setLoadingPozicije(true);
 
       try {
-        const res = await fetch("/api/pozicije", { cache: "no-store" });
+        const res = await fetch('/api/pozicije', { cache: 'no-store' });
         const data = await safeReadJson(res);
 
         if (!res.ok) {
-          setMsg(data?.error ?? "Error loading positions.");
+          setMsg(data?.error ?? 'Error loading positions.');
           setPozicije([]);
           return;
         }
@@ -147,10 +139,10 @@ export default function DodajIgralcaPage() {
 
         // ✅ If current selected is not in list, reset it
         if (pozicijaId && !normalized.some((p) => p.id === pozicijaId)) {
-          setPozicijaId("");
+          setPozicijaId('');
         }
       } catch {
-        setMsg("Error connecting to server (positions).");
+        setMsg('Error connecting to server (positions).');
         setPozicije([]);
       } finally {
         setLoadingPozicije(false);
@@ -164,7 +156,7 @@ export default function DodajIgralcaPage() {
     setMsg(null);
 
     if (!ekipaId) {
-      setMsg("Coach has no team assigned.");
+      setMsg('Coach has no team assigned.');
       return;
     }
 
@@ -174,8 +166,8 @@ export default function DodajIgralcaPage() {
       ime: ime.trim(),
       priimek: priimek.trim(),
       starost: Number(starost),
-      visina: visina === "" ? null : Number(visina),
-      stevilka_dresa: stevilkaDresa === "" ? null : Number(stevilkaDresa),
+      visina: visina === '' ? null : Number(visina),
+      stevilka_dresa: stevilkaDresa === '' ? null : Number(stevilkaDresa),
       pozicija_id: pozicijaId ? pozicijaId : null,
       email: email.trim(),
       password,
@@ -183,33 +175,33 @@ export default function DodajIgralcaPage() {
     };
 
     try {
-      const res = await fetch("/api/igralci", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/igralci', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Error adding player.");
+        setMsg(data?.error ?? 'Error adding player.');
         return;
       }
 
-      router.push("/dashboard");
+      router.push('/dashboard');
       router.refresh();
     } catch {
-      setMsg("Error connecting to server.");
+      setMsg('Error connecting to server.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: "40px auto", padding: 16 }}>
+    <div style={{ maxWidth: 560, margin: '40px auto', padding: 16 }}>
       <h1>Add player</h1>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
+      <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14 }}>
         {/* Team locked - show NAME */}
         <InputGroup
           label="Team (locked)"
@@ -263,12 +255,10 @@ export default function DodajIgralcaPage() {
           label="Height (cm)"
           placeholder="optional"
           type="number"
-          value={visina === "" ? "" : String(visina)}
-          handleChange={(e) =>
-            setVisina(e.target.value === "" ? "" : Number(e.target.value))
-          }
+          value={visina === '' ? '' : String(visina)}
+          handleChange={(e) => setVisina(e.target.value === '' ? '' : Number(e.target.value))}
           disabled={loading}
-          active={visina !== ""}
+          active={visina !== ''}
           name="visina"
         />
 
@@ -276,12 +266,12 @@ export default function DodajIgralcaPage() {
           label="Shirt Number"
           placeholder="optional"
           type="number"
-          value={stevilkaDresa === "" ? "" : String(stevilkaDresa)}
+          value={stevilkaDresa === '' ? '' : String(stevilkaDresa)}
           handleChange={(e) =>
-            setStevilkaDresa(e.target.value === "" ? "" : Number(e.target.value))
+            setStevilkaDresa(e.target.value === '' ? '' : Number(e.target.value))
           }
           disabled={loading}
-          active={stevilkaDresa !== ""}
+          active={stevilkaDresa !== ''}
           name="stevilka_dresa"
         />
 
@@ -296,16 +286,16 @@ export default function DodajIgralcaPage() {
           >
             <option value="">
               {loadingPozicije
-                ? "Loading positions..."
+                ? 'Loading positions...'
                 : pozicije.length === 0
-                ? "No positions found"
-                : "Select position (optional)"}
+                  ? 'No positions found'
+                  : 'Select position (optional)'}
             </option>
 
             {pozicije.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.naziv}
-                {p.kratica ? ` (${p.kratica})` : ""}
+                {p.kratica ? ` (${p.kratica})` : ''}
               </option>
             ))}
           </select>
@@ -340,7 +330,7 @@ export default function DodajIgralcaPage() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Saving..." : "Add player"}
+          {loading ? 'Saving...' : 'Add player'}
         </button>
 
         <button
@@ -352,7 +342,7 @@ export default function DodajIgralcaPage() {
           Cancel
         </button>
 
-        {msg && <p style={{ color: "crimson" }}>{msg}</p>}
+        {msg && <p style={{ color: 'crimson' }}>{msg}</p>}
       </form>
     </div>
   );

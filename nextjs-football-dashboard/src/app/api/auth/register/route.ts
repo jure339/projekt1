@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import postgres from "postgres";
-import bcrypt from "bcryptjs";
-import { v4 as uuidv4 } from "uuid";
+import { NextResponse } from 'next/server';
+import postgres from 'postgres';
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 
 // 🔹 povezava na Postgres (lokalno brez SSL, cloud z SSL)
 const connectionString = process.env.POSTGRES_URL!;
@@ -14,7 +14,7 @@ const sql = postgres(connectionString, {
   ssl: isLocal ? false : { rejectUnauthorized: false },
 });
 
-type Role = "igralec" | "trener";
+type Role = 'igralec' | 'trener';
 
 export async function POST(req: Request) {
   try {

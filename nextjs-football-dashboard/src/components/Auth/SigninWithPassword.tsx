@@ -1,14 +1,14 @@
-"use client";
-import { EmailIcon, PasswordIcon } from "@/assets/icons";
-import Link from "next/link";
-import React, { useState } from "react";
-import InputGroup from "../FormElements/InputGroup";
-import { Checkbox } from "../FormElements/checkbox";
+'use client';
+import { EmailIcon, PasswordIcon } from '@/assets/icons';
+import Link from 'next/link';
+import React, { useState } from 'react';
+import InputGroup from '../FormElements/InputGroup';
+import { Checkbox } from '../FormElements/checkbox';
 
 export default function SigninWithPassword() {
   const [data, setData] = useState({
-    email: process.env.NEXT_PUBLIC_DEMO_USER_MAIL || "",
-    password: process.env.NEXT_PUBLIC_DEMO_USER_PASS || "",
+    email: process.env.NEXT_PUBLIC_DEMO_USER_MAIL || '',
+    password: process.env.NEXT_PUBLIC_DEMO_USER_PASS || '',
     remember: false,
   });
 

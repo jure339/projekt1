@@ -1,18 +1,18 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  throw new Error("Missing JWT_SECRET in environment variables.");
+  throw new Error('Missing JWT_SECRET in environment variables.');
 }
 
 type AuthPayload = {
   sub: string;
-  role: "igralec" | "trener";
+  role: 'igralec' | 'trener';
   email: string;
 };
 
@@ -20,13 +20,10 @@ export async function GET() {
   try {
     // ✅ cookies() je async v Next 15
     const cookieStore = await cookies();
-    const token = cookieStore.get("auth")?.value;
+    const token = cookieStore.get('auth')?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { error: "Ni prijavljen." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Ni prijavljen.' }, { status: 401 });
     }
 
     let payload: AuthPayload;
@@ -34,10 +31,7 @@ export async function GET() {
     try {
       payload = jwt.verify(token, JWT_SECRET) as AuthPayload;
     } catch {
-      return NextResponse.json(
-        { error: "Neveljaven token." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Neveljaven token.' }, { status: 401 });
     }
 
     return NextResponse.json(
@@ -45,15 +39,12 @@ export async function GET() {
       {
         status: 200,
         headers: {
-          "Cache-Control": "no-store",
+          'Cache-Control': 'no-store',
         },
-      }
+      },
     );
   } catch (error) {
-    console.error("GET /api/auth/me error:", error);
-    return NextResponse.json(
-      { error: "Napaka na strežniku." },
-      { status: 500 }
-    );
+    console.error('GET /api/auth/me error:', error);
+    return NextResponse.json({ error: 'Napaka na strežniku.' }, { status: 500 });
   }
 }

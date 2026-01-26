@@ -1,7 +1,7 @@
-import InputGroup from "@/components/FormElements/InputGroup";
-import { TextAreaGroup } from "@/components/FormElements/InputGroup/text-area";
-import { Select } from "@/components/FormElements/select";
-import { ShowcaseSection } from "@/components/Layouts/showcase-section";
+import InputGroup from '@/components/FormElements/InputGroup';
+import { TextAreaGroup } from '@/components/FormElements/InputGroup/text-area';
+import { Select } from '@/components/FormElements/select';
+import { ShowcaseSection } from '@/components/Layouts/showcase-section';
 
 export function ContactForm() {
   return (
@@ -43,9 +43,9 @@ export function ContactForm() {
           placeholder="Select your subject"
           className="mb-4.5"
           items={[
-            { label: "United States", value: "USA" },
-            { label: "United Kingdom", value: "UK" },
-            { label: "Canada", value: "Canada" },
+            { label: 'United States', value: 'USA' },
+            { label: 'United Kingdom', value: 'UK' },
+            { label: 'Canada', value: 'Canada' },
           ]}
         />
 

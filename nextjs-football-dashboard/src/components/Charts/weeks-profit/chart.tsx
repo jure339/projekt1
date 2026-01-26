@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import type { ApexOptions } from "apexcharts";
-import dynamic from "next/dynamic";
+import type { ApexOptions } from 'apexcharts';
+import dynamic from 'next/dynamic';
 
 type PropsType = {
   data: {
@@ -10,15 +10,15 @@ type PropsType = {
   };
 };
 
-const Chart = dynamic(() => import("react-apexcharts"), {
+const Chart = dynamic(() => import('react-apexcharts'), {
   ssr: false,
 });
 
 export function WeeksProfitChart({ data }: PropsType) {
   const options: ApexOptions = {
-    colors: ["#5750F1", "#0ABEF9"],
+    colors: ['#5750F1', '#0ABEF9'],
     chart: {
-      type: "bar",
+      type: 'bar',
       stacked: true,
       toolbar: {
         show: false,
@@ -35,7 +35,7 @@ export function WeeksProfitChart({ data }: PropsType) {
           plotOptions: {
             bar: {
               borderRadius: 3,
-              columnWidth: "25%",
+              columnWidth: '25%',
             },
           },
         },
@@ -45,9 +45,9 @@ export function WeeksProfitChart({ data }: PropsType) {
       bar: {
         horizontal: false,
         borderRadius: 3,
-        columnWidth: "25%",
-        borderRadiusApplication: "end",
-        borderRadiusWhenStacked: "last",
+        columnWidth: '25%',
+        borderRadiusApplication: 'end',
+        borderRadiusWhenStacked: 'last',
       },
     },
     dataLabels: {
@@ -77,14 +77,14 @@ export function WeeksProfitChart({ data }: PropsType) {
       },
     },
     legend: {
-      position: "top",
-      horizontalAlign: "left",
-      fontFamily: "inherit",
+      position: 'top',
+      horizontalAlign: 'left',
+      fontFamily: 'inherit',
       fontWeight: 500,
-      fontSize: "14px",
+      fontSize: '14px',
       markers: {
         size: 9,
-        shape: "circle",
+        shape: 'circle',
       },
     },
     fill: {
@@ -97,11 +97,11 @@ export function WeeksProfitChart({ data }: PropsType) {
         options={options}
         series={[
           {
-            name: "Sales",
+            name: 'Sales',
             data: data.sales,
           },
           {
-            name: "Revenue",
+            name: 'Revenue',
             data: data.revenue,
           },
         ]}

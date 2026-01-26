@@ -1,18 +1,16 @@
-import { DotIcon } from "@/assets/icons";
-import { formatMessageTime } from "@/lib/format-message-time";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
-import Link from "next/link";
-import { getChatsData } from "../fetch";
+import { DotIcon } from '@/assets/icons';
+import { formatMessageTime } from '@/lib/format-message-time';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import Link from 'next/link';
+import { getChatsData } from '../fetch';
 
 export async function ChatsCard() {
   const data = await getChatsData();
 
   return (
     <div className="col-span-12 rounded-[10px] bg-white py-6 shadow-1 dark:bg-gray-dark dark:shadow-card xl:col-span-4">
-      <h2 className="mb-5.5 px-7.5 text-body-2xlg font-bold text-dark dark:text-white">
-        Chats
-      </h2>
+      <h2 className="mb-5.5 px-7.5 text-body-2xlg font-bold text-dark dark:text-white">Chats</h2>
 
       <ul>
         {data.map((chat, key) => (
@@ -27,27 +25,25 @@ export async function ChatsCard() {
                   width={56}
                   height={56}
                   className="size-14 rounded-full object-cover"
-                  alt={"Avatar for " + chat.name}
+                  alt={'Avatar for ' + chat.name}
                 />
 
                 <span
                   className={cn(
-                    "absolute bottom-0 right-0 size-3.5 rounded-full ring-2 ring-white dark:ring-dark-2",
-                    chat.isActive ? "bg-green" : "bg-orange-light",
+                    'absolute bottom-0 right-0 size-3.5 rounded-full ring-2 ring-white dark:ring-dark-2',
+                    chat.isActive ? 'bg-green' : 'bg-orange-light',
                   )}
                 />
               </div>
 
               <div className="relative flex-grow">
-                <h3 className="font-medium text-dark dark:text-white">
-                  {chat.name}
-                </h3>
+                <h3 className="font-medium text-dark dark:text-white">{chat.name}</h3>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <span
                     className={cn(
-                      "truncate text-sm font-medium dark:text-dark-5 xl:max-w-[8rem]",
-                      chat.unreadCount && "text-dark-4 dark:text-dark-6",
+                      'truncate text-sm font-medium dark:text-dark-5 xl:max-w-[8rem]',
+                      chat.unreadCount && 'text-dark-4 dark:text-dark-6',
                     )}
                   >
                     {chat.lastMessage.content}
@@ -55,10 +51,7 @@ export async function ChatsCard() {
 
                   <DotIcon />
 
-                  <time
-                    className="text-xs"
-                    dateTime={chat.lastMessage.timestamp}
-                  >
+                  <time className="text-xs" dateTime={chat.lastMessage.timestamp}>
                     {formatMessageTime(chat.lastMessage.timestamp)}
                   </time>
                 </div>

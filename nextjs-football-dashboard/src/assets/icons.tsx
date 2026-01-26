@@ -1,14 +1,8 @@
-import type { IconProps } from "@/types/icon-props";
+import type { IconProps } from '@/types/icon-props';
 
 export function SearchIcon(props: IconProps) {
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" {...props}>
       <g clipPath="url(#clip0_1699_11536)">
         <path
           fillRule="evenodd"
@@ -27,13 +21,7 @@ export function SearchIcon(props: IconProps) {
 
 export function CloseIcon(props: IconProps) {
   return (
-    <svg
-      width={25}
-      height={24}
-      viewBox="0 0 25 24"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width={25} height={24} viewBox="0 0 25 24" fill="currentColor" {...props}>
       <path d="M12.998 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95 1.414-1.414 4.95 4.95z" />
     </svg>
   );
@@ -41,13 +29,7 @@ export function CloseIcon(props: IconProps) {
 
 export function ArrowLeftIcon(props: IconProps) {
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" {...props}>
       <path
         d="M15.7492 8.38125H3.73984L8.52109 3.51562C8.77422 3.2625 8.77422 2.86875 8.52109 2.61562C8.26797 2.3625 7.87422 2.3625 7.62109 2.61562L1.79922 8.52187C1.54609 8.775 1.54609 9.16875 1.79922 9.42188L7.62109 15.3281C7.73359 15.4406 7.90234 15.525 8.07109 15.525C8.23984 15.525 8.38047 15.4687 8.52109 15.3562C8.77422 15.1031 8.77422 14.7094 8.52109 14.4563L3.76797 9.64687H15.7492C16.0867 9.64687 16.368 9.36562 16.368 9.02812C16.368 8.6625 16.0867 8.38125 15.7492 8.38125Z"
         fill=""
@@ -58,13 +40,7 @@ export function ArrowLeftIcon(props: IconProps) {
 
 export function ChevronUpIcon(props: IconProps) {
   return (
-    <svg
-      width={22}
-      height={22}
-      viewBox="0 0 22 22"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width={22} height={22} viewBox="0 0 22 22" fill="currentColor" {...props}>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -76,13 +52,7 @@ export function ChevronUpIcon(props: IconProps) {
 
 export function ArrowUpIcon(props: IconProps) {
   return (
-    <svg
-      width={10}
-      height={10}
-      viewBox="0 0 10 10"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width={10} height={10} viewBox="0 0 10 10" fill="currentColor" {...props}>
       <path d="M4.357 2.393L.91 5.745 0 4.861 5 0l5 4.861-.909.884-3.448-3.353V10H4.357V2.393z" />
     </svg>
   );
@@ -90,13 +60,7 @@ export function ArrowUpIcon(props: IconProps) {
 
 export function ArrowDownIcon(props: IconProps) {
   return (
-    <svg
-      width={10}
-      height={10}
-      viewBox="0 0 10 10"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width={10} height={10} viewBox="0 0 10 10" fill="currentColor" {...props}>
       <path d="M5.643 7.607L9.09 4.255l.909.884L5 10 0 5.139l.909-.884 3.448 3.353V0h1.286v7.607z" />
     </svg>
   );
@@ -112,13 +76,7 @@ export function DotIcon(props: IconProps) {
 
 export function TrendingUpIcon(props: IconProps) {
   return (
-    <svg
-      width="14"
-      height="15"
-      viewBox="0 0 14 15"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="14" height="15" viewBox="0 0 14 15" fill="currentColor" {...props}>
       <path
         d="M13.0158 5.24707H9.4939C9.2314 5.24707 9.01265 5.46582 9.01265 5.72832C9.01265 5.99082 9.2314 6.20957 9.4939 6.20957H11.6595L8.85953 8.09082C8.75015 8.17832 8.59703 8.17832 8.46578 8.09082L5.57828 6.1877C5.1189 5.88145 4.55015 5.88145 4.09078 6.1877L0.722027 8.44082C0.503277 8.59395 0.437652 8.9002 0.590777 9.11895C0.678277 9.2502 0.831402 9.3377 1.0064 9.3377C1.0939 9.3377 1.20328 9.31582 1.2689 9.2502L4.65953 6.99707C4.7689 6.90957 4.92203 6.90957 5.05328 6.99707L7.94078 8.92207C8.40015 9.22832 8.9689 9.22832 9.42828 8.92207L12.5127 6.84395V9.27207C12.5127 9.53457 12.7314 9.75332 12.9939 9.75332C13.2564 9.75332 13.4752 9.53457 13.4752 9.27207V5.72832C13.5189 5.46582 13.2783 5.24707 13.0158 5.24707Z"
         fill=""
@@ -129,13 +87,7 @@ export function TrendingUpIcon(props: IconProps) {
 
 export function CheckIcon(props: IconProps) {
   return (
-    <svg
-      width="11"
-      height="8"
-      viewBox="0 0 11 8"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="11" height="8" viewBox="0 0 11 8" fill="currentColor" {...props}>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -148,13 +100,7 @@ export function CheckIcon(props: IconProps) {
 
 export function XIcon(props: IconProps) {
   return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 11 11"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="currentColor" {...props}>
       <g clipPath="url(#clip0_803_2686)">
         <path
           fillRule="evenodd"
@@ -191,13 +137,7 @@ export function GlobeIcon(props: IconProps) {
 
 export function TrashIcon(props: IconProps) {
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" {...props}>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -222,13 +162,7 @@ export function TrashIcon(props: IconProps) {
 
 export function MessageOutlineIcon(props: IconProps) {
   return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 22 22"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor" {...props}>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -241,13 +175,7 @@ export function MessageOutlineIcon(props: IconProps) {
 
 export function EmailIcon(props: IconProps) {
   return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 22 22"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor" {...props}>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -260,13 +188,7 @@ export function EmailIcon(props: IconProps) {
 
 export function PasswordIcon(props: IconProps) {
   return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 22 22"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor" {...props}>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -285,13 +207,7 @@ export function PasswordIcon(props: IconProps) {
 
 export function GoogleIcon(props: IconProps) {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" {...props}>
       <g clipPath="url(#clip0_1715_17244)">
         <path
           d="M19.999 10.2216C20.0111 9.53416 19.9387 8.84776 19.7834 8.17725H10.2031V11.8883H15.8266C15.7201 12.539 15.4804 13.1618 15.1219 13.7194C14.7634 14.2769 14.2935 14.7577 13.7405 15.1327L13.7209 15.257L16.7502 17.5567L16.96 17.5772C18.8873 15.8328 19.9986 13.266 19.9986 10.2216"
@@ -321,13 +237,7 @@ export function GoogleIcon(props: IconProps) {
 
 export function UserIcon(props: IconProps) {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" {...props}>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -346,13 +256,7 @@ export function UserIcon(props: IconProps) {
 
 export function CallIcon(props: IconProps) {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" {...props}>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -365,13 +269,7 @@ export function CallIcon(props: IconProps) {
 
 export function PencilSquareIcon(props: IconProps) {
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" {...props}>
       <g clipPath="url(#clip0_2575_3985)">
         <path
           fillRule="evenodd"
@@ -391,13 +289,7 @@ export function PencilSquareIcon(props: IconProps) {
 
 export function UploadIcon(props: IconProps) {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      {...props}
-    >
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" {...props}>
       <g clipPath="url(#clip0_2298_23087)">
         <path
           d="M18.75 13.7501C18.375 13.7501 18.0313 14.0626 18.0313 14.4688V17.2501C18.0313 17.5313 17.8125 17.7501 17.5313 17.7501H2.46875C2.1875 17.7501 1.96875 17.5313 1.96875 17.2501V14.4688C1.96875 14.0626 1.625 13.7501 1.25 13.7501C0.875 13.7501 0.53125 14.0626 0.53125 14.4688V17.2501C0.53125 18.3126 1.375 19.1563 2.4375 19.1563H17.5313C18.5938 19.1563 19.4375 18.3126 19.4375 17.2501V14.4688C19.4688 14.0626 19.125 13.7501 18.75 13.7501Z"

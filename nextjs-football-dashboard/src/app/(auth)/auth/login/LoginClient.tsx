@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { saveUser, type StoredUser } from "@/lib/user-store";
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { saveUser, type StoredUser } from '@/lib/user-store';
 
-import InputGroup from "../../../../components/FormElements/InputGroup";
+import InputGroup from '../../../../components/FormElements/InputGroup';
 
-type Role = "igralec" | "trener";
+type Role = 'igralec' | 'trener';
 
 export default function LoginClient() {
   const router = useRouter();
   const params = useSearchParams();
 
-  const [role, setRole] = useState<Role>("igralec");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<Role>('igralec');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,9 +25,9 @@ export default function LoginClient() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role, email, password }),
       });
 
@@ -35,40 +35,40 @@ export default function LoginClient() {
       const data = text ? JSON.parse(text) : null;
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Login failed.");
+        setMsg(data?.error ?? 'Login failed.');
         return;
       }
 
       const user = data.user as StoredUser;
       saveUser(user);
 
-      const next = params.get("next");
+      const next = params.get('next');
 
       // ✅ ROLE-BASED REDIRECTS
-      if (user.role === "igralec") {
-        router.push("/playerdashboard");
+      if (user.role === 'igralec') {
+        router.push('/playerdashboard');
       } else {
         // coach
         if (!user.ekipa_id) {
-          router.push("/createteam");
+          router.push('/createteam');
         } else {
-          router.push(next || "/dashboard");
+          router.push(next || '/dashboard');
         }
       }
 
       router.refresh();
     } catch {
-      setMsg("Connection error.");
+      setMsg('Connection error.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 420, margin: "40px auto", padding: 16 }}>
+    <div style={{ maxWidth: 420, margin: '40px auto', padding: 16 }}>
       <h1>Log In</h1>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
+      <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14 }}>
         {/* Role */}
         <label className="text-body-sm font-medium text-dark dark:text-white">
           Role
@@ -112,18 +112,18 @@ export default function LoginClient() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Loading..." : "Log In"}
+          {loading ? 'Loading...' : 'Log In'}
         </button>
 
         <button
           type="button"
-          onClick={() => router.push("/auth/register")}
+          onClick={() => router.push('/auth/register')}
           className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 font-medium text-dark transition hover:border-primary hover:text-primary dark:border-dark-3 dark:text-white"
         >
           Create account
         </button>
 
-        {msg && <p style={{ color: "crimson" }}>{msg}</p>}
+        {msg && <p style={{ color: 'crimson' }}>{msg}</p>}
       </form>
     </div>
   );
