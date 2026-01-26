@@ -1,31 +1,36 @@
 import jwt from "jsonwebtoken";
+import { env } from "@/lib/config/env";
 
+/**
+ * Vloge v aplikaciji.
+ * - trener: upravlja ekipo (treningi, tekme, igralci)
+ * - igralec: ima omejen vpogled in profil
+ */
 export type Role = "igralec" | "trener";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  throw new Error("Missing JWT_SECRET in env.");
-}
-
+/**
+ * Payload, ki ga shranimo v JWT.
+ * sub = userId (standard JWT claim)
+ */
 export type AuthPayload = {
   sub: string;
   role: Role;
   email: string;
 };
 
-/* ===============================
-   SIGN TOKEN
-   =============================== */
+const TOKEN_EXPIRES_IN = "7d";
+
+/**
+ * Podpiše JWT token za uporabnika.
+ */
 export function signAuthToken(payload: AuthPayload): string {
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: "7d",
-  });
+  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN });
 }
 
-/* ===============================
-   VERIFY TOKEN
-   =============================== */
+/**
+ * Preveri JWT token in vrne payload.
+ * Če je token invalid/expired, jwt.verify vrže error (naj ga caller catch-a).
+ */
 export function verifyAuthToken(token: string): AuthPayload {
-  return jwt.verify(token, JWT_SECRET) as AuthPayload;
+  return jwt.verify(token, env.JWT_SECRET) as AuthPayload;
 }
