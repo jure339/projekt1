@@ -64,21 +64,22 @@ Additionally, features seamless **essential integrations and extensive functiona
 
 All these features and more make **NextAdmin** a robust, well-rounded solution for all your dashboard development needs.
 
-## Update Logs
+## Environment variables
+
+This project requires environment variables to run.
+
+1. Copy `.env.example` to `.env`
+2. Fill in the required values
+
+Never commit `.env` files to the repository.
+
 
 ### Version 1.2.1 - [Mar 20, 2025]
 
 - Fix Peer dependency issues and NextConfig warning.
 - Updated apexcharts and react-apexhcarts to the latest version.
 
-### Version 1.2.0 - Major Upgrade and UI Improvements - [Jan 27, 2025]
 
-- Upgraded to Next.js v15 and updated dependencies
-- API integration with loading skeleton for tables and charts.
-- Improved code structure for better readability.
-- Rebuilt components like dropdown, sidebar, and all ui-elements using accessibility practices.
-- Using search-params to store dropdown selection and refetch data.
-- Semantic markups, better separation of concerns and more.
 
 ### Version 1.1.0
 
@@ -89,3 +90,4 @@ All these features and more make **NextAdmin** a robust, well-rounded solution f
 ### Version 1.0
 
 - Initial Release - [May 13, 2024]
+

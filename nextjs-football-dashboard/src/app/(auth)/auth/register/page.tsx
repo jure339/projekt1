@@ -39,7 +39,22 @@ export default function RegisterCoachPage() {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+    let data: any = null;
+    const text = await res.text();
+    try {
+      data = text ? JSON.parse(text) : null;
+    }  catch (err) {
+  console.error("FETCH ERROR:", err);
+  setMsg("Connection error.");
+  }
+
+
+    if (!res.ok) {
+      console.log("REGISTER STATUS:", res.status);
+      console.log("REGISTER RESPONSE:", data ?? text);
+      setMsg((data?.error || data?.message) ?? `Registration failed (${res.status})`);
+      return;
+    }
 
       if (!res.ok) {
         setMsg(data?.error ?? 'Registration failed.');
