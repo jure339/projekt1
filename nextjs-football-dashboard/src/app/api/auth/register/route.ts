@@ -29,7 +29,7 @@ const createSql = (): SqlTag => {
   }) as SqlTag;
 };
 
-export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
+function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
   const hashPassword = deps.hashPassword ?? ((password: string) => bcrypt.hash(password, 10));
   const uuid = deps.uuid ?? uuidv4;
   const json = deps.json ?? NextResponse.json;
