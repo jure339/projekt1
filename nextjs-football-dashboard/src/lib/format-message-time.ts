@@ -5,9 +5,8 @@
  * - letos: "12 Mar"
  * - starejše: "12 Mar 2023"
  */
-export function formatMessageTime(timestamp: string): string {
+export function formatMessageTime(timestamp: string, now: Date = new Date()): string {
   const messageDate = new Date(timestamp);
-  const now = new Date();
 
   const diffInMinutes = Math.floor(
     (now.getTime() - messageDate.getTime()) / (60 * 1000),
