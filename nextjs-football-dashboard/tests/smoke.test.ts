@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { test, expect } from "@playwright/test";
 
-describe('smoke', () => {
-  it('vitest runs', () => {
+test.describe("smoke", () => {
+  test("playwright runs", () => {
     expect(true).toBe(true);
   });
 });

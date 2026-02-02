@@ -1,0 +1,59 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary "Main navigation" [ref=e3]:
+      - generic [ref=e6]:
+        - heading "TEAM" [level=2] [ref=e7]
+        - navigation "TEAM" [ref=e8]:
+          - list [ref=e9]:
+            - listitem [ref=e10]:
+              - link "Home" [ref=e11] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e12]
+                - generic [ref=e15]: Home
+            - listitem [ref=e16]:
+              - link "Players" [ref=e17] [cursor=pointer]:
+                - /url: /igralci
+                - img [ref=e18]
+                - generic [ref=e22]: Players
+            - listitem [ref=e23]:
+              - link "Trainings" [ref=e24] [cursor=pointer]:
+                - /url: /treningi
+                - img [ref=e25]
+                - generic [ref=e27]: Trainings
+            - listitem [ref=e28]:
+              - link "Games" [ref=e29] [cursor=pointer]:
+                - /url: /tekme
+                - img [ref=e30]
+                - generic [ref=e34]: Games
+            - listitem [ref=e35]:
+              - link "Profile" [active] [ref=e36] [cursor=pointer]:
+                - /url: /profile
+                - img [ref=e37]
+                - generic [ref=e39]: Profile
+    - generic [ref=e40]:
+      - banner [ref=e41]:
+        - heading "Team-Manager" [level=1] [ref=e43]
+        - generic [ref=e44]:
+          - button "Switch to dark mode" [ref=e45] [cursor=pointer]:
+            - generic [ref=e46]: Switch to dark mode
+            - generic [ref=e47]:
+              - img [ref=e50]
+              - img [ref=e53]
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - generic [ref=e57]: Test Coach
+              - generic [ref=e58]: trener
+            - button "Logout" [ref=e59] [cursor=pointer]
+      - main [ref=e60]:
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - heading "Coach profile" [level=1] [ref=e63]
+            - button "Refresh" [disabled] [ref=e64]
+          - paragraph [ref=e66]: Loading...
+  - button "Open Next.js Dev Tools" [ref=e72] [cursor=pointer]:
+    - img [ref=e73]
+  - alert [ref=e76]
+```
