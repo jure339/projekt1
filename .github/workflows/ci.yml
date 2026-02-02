@@ -73,7 +73,7 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Run E2E tests
-        run: pnpm test:e2e
+        run: pnpm exec playwright test e2e
 
       - name: Upload Playwright report
         if: always()
