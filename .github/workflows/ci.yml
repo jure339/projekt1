@@ -39,7 +39,7 @@ jobs:
         run: pnpm lint
 
       - name: Component/Unit tests
-        run: pnpm test:ci
+        run: pnpm exec playwright test tests
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
