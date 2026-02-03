@@ -3,8 +3,10 @@ import postgres from 'postgres';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// DB povezava za brisanje igralcev.
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
+// Brisanje igralca + odstrani povezave v relacijskih tabelah.
 export async function DELETE(_req: Request, ctx: any) {
   try {
     const id = String(ctx?.params?.id ?? '');
@@ -19,6 +21,7 @@ export async function DELETE(_req: Request, ctx: any) {
     //   return Response.json({ error: "Neveljaven ID igralca." }, { status: 400 });
     // }
 
+    // Najprej pocistimo relacije, potem igralca.
     await sql`DELETE FROM igralec_trening WHERE igralec_id = ${id};`;
     await sql`DELETE FROM igralec_tekma WHERE igralec_id = ${id};`;
 

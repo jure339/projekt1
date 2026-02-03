@@ -4,8 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// DB povezava za treninge.
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
+// Vrne seznam treningov za ekipo (ekipaId v query).
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -30,8 +32,10 @@ export async function GET(req: Request) {
 }
 
 // (če POST že imaš, pusti svojega; če ga nimaš, ga lahko dodaš nazaj)
+// Ustvari nov trening za ekipo.
 export async function POST(req: Request) {
   try {
+    // Prebere in validira body.
     const body = await req.json();
 
     const id = uuidv4();
@@ -42,6 +46,7 @@ export async function POST(req: Request) {
     const povrsina = String(body.povrsina ?? '');
     const opis = body.opis ? String(body.opis) : null;
 
+    // Obvezna polja.
     if (!ekipa_id || !zacetek || !konec || !povrsina) {
       return Response.json({ error: 'Manjkajo podatki.' }, { status: 400 });
     }
