@@ -5,11 +5,13 @@ import { v4 as uuidv4 } from 'uuid';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// DB povezava za CRUD igralcev.
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 /* =========================
    GET /api/igralci?ekipaId=...
    ========================= */
+// Vrne igralce za izbrano ekipo (ekipaId v query).
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -42,10 +44,12 @@ export async function GET(req: Request) {
 /* =========================
    POST /api/igralci  (INSERT)
    ========================= */
+// Ustvari novega igralca in shrani hash gesla.
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    // Normalizacija in validacija obveznih polj.
     const ime = String(body.ime ?? '').trim();
     const priimek = String(body.priimek ?? '').trim();
     const starost = Number(body.starost);
@@ -62,6 +66,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // Neobvezna polja: visina/stevilka_dresa/pozicija.
     const visina =
       body.visina === null || body.visina === undefined || body.visina === ''
         ? null
@@ -84,6 +89,7 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Številka dresa mora biti številka.' }, { status: 400 });
     }
 
+    // Hash gesla in generiranje ID-ja.
     const hashed = await bcrypt.hash(password, 10);
     const id = uuidv4();
 
@@ -100,6 +106,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     const msg = String(error?.message ?? 'Napaka.');
 
+    // Email unique constraint.
     if (msg.toLowerCase().includes('unique') || msg.toLowerCase().includes('duplicate')) {
       return Response.json({ error: 'Email je že v uporabi.' }, { status: 409 });
     }

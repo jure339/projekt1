@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// DB povezava + secret za preverjanje JWT.
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -15,6 +16,7 @@ type TokenPayload = {
   email: string;
 };
 
+// Prebere auth cookie in vrne payload, ce je token veljaven.
 async function getAuthPayload(): Promise<TokenPayload | null> {
   const cookieStore = await cookies(); // ✅ Next 15
   const token = cookieStore.get('auth')?.value;
@@ -27,6 +29,7 @@ async function getAuthPayload(): Promise<TokenPayload | null> {
   }
 }
 
+// Dovoli samo trenerju.
 async function requireCoach() {
   const payload = await getAuthPayload(); // ✅ await
   if (!payload) {
@@ -44,6 +47,7 @@ async function requireCoach() {
   return { ok: true as const, payload };
 }
 
+// Nalozi trening po ID.
 async function loadTraining(id: string) {
   const rows = await sql`
     SELECT
@@ -59,6 +63,7 @@ async function loadTraining(id: string) {
   return rows[0] ?? null;
 }
 
+// Vrne en trening (samo trener).
 export async function GET(_req: Request, ctx: any) {
   const auth = await requireCoach(); // ✅ await
   if (!auth.ok) return auth.res;
@@ -84,6 +89,7 @@ export async function GET(_req: Request, ctx: any) {
   }
 }
 
+// Uredi trening (samo trener).
 export async function PATCH(req: Request, ctx: any) {
   const auth = await requireCoach(); // ✅ await
   if (!auth.ok) return auth.res;
@@ -94,6 +100,7 @@ export async function PATCH(req: Request, ctx: any) {
       return NextResponse.json({ error: 'Manjka ID treninga.' }, { status: 400 });
     }
 
+    // Beremo in validiramo polja iz body.
     const body = (await req.json()) as Partial<{
       zacetek: string;
       konec: string;
@@ -161,6 +168,7 @@ export async function PATCH(req: Request, ctx: any) {
   }
 }
 
+// Brisanje treninga (samo trener).
 export async function DELETE(_req: Request, ctx: any) {
   const auth = await requireCoach(); // ✅ await
   if (!auth.ok) return auth.res;

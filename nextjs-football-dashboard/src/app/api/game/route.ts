@@ -7,6 +7,7 @@ import { randomUUID } from 'crypto';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// DB povezava + secret za preverjanje JWT.
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -16,6 +17,7 @@ type TokenPayload = {
   email: string;
 };
 
+// Prebere auth cookie in vrne payload, ce je token veljaven.
 async function getAuthPayload(): Promise<TokenPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth')?.value;
@@ -28,6 +30,7 @@ async function getAuthPayload(): Promise<TokenPayload | null> {
   }
 }
 
+// Vrne ekipa_id za trenerja.
 async function getCoachTeamId(coachId: string): Promise<string | null> {
   const rows = await sql`
     SELECT ekipa_id
@@ -42,6 +45,7 @@ async function getCoachTeamId(coachId: string): Promise<string | null> {
  * GET /api/game
  * Returns only games for the logged-in coach's team.
  */
+// Vrne tekme trenutnega trenerja (samo njegova ekipa).
 export async function GET() {
   try {
     const payload = await getAuthPayload();
@@ -89,6 +93,7 @@ export async function GET() {
  * POST /api/game
  * Creates a game and attaches it to the coach's team.
  */
+// Ustvari tekmo za trenerjevo ekipo.
 export async function POST(req: Request) {
   try {
     const payload = await getAuthPayload();
@@ -104,6 +109,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Coach has no team assigned.' }, { status: 409 });
     }
 
+    // Beremo in validiramo body.
     const body = (await req.json()) as Partial<{
       cas_tekme: string; // ISO
       kraj: string | null;

@@ -3,6 +3,7 @@ import postgres from "postgres";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 
+// Dovoljene vloge pri registraciji.
 type Role = "igralec" | "trener";
 
 type SqlTag = (
@@ -17,6 +18,7 @@ type RegisterDeps = {
   json: (body: unknown, init?: { status?: number }) => Response;
 };
 
+// Ustvari SQL klient, zanj poišče povezavo v env in pravilno nastavi SSL.
 const createSql = (): SqlTag => {
   const connectionString = process.env.POSTGRES_URL;
   if (!connectionString) {
@@ -32,11 +34,13 @@ const createSql = (): SqlTag => {
   }) as SqlTag;
 };
 
+// Factory za handler, da ga lahko enostavno testiramo (odvisnosti so injicirane).
 export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
   const hashPassword = deps.hashPassword ?? ((password: string) => bcrypt.hash(password, 10));
   const uuid = deps.uuid ?? uuidv4;
   const json = deps.json ?? NextResponse.json;
 
+  // Dejanski API handler, ki bere JSON, validira in zapisuje v DB.
   return async function POST(req: Request) {
     const sqlTag = deps.sql ?? createSql();
 
@@ -61,6 +65,7 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
         ekipa_id?: string | null;
       };
 
+      // Osnovna validacija obveznih polj.
       if (
         !role ||
         !ime ||
@@ -76,9 +81,11 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
         );
       }
 
+      // Hash gesla in generiranje ID-ja.
       const hashedPassword = await hashPassword(password);
       const id = uuid();
 
+      // Trenerji imajo ločeno tabelo in malo drugačen insert.
       if (role === "trener") {
         try {
           await sqlTag`
@@ -88,6 +95,7 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
             (${id}, ${ime}, ${priimek}, ${starost}, ${email}, ${hashedPassword}, ${ekipa_id ?? null})
         `;
         } catch (err: any) {
+          // Pri duplicate email vrni 409.
           if (
             String(err?.message || "")
               .toLowerCase()
@@ -107,6 +115,7 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
         });
       }
 
+      // Dodatna polja samo za igralce.
       const {
         visina,
         pozicija_id,
@@ -147,6 +156,7 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
           )
       `;
       } catch (err: any) {
+        // Pri duplicate email vrni 409.
         if (
           String(err?.message || "")
             .toLowerCase()
@@ -165,6 +175,7 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
         user: { id, role, email },
       });
     } catch (e: any) {
+      // Vse nepričakovane napake mapiramo na 500.
       console.error("REGISTER ERROR:", e);
       return json(
         { error: "Napaka pri registraciji." },
