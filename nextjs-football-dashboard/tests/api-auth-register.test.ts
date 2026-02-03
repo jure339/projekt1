@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { createRegisterHandler } from "../src/app/api/auth/register/route";
+import { createRegisterHandler } from "../src/lib/registerHandler";
 
 test.describe("api auth register", () => {
   test("returns 400 when required data is missing", async () => {
