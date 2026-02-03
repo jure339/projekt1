@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// DB povezava + secret za preverjanje JWT.
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 const JWT_SECRET = process.env.JWT_SECRET!;
 if (!JWT_SECRET) throw new Error('Missing JWT_SECRET in env.');
@@ -16,6 +17,7 @@ type TokenPayload = {
   email: string;
 };
 
+// Prebere auth cookie in vrne payload, ce je token veljaven.
 async function getAuthPayload(): Promise<TokenPayload | null> {
   const cookieStore = await cookies(); // ✅ Next 15
   const token = cookieStore.get('auth')?.value;
@@ -28,6 +30,7 @@ async function getAuthPayload(): Promise<TokenPayload | null> {
   }
 }
 
+// Dovoli samo trenerju.
 async function requireCoach() {
   const payload = await getAuthPayload();
   if (!payload) {
@@ -45,6 +48,7 @@ async function requireCoach() {
   return { ok: true as const, payload };
 }
 
+// Vrne ekipa_id za trenerja.
 async function getCoachTeamId(coachId: string): Promise<string | null> {
   const rows = await sql`
     SELECT ekipa_id
@@ -55,6 +59,7 @@ async function getCoachTeamId(coachId: string): Promise<string | null> {
   return rows[0]?.ekipa_id ?? null;
 }
 
+// Nalozi tekmo, ce pripada trenerjevi ekipi.
 async function loadGameForTeam(id: string, teamId: string) {
   const rows = await sql`
     SELECT
@@ -71,6 +76,7 @@ async function loadGameForTeam(id: string, teamId: string) {
   return rows[0] ?? null;
 }
 
+// Vrne eno tekmo (samo trener + njegova ekipa).
 export async function GET(_req: Request, ctx: any) {
   const auth = await requireCoach();
   if (!auth.ok) return auth.res;
@@ -94,6 +100,7 @@ export async function GET(_req: Request, ctx: any) {
   }
 }
 
+// Uredi tekmo (samo trener + njegova ekipa).
 export async function PATCH(req: Request, ctx: any) {
   const auth = await requireCoach();
   if (!auth.ok) return auth.res;
@@ -106,6 +113,7 @@ export async function PATCH(req: Request, ctx: any) {
     if (!teamId)
       return NextResponse.json({ error: 'Coach has no team assigned.' }, { status: 409 });
 
+    // Beremo in validiramo body.
     const body = (await req.json()) as Partial<{
       cas_tekme: string;
       kraj: string | null;
@@ -164,6 +172,7 @@ export async function PATCH(req: Request, ctx: any) {
   }
 }
 
+// Brisanje tekme (samo trener + njegova ekipa).
 export async function DELETE(_req: Request, ctx: any) {
   const auth = await requireCoach();
   if (!auth.ok) return auth.res;
