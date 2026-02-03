@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { getUser } from "@/lib/user-store";
+import { useEffect, useState } from 'react';
+import { getUser } from '@/lib/user-store';
 
 type Player = {
   id: string;
@@ -20,8 +20,8 @@ export default function DeletePlayersPage() {
   useEffect(() => {
     const u = getUser();
 
-    if (!u || u.role !== "trener") {
-      setMsg("Nimaš dostopa.");
+    if (!u || u.role !== 'trener') {
+      setMsg('Nimaš dostopa.');
       setLoading(false);
       return;
     }
@@ -29,29 +29,28 @@ export default function DeletePlayersPage() {
     const ekipaId = u.ekipa_id;
 
     if (!ekipaId) {
-      setMsg("Nimaš dostopa.");
+      setMsg('Nimaš dostopa.');
       setLoading(false);
       return;
     }
 
     (async () => {
       try {
-        const res = await fetch(
-          `/api/igralci?ekipaId=${encodeURIComponent(ekipaId)}`,
-          { cache: "no-store" }
-        );
+        const res = await fetch(`/api/igralci?ekipaId=${encodeURIComponent(ekipaId)}`, {
+          cache: 'no-store',
+        });
 
         const text = await res.text();
         const data = text ? JSON.parse(text) : null;
 
         if (!res.ok) {
-          setMsg(data?.error ?? "Napaka pri nalaganju igralcev.");
+          setMsg(data?.error ?? 'Napaka pri nalaganju igralcev.');
           return;
         }
 
         setPlayers(data?.players ?? []);
       } catch {
-        setMsg("Napaka pri povezavi.");
+        setMsg('Napaka pri povezavi.');
       } finally {
         setLoading(false);
       }
@@ -59,40 +58,36 @@ export default function DeletePlayersPage() {
   }, []);
 
   async function onDelete(id: string) {
-    if (!confirm("Ali si prepričan, da želiš izbrisati igralca?")) return;
+    if (!confirm('Ali si prepričan, da želiš izbrisati igralca?')) return;
 
     try {
       const res = await fetch(`/api/igralci/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       const text = await res.text();
       const data = text ? JSON.parse(text) : null;
 
       if (!res.ok) {
-        alert(data?.error ?? "Napaka pri brisanju.");
+        alert(data?.error ?? 'Napaka pri brisanju.');
         return;
       }
 
       // odstrani iz UI
       setPlayers((prev) => prev.filter((p) => p.id !== id));
     } catch {
-      alert("Napaka pri povezavi.");
+      alert('Napaka pri povezavi.');
     }
   }
 
   return (
     <div className="mx-auto max-w-4xl p-6">
-      <h1 className="mb-6 text-2xl font-bold text-dark dark:text-white">
-        Players
-      </h1>
+      <h1 className="mb-6 text-2xl font-bold text-dark dark:text-white">Players</h1>
 
       {loading && <p>Loading...</p>}
       {msg && <p className="text-red">{msg}</p>}
 
-      {!loading && players.length === 0 && (
-        <p>No players found.</p>
-      )}
+      {!loading && players.length === 0 && <p>No players found.</p>}
 
       <div className="space-y-3">
         {players.map((p) => (
@@ -106,7 +101,7 @@ export default function DeletePlayersPage() {
               </div>
               <div className="text-sm text-dark-6 dark:text-white/70">
                 Age: {p.starost}
-                {p.pozicija ? ` · ${p.pozicija}` : ""}
+                {p.pozicija ? ` · ${p.pozicija}` : ''}
               </div>
             </div>
 

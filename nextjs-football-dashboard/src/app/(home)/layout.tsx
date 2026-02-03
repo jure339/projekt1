@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import type { PropsWithChildren } from "react";
-import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import type { PropsWithChildren } from 'react';
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
-import { Sidebar } from "@/components/Layouts/sidebar";
-import { Header } from "@/components/Layouts/header";
-import { getUser } from "@/lib/user-store";
+import { Sidebar } from '@/components/Layouts/sidebar';
+import { Header } from '@/components/Layouts/header';
+import { getUser } from '@/lib/user-store';
 
 export default function HomeLayout({ children }: PropsWithChildren) {
   const router = useRouter();

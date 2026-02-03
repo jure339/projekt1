@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import InputGroup from "@/components/FormElements/InputGroup";
-import { getUser, type StoredUser } from "@/lib/user-store";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import InputGroup from '@/components/FormElements/InputGroup';
+import { getUser, type StoredUser } from '@/lib/user-store';
 
 type NasprotnaEkipa = {
   id: string;
@@ -30,11 +30,11 @@ async function safeReadJson(res: Response) {
 export default function AddGamePage() {
   const router = useRouter();
 
-  const [casTekme, setCasTekme] = useState<string>(""); // datetime-local
-  const [kraj, setKraj] = useState<string>("");
+  const [casTekme, setCasTekme] = useState<string>(''); // datetime-local
+  const [kraj, setKraj] = useState<string>('');
 
   const [nasprotniki, setNasprotniki] = useState<NasprotnaEkipa[]>([]);
-  const [nasprotnikId, setNasprotnikId] = useState<string>("");
+  const [nasprotnikId, setNasprotnikId] = useState<string>('');
 
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -44,11 +44,11 @@ export default function AddGamePage() {
   useEffect(() => {
     const u: StoredUser | null = getUser();
     if (!u) {
-      router.push("/auth/login");
+      router.push('/auth/login');
       return;
     }
-    if (u.role !== "trener") {
-      router.push("/dashboard");
+    if (u.role !== 'trener') {
+      router.push('/dashboard');
       return;
     }
   }, [router]);
@@ -58,18 +58,18 @@ export default function AddGamePage() {
     setMsg(null);
 
     try {
-      const res = await fetch("/api/game/nasprotne-ekipe", { cache: "no-store" });
+      const res = await fetch('/api/game/nasprotne-ekipe', { cache: 'no-store' });
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Failed to load opponents.");
+        setMsg(data?.error ?? 'Failed to load opponents.');
         setNasprotniki([]);
         return;
       }
 
       setNasprotniki(data?.teams ?? []);
     } catch {
-      setMsg("Connection error (opponents).");
+      setMsg('Connection error (opponents).');
       setNasprotniki([]);
     } finally {
       setLoadingOpp(false);
@@ -90,7 +90,7 @@ export default function AddGamePage() {
     setMsg(null);
 
     if (!casTekme) {
-      setMsg("Date and time are required.");
+      setMsg('Date and time are required.');
       return;
     }
 
@@ -103,33 +103,33 @@ export default function AddGamePage() {
     };
 
     try {
-      const res = await fetch("/api/game", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Failed to save game.");
+        setMsg(data?.error ?? 'Failed to save game.');
         return;
       }
 
-      router.push("/tekme");
+      router.push('/tekme');
       router.refresh();
     } catch {
-      setMsg("Connection error.");
+      setMsg('Connection error.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 620, margin: "40px auto", padding: 16 }}>
+    <div style={{ maxWidth: 620, margin: '40px auto', padding: 16 }}>
       <h1>Add game</h1>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
+      <form onSubmit={onSubmit} style={{ display: 'grid', gap: 14 }}>
         <InputGroup
           label="Game date & time"
           placeholder=""
@@ -174,9 +174,7 @@ export default function AddGamePage() {
             disabled={loading || loadingOpp}
             className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5.5 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white"
           >
-            <option value="">
-              {loadingOpp ? "Loading opponents..." : "Select opponent"}
-            </option>
+            <option value="">{loadingOpp ? 'Loading opponents...' : 'Select opponent'}</option>
 
             {nasprotniki.map((t) => (
               <option key={t.id} value={t.id}>
@@ -184,7 +182,6 @@ export default function AddGamePage() {
               </option>
             ))}
           </select>
-
         </div>
 
         <button
@@ -192,7 +189,7 @@ export default function AddGamePage() {
           type="submit"
           className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
         >
-          {loading ? "Saving..." : "Add game"}
+          {loading ? 'Saving...' : 'Add game'}
         </button>
 
         <button
@@ -204,7 +201,7 @@ export default function AddGamePage() {
           Cancel
         </button>
 
-        {msg && <p style={{ color: "crimson" }}>{msg}</p>}
+        {msg && <p style={{ color: 'crimson' }}>{msg}</p>}
       </form>
     </div>
   );

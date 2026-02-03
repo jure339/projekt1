@@ -2,14 +2,14 @@
 
 **NextAdmin** is a Free, open-source Next.js admin dashboard toolkit featuring 200+ UI components and templates that come with pre-built elements, components, pages, high-quality design, integrations, and much more to help you create powerful admin dashboards with ease.
 
-
 [![nextjs admin template](https://cdn.pimjo.com/nextadmin-2.png)](https://nextadmin.co/)
-
 
 **NextAdmin** provides you with a diverse set of dashboard UI components, elements, examples and pages necessary for creating top-notch admin panels or dashboards with **powerful** features and integrations. Whether you are working on a complex web application or a basic website, **NextAdmin** has got you covered.
 
 ### [✨ Visit Website](https://nextadmin.co/)
+
 ### [🚀 Live Demo](https://demo.nextadmin.co/)
+
 ### [📖 Docs](https://docs.nextadmin.co/)
 
 By leveraging the latest features of **Next.js 14** and key functionalities like **server-side rendering (SSR)**, **static site generation (SSG)**, and seamless **API route integration**, **NextAdmin** ensures optimal performance. With the added benefits of **React 18 advancements** and **TypeScript** reliability, **NextAdmin** is the ultimate choice to kickstart your **Next.js** project efficiently.
@@ -21,6 +21,7 @@ By leveraging the latest features of **Next.js 14** and key functionalities like
 ```
 npm install
 ```
+
 If you're using **Yarn** as your package manager, the command will be:
 
 ```
@@ -32,6 +33,7 @@ yarn install
 ```
 npm run dev
 ```
+
 And if you're using **Yarn**, it's:
 
 ```
@@ -41,6 +43,7 @@ yarn dev
 And voila! You're now ready to start developing. **Happy coding**!
 
 ## Highlighted Features
+
 **200+ Next.js Dashboard Ul Components and Templates** - includes a variety of prebuilt **Ul elements, components, pages, and examples** crafted with a high-quality design.
 Additionally, features seamless **essential integrations and extensive functionalities**.
 
@@ -61,25 +64,30 @@ Additionally, features seamless **essential integrations and extensive functiona
 
 All these features and more make **NextAdmin** a robust, well-rounded solution for all your dashboard development needs.
 
-## Update Logs
+## Environment variables
+
+This project requires environment variables to run.
+
+1. Copy `.env.example` to `.env`
+2. Fill in the required values
+
+Never commit `.env` files to the repository.
+
 
 ### Version 1.2.1 - [Mar 20, 2025]
+
 - Fix Peer dependency issues and NextConfig warning.
 - Updated apexcharts and react-apexhcarts to the latest version.
 
-### Version 1.2.0 - Major Upgrade and UI Improvements - [Jan 27, 2025]
 
-- Upgraded to Next.js v15 and updated dependencies
-- API integration with loading skeleton for tables and charts.
-- Improved code structure for better readability.
-- Rebuilt components like dropdown, sidebar, and all ui-elements using accessibility practices.
-- Using search-params to store dropdown selection and refetch data.
-- Semantic markups, better separation of concerns and more.
 
 ### Version 1.1.0
+
 - Updated Dependencies
 - Removed Unused Integrations
 - Optimized App
 
 ### Version 1.0
+
 - Initial Release - [May 13, 2024]
+

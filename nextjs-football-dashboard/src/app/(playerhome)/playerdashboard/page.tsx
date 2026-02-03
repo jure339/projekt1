@@ -1,5 +1,5 @@
-import { createTimeFrameExtractor } from "@/utils/timeframe-extractor";
-import DashboardCards from "./DahboardCards";
+import { createTimeFrameExtractor } from '@/utils/timeframe-extractor';
+import DashboardCards from './DahboardCards';
 
 type PropsType = {
   searchParams: Promise<{

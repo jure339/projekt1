@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import InputGroup from "@/components/FormElements/InputGroup";
-import { cn } from "@/lib/utils";
-import { getUser, saveUser, type StoredUser } from "@/lib/user-store";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import InputGroup from '@/components/FormElements/InputGroup';
+import { cn } from '@/lib/utils';
+import { getUser, saveUser, type StoredUser } from '@/lib/user-store';
 
 type Coach = {
   id: string;
@@ -35,14 +35,14 @@ export default function CoachProfilePage() {
   const [coach, setCoach] = useState<Coach | null>(null);
 
   // form
-  const [ime, setIme] = useState("");
-  const [priimek, setPriimek] = useState("");
-  const [email, setEmail] = useState("");
-  const [starost, setStarost] = useState<string>("");
-  const [password, setPassword] = useState(""); // optional
+  const [ime, setIme] = useState('');
+  const [priimek, setPriimek] = useState('');
+  const [email, setEmail] = useState('');
+  const [starost, setStarost] = useState<string>('');
+  const [password, setPassword] = useState(''); // optional
 
   // team name
-  const [teamName, setTeamName] = useState<string>("");
+  const [teamName, setTeamName] = useState<string>('');
   const [loadingTeam, setLoadingTeam] = useState(false);
 
   async function load() {
@@ -52,19 +52,19 @@ export default function CoachProfilePage() {
     try {
       const u = getUser();
       if (!u) {
-        router.push("/auth/login");
+        router.push('/auth/login');
         return;
       }
-      if (u.role !== "trener") {
-        router.push("/dashboard");
+      if (u.role !== 'trener') {
+        router.push('/dashboard');
         return;
       }
 
-      const res = await fetch("/api/trenerji/moj-profil", { cache: "no-store" });
+      const res = await fetch('/api/trenerji/moj-profil', { cache: 'no-store' });
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Failed to load coach profile.");
+        setMsg(data?.error ?? 'Failed to load coach profile.');
         setCoach(null);
         return;
       }
@@ -72,28 +72,28 @@ export default function CoachProfilePage() {
       const c = data?.coach as Coach;
       setCoach(c);
 
-      setIme(c.ime ?? "");
-      setPriimek(c.priimek ?? "");
-      setEmail(c.email ?? "");
-      setStarost(String(c.starost ?? ""));
-      setPassword("");
+      setIme(c.ime ?? '');
+      setPriimek(c.priimek ?? '');
+      setEmail(c.email ?? '');
+      setStarost(String(c.starost ?? ''));
+      setPassword('');
 
       if (c.ekipa_id) {
         setLoadingTeam(true);
         try {
-          const tRes = await fetch(`/api/ekipa/${c.ekipa_id}`, { cache: "no-store" });
+          const tRes = await fetch(`/api/ekipa/${c.ekipa_id}`, { cache: 'no-store' });
           const tData = await safeReadJson(tRes);
-          setTeamName(tRes.ok ? (tData?.ekipa?.ime ?? "") : "");
+          setTeamName(tRes.ok ? (tData?.ekipa?.ime ?? '') : '');
         } catch {
-          setTeamName("");
+          setTeamName('');
         } finally {
           setLoadingTeam(false);
         }
       } else {
-        setTeamName("");
+        setTeamName('');
       }
     } catch {
-      setMsg("Connection error.");
+      setMsg('Connection error.');
       setCoach(null);
     } finally {
       setLoading(false);
@@ -110,7 +110,7 @@ export default function CoachProfilePage() {
     setMsg(null);
 
     if (!ime.trim() || !priimek.trim() || !email.trim() || !starost.trim()) {
-      setMsg("Please fill in all required fields.");
+      setMsg('Please fill in all required fields.');
       return;
     }
 
@@ -125,9 +125,9 @@ export default function CoachProfilePage() {
 
       if (password.trim().length > 0) payload.password = password.trim();
 
-      const res = await fetch("/api/trenerji/moj-profil", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/trenerji/moj-profil', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
@@ -135,7 +135,7 @@ export default function CoachProfilePage() {
 
       if (!res.ok) {
         // ✅ prikaži pravi server error
-        setMsg(data?.error ?? "Failed to save coach profile.");
+        setMsg(data?.error ?? 'Failed to save coach profile.');
         return;
       }
 
@@ -145,7 +145,7 @@ export default function CoachProfilePage() {
 
         // ✅ update localStorage user
         const u = getUser();
-        if (u && u.role === "trener") {
+        if (u && u.role === 'trener') {
           const updatedStored: StoredUser = {
             ...u,
             ime: updated.ime,
@@ -156,20 +156,20 @@ export default function CoachProfilePage() {
           saveUser(updatedStored);
         }
 
-        setPassword("");
+        setPassword('');
       }
 
-      setMsg("Saved ✅");
+      setMsg('Saved ✅');
       router.refresh();
     } catch {
-      setMsg("Connection error.");
+      setMsg('Connection error.');
     } finally {
       setSaving(false);
     }
   }
 
   const card =
-    "rounded-[14px] border border-stroke bg-white p-6 shadow-1 dark:border-primary/30 dark:bg-gray-dark dark:shadow-card";
+    'rounded-[14px] border border-stroke bg-white p-6 shadow-1 dark:border-primary/30 dark:bg-gray-dark dark:shadow-card';
 
   return (
     <div className="mx-auto max-w-3xl p-6">
@@ -180,10 +180,10 @@ export default function CoachProfilePage() {
           onClick={load}
           disabled={loading}
           className={cn(
-            "rounded-lg border border-stroke px-4 py-2 text-sm font-medium transition dark:border-dark-3",
+            'rounded-lg border border-stroke px-4 py-2 text-sm font-medium transition dark:border-dark-3',
             loading
-              ? "cursor-not-allowed opacity-50 text-dark-6 dark:text-white/60"
-              : "text-dark hover:border-primary hover:text-primary dark:text-white"
+              ? 'cursor-not-allowed text-dark-6 opacity-50 dark:text-white/60'
+              : 'text-dark hover:border-primary hover:text-primary dark:text-white',
           )}
         >
           Refresh
@@ -192,7 +192,7 @@ export default function CoachProfilePage() {
 
       <div className={card}>
         {msg && (
-          <p className={cn("mb-4 text-sm", msg.includes("✅") ? "text-green-600" : "text-red")}>
+          <p className={cn('mb-4 text-sm', msg.includes('✅') ? 'text-green-600' : 'text-red')}>
             {msg}
           </p>
         )}
@@ -206,7 +206,7 @@ export default function CoachProfilePage() {
             <div className="mb-5 text-sm text-dark-6 dark:text-white/70">
               <div>
                 <span className="font-medium text-dark dark:text-white">Team: </span>
-                {coach.ekipa_id ? (loadingTeam ? "Loading..." : teamName || "—") : "No team"}
+                {coach.ekipa_id ? (loadingTeam ? 'Loading...' : teamName || '—') : 'No team'}
               </div>
             </div>
 
@@ -276,7 +276,7 @@ export default function CoachProfilePage() {
                 type="submit"
                 className="mt-2 w-full rounded-lg bg-primary px-5.5 py-3 font-medium text-white transition disabled:opacity-60"
               >
-                {saving ? "Saving..." : "Save changes"}
+                {saving ? 'Saving...' : 'Save changes'}
               </button>
 
               <button

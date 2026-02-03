@@ -1,7 +1,7 @@
-import { Checkbox } from "@/components/FormElements/checkbox";
-import InputGroup from "@/components/FormElements/InputGroup";
-import { ShowcaseSection } from "@/components/Layouts/showcase-section";
-import Link from "next/link";
+import { Checkbox } from '@/components/FormElements/checkbox';
+import InputGroup from '@/components/FormElements/InputGroup';
+import { ShowcaseSection } from '@/components/Layouts/showcase-section';
+import Link from 'next/link';
 
 export function SignInForm() {
   return (
@@ -14,11 +14,7 @@ export function SignInForm() {
           className="mb-4.5"
         />
 
-        <InputGroup
-          label="Password"
-          type="password"
-          placeholder="Enter your password"
-        />
+        <InputGroup label="Password" type="password" placeholder="Enter your password" />
 
         <div className="mb-5.5 mt-5 flex items-center justify-between">
           <Checkbox label="Remember me" minimal withBg withIcon="check" />

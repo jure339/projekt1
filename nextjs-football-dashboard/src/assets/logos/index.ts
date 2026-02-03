@@ -1,4 +1,4 @@
-import  sql  from "@/lib/db"; // tvoja povezava na PostgreSQL
+import sql from '@/lib/db'; // tvoja povezava na PostgreSQL
 
 export async function GET() {
   try {
@@ -14,6 +14,6 @@ export async function GET() {
     return new Response(JSON.stringify(igralci), { status: 200 });
   } catch (err) {
     console.error(err);
-    return new Response(JSON.stringify({ error: "Database error" }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Database error' }), { status: 500 });
   }
 }

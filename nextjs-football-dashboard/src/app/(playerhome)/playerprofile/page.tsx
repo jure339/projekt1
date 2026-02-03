@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
+import { useEffect, useMemo, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 type Position = {
   id: string;
@@ -45,23 +45,23 @@ export default function PlayerProfilePage() {
   const [positions, setPositions] = useState<Position[]>([]);
 
   // form state
-  const [ime, setIme] = useState("");
-  const [priimek, setPriimek] = useState("");
-  const [email, setEmail] = useState("");
-  const [starost, setStarost] = useState<string>("");
-  const [visina, setVisina] = useState<string>("");
-  const [dres, setDres] = useState<string>("");
+  const [ime, setIme] = useState('');
+  const [priimek, setPriimek] = useState('');
+  const [email, setEmail] = useState('');
+  const [starost, setStarost] = useState<string>('');
+  const [visina, setVisina] = useState<string>('');
+  const [dres, setDres] = useState<string>('');
 
   // ✅ password (optional) - samo 1x
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
 
   // dropdown value: "" pomeni "Brez pozicije"
-  const [pozicijaValue, setPozicijaValue] = useState<string>("");
+  const [pozicijaValue, setPozicijaValue] = useState<string>('');
 
   const currentPosLabel = useMemo(() => {
-    if (!profile) return "—";
-    if (!profile.pozicija_naziv) return "—";
-    return `${profile.pozicija_naziv}${profile.pozicija_kratica ? ` (${profile.pozicija_kratica})` : ""}`;
+    if (!profile) return '—';
+    if (!profile.pozicija_naziv) return '—';
+    return `${profile.pozicija_naziv}${profile.pozicija_kratica ? ` (${profile.pozicija_kratica})` : ''}`;
   }, [profile]);
 
   useEffect(() => {
@@ -71,32 +71,32 @@ export default function PlayerProfilePage() {
 
       try {
         const [profileRes, positionsRes] = await Promise.all([
-          fetch("/api/igralci/moj-profil", { cache: "no-store" }),
-          fetch("/api/pozicije", { cache: "no-store" }),
+          fetch('/api/igralci/moj-profil', { cache: 'no-store' }),
+          fetch('/api/pozicije', { cache: 'no-store' }),
         ]);
 
         const profileData = await safeReadJson(profileRes);
         const positionsData = await safeReadJson(positionsRes);
 
         if (!profileRes.ok) {
-          setMsg(profileData?.error ?? "Napaka pri nalaganju profila.");
+          setMsg(profileData?.error ?? 'Napaka pri nalaganju profila.');
           return;
         }
 
         const p = profileData?.player as PlayerProfile;
         setProfile(p);
 
-        setIme(p.ime ?? "");
-        setPriimek(p.priimek ?? "");
-        setEmail(p.email ?? "");
-        setStarost(String(p.starost ?? ""));
-        setVisina(p.visina === null ? "" : String(p.visina));
-        setDres(p.stevilka_dresa === null ? "" : String(p.stevilka_dresa));
+        setIme(p.ime ?? '');
+        setPriimek(p.priimek ?? '');
+        setEmail(p.email ?? '');
+        setStarost(String(p.starost ?? ''));
+        setVisina(p.visina === null ? '' : String(p.visina));
+        setDres(p.stevilka_dresa === null ? '' : String(p.stevilka_dresa));
 
-        setPozicijaValue(p.pozicija_id ?? "");
+        setPozicijaValue(p.pozicija_id ?? '');
 
         // ✅ reset password
-        setPassword("");
+        setPassword('');
 
         if (positionsRes.ok) {
           setPositions((positionsData?.positions ?? []) as Position[]);
@@ -104,7 +104,7 @@ export default function PlayerProfilePage() {
           setPositions([]);
         }
       } catch {
-        setMsg("Napaka pri povezavi.");
+        setMsg('Napaka pri povezavi.');
       } finally {
         setLoading(false);
       }
@@ -116,7 +116,7 @@ export default function PlayerProfilePage() {
     setMsg(null);
 
     if (!starost.trim()) {
-      setMsg("Starost je obvezna.");
+      setMsg('Starost je obvezna.');
       return;
     }
 
@@ -128,9 +128,9 @@ export default function PlayerProfilePage() {
         priimek: priimek.trim(),
         email: email.trim(),
         starost: Number(starost),
-        visina: visina.trim() === "" ? null : Number(visina),
-        stevilka_dresa: dres.trim() === "" ? null : Number(dres),
-        pozicija_id: pozicijaValue === "" ? null : pozicijaValue,
+        visina: visina.trim() === '' ? null : Number(visina),
+        stevilka_dresa: dres.trim() === '' ? null : Number(dres),
+        pozicija_id: pozicijaValue === '' ? null : pozicijaValue,
       };
 
       // ✅ dodaj password samo, če je vpisan (brez dodatnih pravil)
@@ -138,43 +138,43 @@ export default function PlayerProfilePage() {
         payload.password = password;
       }
 
-      const res = await fetch("/api/igralci/moj-profil", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/igralci/moj-profil', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       const data = await safeReadJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Napaka pri shranjevanju.");
+        setMsg(data?.error ?? 'Napaka pri shranjevanju.');
         return;
       }
 
       const updated = (data?.player ?? data?.updated ?? data?.profile) as PlayerProfile;
       if (updated) {
         setProfile(updated);
-        setPozicijaValue(updated.pozicija_id ?? "");
+        setPozicijaValue(updated.pozicija_id ?? '');
       }
 
       // ✅ po uspehu pobriši polje za geslo
-      setPassword("");
+      setPassword('');
 
-      setMsg("Profile saved ✅");
+      setMsg('Profile saved ✅');
     } catch {
-      setMsg("Error connecting.");
+      setMsg('Error connecting.');
     } finally {
       setSaving(false);
     }
   }
 
   const card =
-    "rounded-[14px] border border-stroke bg-white p-6 shadow-1 dark:border-primary/30 dark:bg-gray-dark dark:shadow-card";
-  const label = "text-body-sm font-medium text-dark dark:text-white";
+    'rounded-[14px] border border-stroke bg-white p-6 shadow-1 dark:border-primary/30 dark:bg-gray-dark dark:shadow-card';
+  const label = 'text-body-sm font-medium text-dark dark:text-white';
   const input =
-    "mt-2 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-4 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white";
+    'mt-2 w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-4 py-3 text-dark outline-none transition focus:border-primary dark:border-dark-3 dark:bg-dark-2 dark:text-white';
   const btn =
-    "inline-flex w-full items-center justify-center rounded-lg bg-primary px-5 py-3 font-medium text-white transition disabled:opacity-60";
+    'inline-flex w-full items-center justify-center rounded-lg bg-primary px-5 py-3 font-medium text-white transition disabled:opacity-60';
 
   return (
     <div className="mx-auto max-w-3xl p-6">
@@ -186,24 +186,40 @@ export default function PlayerProfilePage() {
         ) : profile ? (
           <form onSubmit={onSave} className="grid gap-5">
             <div className="text-sm text-dark-6 dark:text-white/70">
-              Team: {profile.ekipa_ime ?? "—"}
+              Team: {profile.ekipa_ime ?? '—'}
               <br />
               Current position: {currentPosLabel}
             </div>
 
             <div>
               <div className={label}>Name</div>
-              <input className={input} value={ime} onChange={(e) => setIme(e.target.value)} required />
+              <input
+                className={input}
+                value={ime}
+                onChange={(e) => setIme(e.target.value)}
+                required
+              />
             </div>
 
             <div>
               <div className={label}>Last name</div>
-              <input className={input} value={priimek} onChange={(e) => setPriimek(e.target.value)} required />
+              <input
+                className={input}
+                value={priimek}
+                onChange={(e) => setPriimek(e.target.value)}
+                required
+              />
             </div>
 
             <div>
               <div className={label}>Email</div>
-              <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input
+                className={input}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
 
             <div>
@@ -247,12 +263,16 @@ export default function PlayerProfilePage() {
 
             <div>
               <div className={label}>Position</div>
-              <select className={input} value={pozicijaValue} onChange={(e) => setPozicijaValue(e.target.value)}>
+              <select
+                className={input}
+                value={pozicijaValue}
+                onChange={(e) => setPozicijaValue(e.target.value)}
+              >
                 <option value="">No position</option>
                 {positions.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.naziv}
-                    {p.kratica ? ` (${p.kratica})` : ""}
+                    {p.kratica ? ` (${p.kratica})` : ''}
                   </option>
                 ))}
               </select>
@@ -266,7 +286,9 @@ export default function PlayerProfilePage() {
 
             {/* ✅ Password change (optional) - samo 1 polje */}
             <div>
-              <div className="mb-2 text-sm font-semibold text-dark dark:text-white">Change password (optional)</div>
+              <div className="mb-2 text-sm font-semibold text-dark dark:text-white">
+                Change password (optional)
+              </div>
 
               <div>
                 <div className={label}>New password</div>
@@ -279,17 +301,20 @@ export default function PlayerProfilePage() {
                   autoComplete="new-password"
                 />
               </div>
-
             </div>
 
             <button className={btn} disabled={saving} type="submit">
-              {saving ? "Saving..." : "Save changes"}
+              {saving ? 'Saving...' : 'Save changes'}
             </button>
 
-            {msg && <p className={cn("text-sm", msg.includes("✅") ? "text-green-600" : "text-red")}>{msg}</p>}
+            {msg && (
+              <p className={cn('text-sm', msg.includes('✅') ? 'text-green-600' : 'text-red')}>
+                {msg}
+              </p>
+            )}
           </form>
         ) : (
-          <p className="text-red">{msg ?? "Profil ni na voljo."}</p>
+          <p className="text-red">{msg ?? 'Profil ni na voljo.'}</p>
         )}
       </div>
     </div>

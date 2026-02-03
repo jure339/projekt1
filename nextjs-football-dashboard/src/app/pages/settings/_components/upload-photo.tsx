@@ -1,6 +1,6 @@
-import { UploadIcon } from "@/assets/icons";
-import { ShowcaseSection } from "@/components/Layouts/showcase-section";
-import Image from "next/image";
+import { UploadIcon } from '@/assets/icons';
+import { ShowcaseSection } from '@/components/Layouts/showcase-section';
+import Image from 'next/image';
 
 export function UploadPhotoForm() {
   return (
@@ -17,16 +17,12 @@ export function UploadPhotoForm() {
           />
 
           <div>
-            <span className="mb-1.5 font-medium text-dark dark:text-white">
-              Edit your photo
-            </span>
+            <span className="mb-1.5 font-medium text-dark dark:text-white">Edit your photo</span>
             <span className="flex gap-3">
               <button type="button" className="text-body-sm hover:text-red">
                 Delete
               </button>
-              <button className="text-body-sm hover:text-primary">
-                Update
-              </button>
+              <button className="text-body-sm hover:text-primary">Update</button>
             </span>
           </div>
         </div>
@@ -49,13 +45,10 @@ export function UploadPhotoForm() {
             </div>
 
             <p className="mt-2.5 text-body-sm font-medium">
-              <span className="text-primary">Click to upload</span> or drag and
-              drop
+              <span className="text-primary">Click to upload</span> or drag and drop
             </p>
 
-            <p className="mt-1 text-body-xs">
-              SVG, PNG, JPG or GIF (max, 800 X 800px)
-            </p>
+            <p className="mt-1 text-body-xs">SVG, PNG, JPG or GIF (max, 800 X 800px)</p>
           </label>
         </div>
 

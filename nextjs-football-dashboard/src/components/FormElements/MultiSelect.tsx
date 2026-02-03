@@ -1,5 +1,5 @@
-"use client";
-import React, { useEffect, useRef, useState } from "react";
+'use client';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface Option {
   value: string;
@@ -28,7 +28,7 @@ const MultiSelect: React.FC<DropdownProps> = ({ id }) => {
           newOptions.push({
             value: select.options[i].value,
             text: select.options[i].innerText,
-            selected: select.options[i].hasAttribute("selected"),
+            selected: select.options[i].hasAttribute('selected'),
           });
         }
         setOptions(newOptions);
@@ -82,16 +82,11 @@ const MultiSelect: React.FC<DropdownProps> = ({ id }) => {
   useEffect(() => {
     const clickHandler = ({ target }: MouseEvent) => {
       if (!dropdownRef.current) return;
-      if (
-        !show ||
-        dropdownRef.current.contains(target) ||
-        trigger.current.contains(target)
-      )
-        return;
+      if (!show || dropdownRef.current.contains(target) || trigger.current.contains(target)) return;
       setShow(false);
     };
-    document.addEventListener("click", clickHandler);
-    return () => document.removeEventListener("click", clickHandler);
+    document.addEventListener('click', clickHandler);
+    return () => document.removeEventListener('click', clickHandler);
   });
 
   return (
@@ -119,9 +114,7 @@ const MultiSelect: React.FC<DropdownProps> = ({ id }) => {
                         key={index}
                         className="flex items-center justify-center rounded-[5px] border-[.5px] border-stroke bg-gray-2 px-2.5 py-[3px] text-body-sm font-medium dark:border-dark-3 dark:bg-dark"
                       >
-                        <div className="max-w-full flex-initial">
-                          {options[index].text}
-                        </div>
+                        <div className="max-w-full flex-initial">{options[index].text}</div>
                         <div className="flex flex-auto flex-row-reverse">
                           <div
                             onClick={() => remove(index)}
@@ -185,7 +178,7 @@ const MultiSelect: React.FC<DropdownProps> = ({ id }) => {
               <div className="w-full px-4">
                 <div
                   className={`max-h-select absolute left-0 top-full z-40 w-full overflow-y-auto rounded bg-white shadow-1 dark:bg-dark-2 dark:shadow-card ${
-                    isOpen() ? "" : "hidden"
+                    isOpen() ? '' : 'hidden'
                   }`}
                   ref={dropdownRef}
                   onFocus={() => setShow(true)}
@@ -200,13 +193,11 @@ const MultiSelect: React.FC<DropdownProps> = ({ id }) => {
                         >
                           <div
                             className={`relative flex w-full items-center border-l-2 border-transparent p-2 pl-2 ${
-                              option.selected ? "border-primary" : ""
+                              option.selected ? 'border-primary' : ''
                             }`}
                           >
                             <div className="flex w-full items-center">
-                              <div className="mx-2 leading-6">
-                                {option.text}
-                              </div>
+                              <div className="mx-2 leading-6">{option.text}</div>
                             </div>
                           </div>
                         </div>

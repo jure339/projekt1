@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 type Game = {
   id: string;
@@ -25,18 +25,18 @@ export default function GamePage() {
     setMsg(null);
 
     try {
-      const res = await fetch("/api/game", { cache: "no-store" });
+      const res = await fetch('/api/game', { cache: 'no-store' });
       const data = await safeJson(res);
 
       if (!res.ok) {
-        setMsg(data?.error ?? "Failed to load games.");
+        setMsg(data?.error ?? 'Failed to load games.');
         setGames([]);
         return;
       }
 
       setGames(data?.games ?? []);
     } catch {
-      setMsg("Connection error.");
+      setMsg('Connection error.');
     } finally {
       setLoading(false);
     }
@@ -47,12 +47,12 @@ export default function GamePage() {
   }, []);
 
   async function onDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this game?")) return;
+    if (!confirm('Are you sure you want to delete this game?')) return;
 
-    const res = await fetch(`/api/game/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/game/${id}`, { method: 'DELETE' });
     if (!res.ok) {
       const data = await safeJson(res);
-      alert(data?.error ?? "Delete failed.");
+      alert(data?.error ?? 'Delete failed.');
       return;
     }
 
@@ -63,9 +63,7 @@ export default function GamePage() {
     <div className="mx-auto mt-10 max-w-6xl px-4">
       <div className="rounded-[14px] bg-white p-6 shadow-1 dark:bg-gray-dark dark:shadow-card">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-dark dark:text-white">
-            Games
-          </h1>
+          <h1 className="text-2xl font-bold text-dark dark:text-white">Games</h1>
 
           <div className="flex gap-2">
             <Link
@@ -108,9 +106,9 @@ export default function GamePage() {
                   {new Date(g.cas_tekme).toLocaleString()}
                 </div>
 
-                <div className="col-span-4">{g.nasprotnik ?? "—"}</div>
+                <div className="col-span-4">{g.nasprotnik ?? '—'}</div>
 
-                <div className="col-span-2">{g.kraj ?? "—"}</div>
+                <div className="col-span-2">{g.kraj ?? '—'}</div>
 
                 <div className="col-span-2 flex justify-end gap-2">
                   <Link
