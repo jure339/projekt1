@@ -94,7 +94,7 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
               .includes("duplicate")
           ) {
             return json(
-              { error: "Email je Ĺľe v uporabi." },
+              { error: "Email je že v uporabi." },
               { status: 409 }
             );
           }
@@ -102,7 +102,7 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
         }
 
         return json({
-          message: "Registracija uspeĹˇna",
+          message: "Registracija uspešna",
           user: { id, role, email },
         });
       }
@@ -153,7 +153,7 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
             .includes("duplicate")
         ) {
           return json(
-            { error: "Email je Ĺľe v uporabi." },
+            { error: "Email je že v uporabi." },
             { status: 409 }
           );
         }
@@ -161,7 +161,7 @@ export function createRegisterHandler(deps: Partial<RegisterDeps> = {}) {
       }
 
       return json({
-        message: "Registracija uspeĹˇna",
+        message: "Registracija uspešna",
         user: { id, role, email },
       });
     } catch (e: any) {
